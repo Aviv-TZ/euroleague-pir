@@ -94,7 +94,7 @@ tbody tr:hover{background:var(--panel2)}
 .pchip i{font-style:normal;width:10px;height:10px;border-radius:50%}
 .pchip button{background:#ffffff14;border:none;color:var(--muted);width:22px;height:22px;border-radius:50%;cursor:pointer}
 .cmp{margin-top:16px}
-.cmp th.pc{text-align:left;min-width:150px}
+.cmp th.pc{text-align:center;min-width:150px}
 .cmp td.sec{background:var(--panel2);color:var(--accent);font-weight:700;font-size:13px}
 .cmp td.best{color:var(--good);font-weight:700}
 .note{color:var(--muted);font-size:12.5px;line-height:1.6}
@@ -129,6 +129,14 @@ tbody tr:hover{background:var(--panel2)}
 .cmp tr.real td{background:#2ec47a0a}
 .cmphead .phead h2{margin:0}
 .roundnote{margin-top:6px;font-size:12.5px;color:var(--accent)}
+/* compare header: photo + frozen row */
+.cmp thead th{position:sticky;top:0;z-index:3;background:var(--panel);box-shadow:0 2px 0 var(--line);vertical-align:bottom}
+.cmp .scroll{max-height:82vh;overflow:auto}
+@media(min-width:760px){ .cmp .scroll{max-height:none;overflow:visible} }
+.pcw{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center}
+.pcw small{display:block;margin-top:2px}
+.ph{width:64px;height:64px;border-radius:50%;border:3px solid;background:var(--panel2) center 15%/cover no-repeat;
+    display:flex;align-items:center;justify-content:center;font-weight:700;font-size:20px;color:var(--muted)}
 footer{color:var(--muted);font-size:12px;padding:10px 20px 30px;text-align:center}
 .empty{color:var(--muted);padding:30px;text-align:center}
 </style>
@@ -558,6 +566,32 @@ function renderCompare(){
   if(showCmpSearch && !full) setTimeout(()=>inp.focus(),0);
   $('#cmpTable').innerHTML = compareTable(compare.map(id=>byId.get(id)));
   $('#cmpTable').querySelectorAll('.pl').forEach(el=>el.onclick=()=>openPlayer(+el.dataset.id));
+  $('#cmpTable').querySelectorAll('[data-img]').forEach(async el=>{
+    const url = await wikiImage(byId.get(+el.dataset.img));
+    if(url && el.isConnected){ el.style.backgroundImage=`url("${url}")`; el.textContent=''; el.title='תמונה: ויקיפדיה'; }
+  });
+}
+// ---------- player photos from Wikipedia (looked up in the browser, cached locally) ----------
+const initials = p => (p.name||'').split(/\s+/).map(w=>w[0]).filter(Boolean).slice(0,2).join('').toUpperCase();
+const IMG_KEY = 'el_wiki_img_v1';
+let imgCache = {}; try{ imgCache = JSON.parse(localStorage.getItem(IMG_KEY)||'{}'); }catch(e){}
+const imgPending = {};
+function wikiImage(p){
+  if(!p) return Promise.resolve(null);
+  if(p.raw in imgCache) return Promise.resolve(imgCache[p.raw]);
+  if(imgPending[p.raw]) return imgPending[p.raw];
+  const last = norm((p.raw.split(',')[0]||'').trim().split(/[\s-]+/)[0]);
+  const api = 'https://en.wikipedia.org/w/api.php?action=query&format=json&origin=*&generator=search'+
+    '&gsrlimit=5&prop=pageimages|description&piprop=thumbnail&pithumbsize=240&gsrsearch='+
+    encodeURIComponent(p.name+' basketball');
+  return imgPending[p.raw] = fetch(api).then(r=>r.json()).then(j=>{
+    const pages = Object.values((j.query&&j.query.pages)||{}).sort((a,b)=>a.index-b.index);
+    const hit = pages.find(pg=>pg.thumbnail && norm(pg.title).includes(last) &&
+                  (/basketball/i.test(pg.description||'') || /basketball/i.test(pg.title)));
+    const url = hit ? hit.thumbnail.source : null;
+    imgCache[p.raw] = url; try{ localStorage.setItem(IMG_KEY, JSON.stringify(imgCache)); }catch(e){}
+    return url;
+  }).catch(()=>null);   // network error: not cached, retried next time
 }
 function compareTable(ps){
   const row = (label, get, opt={})=>{
@@ -572,7 +606,10 @@ function compareTable(ps){
   const mm = (p,k,key)=>p.ranked?p.m[k][key]:null;
   const acts = ps.map(getActual);
   let h = `<div class="card cmp"><div class="hint">הערך הטוב ביותר בכל שורה מודגש בירוק</div><div class="scroll"><table>
-    <thead><tr><th></th>${ps.map((p,i)=>`<th class="pc"><span class="pl" data-id="${p.id}" style="cursor:pointer"><i class="dot" style="background:${CMP_COLORS[i]}"></i> <b>${esc(p.name)}</b></span><br><small class="note">${esc(p.team)} · ${p.pos_he}</small></th>`).join('')}</tr></thead><tbody>`;
+    <thead><tr><th class="corner"></th>${ps.map((p,i)=>`<th class="pc"><div class="pcw">
+      <div class="ph" data-img="${p.id}" style="border-color:${CMP_COLORS[i]}">${esc(initials(p))}</div>
+      <div><span class="pl" data-id="${p.id}" style="cursor:pointer"><b>${esc(p.name)}</b></span>
+      <small class="note">${esc(p.team)} · ${p.pos_he}</small></div></div></th>`).join('')}</tr></thead><tbody>`;
   if(acts.some(Boolean)){
     const anyLive = acts.some(a=>a&&a.status==='live');
     h += sec(`משחק המחזור – נתוני אמת${anyLive?' / LIVE':''} (לא חיזוי)`,'real');

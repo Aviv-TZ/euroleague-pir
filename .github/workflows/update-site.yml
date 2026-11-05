@@ -1,13 +1,19 @@
 name: EuroLeague round update
 
+# GitHub often delays or skips scheduled runs. So instead of one run every 10 minutes,
+# ONE evening run stays alive and checks every 10 minutes until 23:00 UTC (game window).
+# Several start times are listed as backups: if a loop is already running, the later
+# trigger waits in the queue and then runs once.
 on:
   schedule:
-    - cron: '17 * * * *'           # every hour: round-end check + in-round results
-    - cron: '*/10 16-22 * * *'     # every 10 min during game hours (UTC) for live box scores
+    - cron: '17 * * * *'      # hourly: round-end check + in-round results
+    - cron: '45 15 * * *'     # evening loop start (17:45 Israel winter time)
+    - cron: '35 17 * * *'     # backup start
+    - cron: '35 19 * * *'     # backup start
   workflow_dispatch:
     inputs:
       force:
-        description: 'Run now even if no new round finished'
+        description: 'Run the full round prediction now even if no new round finished'
         type: boolean
         default: false
 
@@ -21,7 +27,7 @@ concurrency:
 jobs:
   update:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 360
     steps:
       - uses: actions/checkout@v4
 
@@ -32,16 +38,24 @@ jobs:
       - name: Install R packages
         run: Rscript -e 'install.packages(c("httr","jsonlite","openxlsx"))'
 
-      - name: Run update (prediction only, no training)
+      - name: Update (prediction only, no training) - loops every 10 min during game hours
         env:
           TZ: Asia/Jerusalem
-        run: Rscript R/EuroLeague_auto_update_v11.R ${{ inputs.force && '--force' || '' }}
-
-      - name: Commit new page
+          FORCE: ${{ inputs.force && '--force' || '' }}
         run: |
           git config user.name  "el-bot"
           git config user.email "el-bot@users.noreply.github.com"
-          git add docs output
-          if git diff --cached --quiet; then echo "Nothing new"; exit 0; fi
-          git commit -m "Update EuroLeague page $(date -u +%Y-%m-%dT%H:%MZ)"
-          git push
+          publish() {
+            git add docs output
+            if git diff --cached --quiet; then echo "Nothing new"; return 0; fi
+            git commit -q -m "Update EuroLeague page $(date -u +%Y-%m-%dT%H:%MZ)"
+            git pull -q --rebase origin main || true
+            git push -q && echo "Published"
+          }
+          Rscript R/EuroLeague_auto_update_v11.R $FORCE || echo "update failed"
+          publish
+          while [ "$(date -u +%H)" -ge 15 ] && [ "$(date -u +%H)" -lt 23 ]; do
+            sleep 600
+            Rscript R/EuroLeague_auto_update_v11.R || echo "update failed"
+            publish
+          done
