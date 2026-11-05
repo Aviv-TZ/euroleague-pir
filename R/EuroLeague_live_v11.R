@@ -48,7 +48,10 @@ el_get_json <- function(path, season='E2026') {
 el_live_box <- function(game_id, home, away) {
   h <- el_live_helpers
   box <- el_get_json(paste0('games/', game_id, '/stats'))
-  if (is.null(box)) return(NULL)
+  if (is.null(box)) {
+    el_live_debug(game_id, 'v2', list(ok=FALSE, err='no response'))
+    return(el_live_box_legacy(game_id, home, away))
+  }
   if (!is.null(box$data) && is.list(box$data) && is.null(box$local)) box <- box$data
   out <- list()
   for (side in c('local','road')) {
@@ -62,14 +65,60 @@ el_live_box <- function(game_id, home, away) {
       name <- h$str1(h$val(person, c('person')) %||% person)
       secs <- h$number(h$val(stats, c('timePlayed','minutesPlayed','minutes','min')))
       pir <- h$number(h$val(stats, c('valuation','pir','PIR','rating')))
+      pts <- h$number(h$val(stats, c('points','pts','Points')))
       if (!nzchar(name) || !is.finite(secs) || secs <= 0 || !is.finite(pir)) next
       out[[length(out)+1L]] <- data.frame(Game=game_id, Player=name,
         Team=if (side == 'local') home else away, Opponent=if (side == 'local') away else home,
-        Minutes=secs/60, PIR=pir, stringsAsFactors=FALSE)
+        Minutes=secs/60, PIR=pir, Points=if (is.finite(pts)) pts else 0, Side=side,
+        stringsAsFactors=FALSE)
     }
   }
-  if (length(out)) do.call(rbind, out) else NULL
+  res <- if (length(out)) do.call(rbind, out) else NULL
+  el_live_debug(game_id, 'v2', list(ok=TRUE, top=names(box),
+    local=names(h$val(box, c('local','home'))), rows=if (is.null(res)) 0L else nrow(res)))
+  if (is.null(res)) res <- el_live_box_legacy(game_id, home, away)
+  res
 }
+
+# Fallback: the older live box-score service (built for games in progress).
+el_live_box_legacy <- function(game_id, home, away, season='E2026') {
+  h <- el_live_helpers
+  u <- 'https://live.euroleague.net/api/Boxscore'
+  r <- tryCatch(httr::GET(u, query=list(gamecode=game_id, seasoncode=season),
+                          httr::user_agent('EuroLeague-R-Boxscore/2.0'), httr::timeout(20)), error=identity)
+  if (inherits(r, 'error') || httr::status_code(r) != 200) {
+    el_live_debug(game_id, 'legacy', list(ok=FALSE, err=if (inherits(r,'error')) conditionMessage(r) else httr::status_code(r)))
+    return(NULL)
+  }
+  x <- tryCatch(jsonlite::fromJSON(httr::content(r, 'text', encoding='UTF-8'), simplifyVector=FALSE), error=identity)
+  if (inherits(x, 'error') || !is.list(x)) { el_live_debug(game_id, 'legacy', list(ok=FALSE, err='bad json')); return(NULL) }
+  el_parse_legacy_box(x, game_id, home, away)
+}
+el_parse_legacy_box <- function(x, game_id, home, away) {
+  h <- el_live_helpers
+  st <- h$val(x, c('Stats','stats'))
+  out <- list()
+  for (k in seq_along(st)) {
+    side <- if (k == 1) 'local' else 'road'
+    for (pl in h$val(st[[k]], c('PlayersStats','playersStats'))) {
+      name <- h$str1(h$val(pl, c('Player','player')))
+      secs <- h$number(h$val(pl, c('Minutes','minutes')))
+      pir <- h$number(h$val(pl, c('Valuation','valuation')))
+      pts <- h$number(h$val(pl, c('Points','points')))
+      if (!nzchar(name) || toupper(name) %in% c('TEAM','TOTAL') || !is.finite(secs) || secs <= 0 || !is.finite(pir)) next
+      out[[length(out)+1L]] <- data.frame(Game=game_id, Player=trimws(name),
+        Team=if (side == 'local') home else away, Opponent=if (side == 'local') away else home,
+        Minutes=secs/60, PIR=pir, Points=if (is.finite(pts)) pts else 0, Side=side, stringsAsFactors=FALSE)
+    }
+  }
+  res <- if (length(out)) do.call(rbind, out) else NULL
+  el_live_debug(game_id, 'legacy', list(ok=TRUE, top=names(x), teams=length(st),
+    first=if (length(st)) names(h$val(st[[1]], c('PlayersStats'))[[1]]) else NULL,
+    rows=if (is.null(res)) 0L else nrow(res)))
+  res
+}
+.el_dbg <- new.env()
+el_live_debug <- function(game, src, info) assign(paste(game, src), c(list(game=game, src=src), info), envir=.el_dbg)
 `%||%` <- function(a, b) if (is.null(a)) b else a
 
 el_opponent_tables <- function(raw, meta) {
@@ -141,6 +190,14 @@ el_live_update <- function(schedule, site_dir, code_dir, now=Sys.time()) {
     b <- tryCatch(el_live_box(g, x$Home, x$Away), error=function(e) NULL)
     if (!is.null(b)) live_rows <- rbind(live_rows, b)
   }
+  live_score <- list()   # live score = sum of player points per side
+  if (!is.null(live_rows) && nrow(live_rows)) {
+    for (g in unique(live_rows$Game)) {
+      z <- live_rows[live_rows$Game == g,,drop=FALSE]
+      live_score[[g]] <- c(hs=sum(z$Points[z$Side == 'local']), as=sum(z$Points[z$Side == 'road']))
+    }
+    live_rows <- live_rows[, c('Game','Player','Team','Opponent','Minutes','PIR')]
+  }
 
   # ---- actual results + real rank among everyone who played in the round so far ----
   rows <- rbind(if (!is.null(final_rows) && nrow(final_rows)) cbind(final_rows, status='final'),
@@ -169,14 +226,27 @@ el_live_update <- function(schedule, site_dir, code_dir, now=Sys.time()) {
   games <- lapply(seq_len(nrow(rg)), function(i) list(game=rg$Game[i], home=rg$Home[i], away=rg$Away[i],
     utc=if (!is.na(rg$Utc[i])) format(rg$Utc[i], '%Y-%m-%dT%H:%M:%SZ', tz='UTC') else NULL,
     status=if (rg$Played[i]) 'final' else if (rg$Game[i] %in% live_ids) 'live' else 'scheduled',
-    hs=if (is.finite(rg$HomeScore[i])) rg$HomeScore[i] else NULL,
-    as=if (is.finite(rg$AwayScore[i])) rg$AwayScore[i] else NULL))
+    hs=if (!is.null(live_score[[rg$Game[i]]])) live_score[[rg$Game[i]]][['hs']] else
+       if (rg$Played[i] && is.finite(rg$HomeScore[i])) rg$HomeScore[i] else NULL,
+    as=if (!is.null(live_score[[rg$Game[i]]])) live_score[[rg$Game[i]]][['as']] else
+       if (rg$Played[i] && is.finite(rg$AwayScore[i])) rg$AwayScore[i] else NULL))
 
-  out <- list(round=R, finished_ids=as.list(finished),
+  # full schedule from the current round onwards (for browsing future rounds)
+  fut <- s[s$Round >= R,,drop=FALSE]
+  fut <- fut[order(fut$Round, fut$Utc, suppressWarnings(as.numeric(fut$Game))),,drop=FALSE]
+  schedule_out <- lapply(seq_len(nrow(fut)), function(i) list(game=fut$Game[i], round=fut$Round[i],
+    date=fut$Date[i], home=fut$Home[i], away=fut$Away[i],
+    utc=if (!is.na(fut$Utc[i])) format(fut$Utc[i], '%Y-%m-%dT%H:%M:%SZ', tz='UTC') else NULL,
+    status=if (fut$Played[i]) 'final' else if (fut$Game[i] %in% live_ids) 'live' else 'scheduled',
+    hs=if (fut$Played[i] && is.finite(fut$HomeScore[i])) fut$HomeScore[i] else NULL,
+    as=if (fut$Played[i] && is.finite(fut$AwayScore[i])) fut$AwayScore[i] else NULL))
+
+  out <- list(round=R, finished_ids=as.list(finished), schedule=schedule_out,
               round_finished=sum(rg$Played), round_games=nrow(rg),
               n_played=if (is.null(rows)) 0L else nrow(rows),
               games=games, actual=actual, next_game=nxt,
-              opponents=tables$opponents, league=tables$league)
+              opponents=tables$opponents, league=tables$league,
+              debug=unname(as.list(.el_dbg)))
   body <- jsonlite::toJSON(out, auto_unbox=TRUE, null='null', na='null', digits=NA)
   prev_body <- if (length(prev)) { prev$updated_utc <- NULL
     jsonlite::toJSON(prev, auto_unbox=TRUE, null='null', na='null', digits=NA) } else ''
