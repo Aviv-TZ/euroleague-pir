@@ -99,6 +99,17 @@ tbody tr:hover{background:var(--panel2)}
 .cmp td.best{color:var(--good);font-weight:700}
 .note{color:var(--muted);font-size:12.5px;line-height:1.6}
 .warn{background:#ff6b6b18;border:1px solid #ff6b6b55;border-radius:10px;padding:10px 12px;margin-top:12px}
+/* opponents */
+.opp-t th{cursor:pointer;user-select:none}
+.opp-t th.grp{cursor:default;text-align:center;border-bottom:none;color:var(--text);font-size:13.5px}
+.opp-t th.sorted{color:var(--accent)}
+.opp-t th.sorted:after{content:attr(data-dir);margin-inline-start:4px}
+.opp-t td.num{text-align:center}
+.opp-t td.sep,.opp-t th.sep{border-inline-start:2px solid var(--line)}
+.opp-t td.d{font-size:12px}
+.up{color:var(--good)} .down{color:var(--bad)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;align-items:center;font-size:12.5px;color:var(--muted);margin-top:8px}
+.legend .sw{display:inline-block;width:46px;height:12px;border-radius:3px;background:linear-gradient(270deg,#ff6b6b99,transparent,#2ec47a99);vertical-align:middle;margin:0 6px}
 footer{color:var(--muted);font-size:12px;padding:10px 20px 30px;text-align:center}
 .empty{color:var(--muted);padding:30px;text-align:center}
 </style>
@@ -111,6 +122,7 @@ footer{color:var(--muted);font-size:12px;padding:10px 20px 30px;text-align:cente
     <button data-tab="top" class="on">טופ 15</button>
     <button data-tab="fixtures">לוח המחזור הקרוב</button>
     <button data-tab="search">חיפוש והשוואת שחקנים</button>
+    <button data-tab="opp">יריבות לפי עמדה</button>
   </nav>
 </div></header>
 
@@ -121,6 +133,10 @@ footer{color:var(--muted);font-size:12px;padding:10px 20px 30px;text-align:cente
 
   <section class="tab" id="tab-fixtures">
     <div id="fixtures"></div>
+  </section>
+
+  <section class="tab" id="tab-opp">
+    <div id="oppView"></div>
   </section>
 
   <section class="tab" id="tab-search">
@@ -216,6 +232,45 @@ function renderFixtures(){
         <div class="mid">${g.utc?`<b>${timeFmt.format(new Date(g.utc))}</b>`:''}${g.played?'שוחק':'בית · חוץ'}</div>
         ${team(g.away)}</div>`).join('')}</div></div>`).join('');
   $('#fixtures').querySelectorAll('.pl').forEach(el=>{el.style.cursor='pointer'; el.onclick=()=>openPlayer(+el.dataset.id);});
+}
+
+// ---------- E. Opponents by position ----------
+const POS = [['Guard','גארדים'],['Forward','פורוורדים'],['Center','סנטרים']];
+let oppSort = {key:'Guard.season', dir:-1};
+function heat(v, base){
+  if(v==null||!base) return '';
+  const r = Math.max(-1, Math.min(1, (v/base-1)/0.30));
+  const c = r>=0 ? '46,196,122' : '255,107,107';
+  return `background:rgba(${c},${(Math.abs(r)*0.55).toFixed(3)})`;
+}
+function renderOpp(){
+  const O = D.opponents||[], L = D.league||{};
+  if(!O.length){ $('#oppView').innerHTML='<div class="empty">אין נתונים</div>'; return; }
+  const get = (o,key)=>{ if(key==='team') return o.team;
+    const [p,w] = key.split('.'); const s=o.season[p], l=o.last5[p];
+    return w==='season'?s : w==='last5'?l : (s!=null&&l!=null? l-s : null); };
+  const rows = [...O].sort((a,b)=>{ const x=get(a,oppSort.key), y=get(b,oppSort.key);
+    if(x==null) return 1; if(y==null) return -1;
+    return (typeof x==='string' ? x.localeCompare(y) : x-y)*oppSort.dir; });
+  const th = (key,label,cls='')=>`<th class="num ${cls} ${oppSort.key===key?'sorted':''}" data-k="${key}" data-dir="${oppSort.dir>0?'▲':'▼'}">${label}</th>`;
+  $('#oppView').innerHTML = `<div class="card">
+    <h2>PIR שהיריבה מאפשרת לפי עמדה</h2>
+    <div class="hint">ממוצע PIR (משוקלל לפי דקות) של שחקני היריבות בכל עמדה מול כל קבוצה: כל העונה ובחמשת המשחקים האחרונים של הקבוצה. ערך גבוה = הגנה חלשה מול העמדה (טוב לשחקן שפוגש אותה). לחיצה על כותרת ממיינת.</div>
+    <div class="legend">ממוצע ליגה: ${POS.map(([p,h])=>`${h} <b>${f(L[p],2)}</b>`).join(' · ')}
+      <span>קשה<span class="sw"></span>נוח (ביחס לממוצע הליגה בעמדה)</span></div>
+    <div class="scroll" style="margin-top:12px"><table class="opp-t">
+      <thead><tr><th rowspan="2" data-k="team" class="${oppSort.key==='team'?'sorted':''}" data-dir="${oppSort.dir>0?'▲':'▼'}">קבוצה</th>
+        ${POS.map(([p,h])=>`<th colspan="3" class="grp sep">${h}</th>`).join('')}
+        <th rowspan="2" class="sep" style="cursor:default">משחק קרוב</th></tr>
+      <tr>${POS.map(([p])=>th(p+'.season','עונה','sep')+th(p+'.last5','5 אחרונים')+th(p+'.diff','שינוי')).join('')}</tr></thead>
+      <tbody>${rows.map(o=>`<tr><td><b>${esc(o.team)}</b></td>${POS.map(([p])=>{
+          const s=o.season[p], l=o.last5[p], d=(s!=null&&l!=null)?l-s:null;
+          return `<td class="num sep" style="${heat(s,L[p])}">${f(s,2)}</td><td class="num" style="${heat(l,L[p])}">${f(l,2)}</td>
+                  <td class="num d ${d>0?'up':d<0?'down':''}">${d==null?'–':(d>0?'▲':'▼')+f(Math.abs(d),2)}</td>`;}).join('')}
+        <td class="sep note">${o.next_vs?`${o.next_venue==='Home'?'נגד':'@'} ${esc(o.next_vs)}`:'–'}</td></tr>`).join('')}</tbody>
+    </table></div></div>`;
+  $('#oppView').querySelectorAll('th[data-k]').forEach(t=>t.onclick=()=>{
+    const k=t.dataset.k; oppSort = {key:k, dir: oppSort.key===k ? -oppSort.dir : (k==='team'?1:-1)}; renderOpp(); });
 }
 
 // ---------- Autocomplete ----------
@@ -395,7 +450,7 @@ function readHash(){
     const ids = (h.split('/')[1]||'').split(',').map(Number).filter(id=>byId.has(id)).slice(0,4);
     if(ids.length){ current=ids[0]; compare=ids; }
     showTab('search');
-  } else if(['top','fixtures'].includes(h)) showTab(h);
+  } else if(['top','fixtures','opp'].includes(h)) showTab(h);
 }
 
 // ---------- footer ----------
@@ -405,7 +460,7 @@ $('#foot').innerHTML = `מודלים שאומנו על 2024/25–2025/26 (משק
   ` · בקטסט על מחזורי 2026/27 (מחוץ למדגם)`;
 
 makeSearch($('#mainSearch'),'חפש שחקן… (שם או קבוצה)', p=>openPlayer(p.id), ()=>new Set());
-renderTops(); renderFixtures(); readHash(); renderPlayer();
+renderTops(); renderFixtures(); renderOpp(); readHash(); renderPlayer();
 })();
 </script>
 </body>

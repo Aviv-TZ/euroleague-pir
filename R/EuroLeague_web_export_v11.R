@@ -8,7 +8,7 @@
 # Sheets are read by POSITION (not by Hebrew name) so this works in any R locale.
 # Positions follow the `sheets` vector in build_euroleague_2026_27().
 
-EL_SHEET <- list(all_candidates=8, player_avgs=10, next_fixtures=11, backtest=15)
+EL_SHEET <- list(opp_season=1, opp_last5=2, all_candidates=8, player_avgs=10, next_fixtures=11, backtest=15)
 
 el_web_format_name <- function(x) {
   # "VEZENKOV, SASHA" -> "Sasha Vezenkov"
@@ -173,6 +173,31 @@ export_euroleague_web <- function(output_dir, site_dir, template_file,
     }
   }
 
+  # ---- opponent PIR allowed by position (season + last 5 games) -------------
+  opp_s <- read_sheet(EL_SHEET$opp_season)
+  opp_r <- read_sheet(EL_SHEET$opp_last5)
+  pos3 <- c('Guard','Forward','Center')
+  opponents <- list(); league <- list()
+  if (nrow(opp_s)) {
+    names(opp_s)[1] <- 'Team'; if (nrow(opp_r)) names(opp_r)[1] <- 'Team'
+    opponents <- lapply(seq_len(nrow(opp_s)), function(i) {
+      t <- opp_s$Team[i]; r <- if (nrow(opp_r)) opp_r[opp_r$Team == t,,drop=FALSE] else opp_r
+      fx <- fx_by_team[[t]]
+      list(team=t,
+           season=setNames(lapply(pos3, function(p) num(opp_s[[p]][i], 3)), pos3),
+           last5=setNames(lapply(pos3, function(p) if (nrow(r)) num(r[[p]][1], 3) else NULL), pos3),
+           next_vs=if (!is.null(fx)) fx$Opponent[1] else NULL,
+           next_venue=if (!is.null(fx)) fx$Venue[1] else NULL)
+    })
+  }
+  raw_csv <- file.path(output_dir, 'EuroLeague_2026-27_players.csv')
+  if (file.exists(raw_csv)) {
+    raw <- utils::read.csv(raw_csv, fileEncoding='UTF-8', stringsAsFactors=FALSE)
+    league <- setNames(lapply(pos3, function(p) {
+      d <- raw[raw$Position == p,,drop=FALSE]
+      if (nrow(d)) num(sum(d$PIR_x_Minutes)/sum(d$Minutes), 3) else NULL }), pos3)
+  }
+
   now <- Sys.time()
   meta <- c(list(
     generated_utc=format(now, '%Y-%m-%dT%H:%M:%SZ', tz='UTC'),
@@ -181,7 +206,8 @@ export_euroleague_web <- function(output_dir, site_dir, template_file,
     calib=lapply(calib, function(c) lapply(c, function(v) if (is.finite(v)) round(v,4) else NULL)),
     backtest=backtest), extra_meta)
 
-  data <- list(meta=meta, fixtures=fixtures, players=players)
+  data <- list(meta=meta, fixtures=fixtures, players=players,
+               opponents=opponents, league=league)
   json <- jsonlite::toJSON(data, auto_unbox=TRUE, null='null', na='null', digits=NA, pretty=FALSE)
   writeLines(json, file.path(site_dir, 'data.json'), useBytes=TRUE)
 
