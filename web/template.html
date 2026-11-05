@@ -137,6 +137,13 @@ tbody tr:hover{background:var(--panel2)}
 .pcw small{display:block;margin-top:2px}
 .ph{width:64px;height:64px;border-radius:50%;border:3px solid;background:var(--panel2) center 15%/cover no-repeat;
     display:flex;align-items:center;justify-content:center;font-weight:700;font-size:20px;color:var(--muted)}
+/* fixtures navigation + leaders */
+.rnav{display:flex;align-items:center;justify-content:space-between;gap:12px;text-align:center}
+.rnav h2{justify-content:center}
+.game.played{opacity:1} .game.played .t{opacity:.9}
+.game.is-live{border-color:#ff6b6b88}
+.game .t small.lead-final{color:var(--good)}
+.game .t small.lead-live{color:#ff8b8b}
 footer{color:var(--muted);font-size:12px;padding:10px 20px 30px;text-align:center}
 .empty{color:var(--muted);padding:30px;text-align:center}
 </style>
@@ -200,11 +207,13 @@ const timeFmt = new Intl.DateTimeFormat('he-IL',{hour:'2-digit',minute:'2-digit'
 const dateOnly = s => s ? new Date(s+'T12:00:00Z') : null;
 const fmtShortDate = s => s ? shortDay.format(dateOnly(s)) : '';
 const gen = new Date(M.generated_utc);
-$('#subline').textContent =
-  `עודכן: ${dayFmt.format(gen)} ${timeFmt.format(gen)}` +
-  (M.last_complete_round ? ` · אחרי מחזור ${M.last_complete_round}` : '') +
-  (M.next_round ? ` · תחזית למחזור ${M.next_round}` : '') +
-  ` · ${nRanked} שחקנים מדורגים`;
+function updateSubline(){
+  const L = LIVE.data, lu = L && L.updated_utc ? new Date(L.updated_utc) : null;
+  $('#subline').innerHTML =
+    (M.next_round ? `תחזית למחזור ${M.next_round}` : 'תחזית') +
+    ` (חושבה ${dayFmt.format(gen)} ${timeFmt.format(gen)}) · ${nRanked} שחקנים מדורגים` +
+    (lu ? ` · <b>תוצאות ולייב עודכנו: ${dayFmt.format(lu)} ${timeFmt.format(lu)}</b>` : '');
+}
 
 // ---------- tabs ----------
 function showTab(t){
@@ -219,7 +228,7 @@ function actualTag(p){ const a=getActual(p); if(!a) return '';
 const oppText = p => p.opp ? `${p.venue==='Home'?'נגד':'@'} ${p.opp}` : 'אין משחק במחזור';
 
 // ---------- Live / in-round results (live.json, refreshed by the server every 10-60 min) ----------
-const LIVE = {data:null, map:new Map(), direct:new Map(), round:M.next_round, nPlayed:0, nFinal:0, roundDone:false};
+const LIVE = {data:null, rows:[], map:new Map(), direct:new Map(), round:M.next_round, nPlayed:0, nFinal:0, roundDone:false};
 const akey = (raw,team)=>raw+'||'+team;
 function rebuildLive(){
   const L = LIVE.data; LIVE.map = new Map();
@@ -238,6 +247,7 @@ function rebuildLive(){
   const fin = rows.filter(a=>a.status==='final');
   fin.forEach(a=>{ a.rank = 1+fin.filter(b=>b.pir>a.pir).length; });
   rows.forEach(a=>LIVE.map.set(akey(a.raw,a.team),a));
+  LIVE.rows = rows;
 }
 const getActual = p => LIVE.map.get(akey(p.raw,p.team)) || null;
 const teamNext = t => (LIVE.data && LIVE.data.next_game && LIVE.data.next_game[t]) || null;
@@ -317,35 +327,70 @@ function renderTops(){
   $('#tops').querySelectorAll('.pl').forEach(td=>td.onclick=()=>openPlayer(+td.dataset.id));
 }
 
-// ---------- B. Fixtures ----------
-function gameStatus(g){ const lg=liveGame(g.game); return lg ? lg.status : (g.played?'final':'scheduled'); }
+// ---------- B. Fixtures (current + future rounds) ----------
+let fxRound = null;
+const fmtRaw = raw => { const p = String(raw).split(','); const cap = x=>x.toLowerCase().replace(/(^|[\s\-'.])([a-z])/g,(m,a,b)=>a+b.toUpperCase()).trim();
+  return p.length>1 ? cap(p.slice(1).join(' '))+' '+cap(p[0]) : cap(raw); };
+function gameInfo(g){ return liveGame(g.game) || g; }
+function gameStatus(g){ const i=gameInfo(g); return i.status || (g.played?'final':'scheduled'); }
 function gameMid(g){
-  const lg = liveGame(g.game), st = gameStatus(g);
-  const sc = lg && lg.hs!=null && lg.as!=null ? `<b>${lg.as} – ${lg.hs}</b>` : '';   // LTR: away (left) – home (right)
-  if(st==='final') return (sc||'')+'סיום';
-  if(st==='live') return (sc||'')+'<span class="badge live"><i></i>LIVE</span>';
+  const i = gameInfo(g), st = gameStatus(g);
+  const sc = i.hs!=null && i.as!=null ? `<b>${i.as} – ${i.hs}</b>` : '';   // LTR: away (left) – home (right)
+  if(st==='final') return sc+'סיום';
+  if(st==='live') return sc+'<span class="badge live"><i></i>LIVE</span>';
   return (g.utc?`<b>${timeFmt.format(new Date(g.utc))}</b>`:'')+'בית · חוץ';
 }
+function leaders(game, team){   // actual top PIR in this game for this team (ties: all of them)
+  const rows = (LIVE.rows||[]).filter(a=>String(a.game)===String(game) && a.team===team);
+  if(!rows.length) return null;
+  const top = Math.max(...rows.map(a=>a.pir));
+  return {pir:top, live:rows[0].status==='live', ps:rows.filter(a=>a.pir===top)};
+}
+function roundGames(r){
+  const sch = LIVE.data && LIVE.data.schedule;
+  if(sch && sch.length) return sch.filter(g=>g.round===r);
+  return r===M.next_round ? (D.fixtures||[]) : [];
+}
 function renderFixtures(){
-  const fx = D.fixtures||[];
-  if(!fx.length){ $('#fixtures').innerHTML='<div class="empty">אין משחקים קרובים בלוח</div>'; return; }
+  const sch = (LIVE.data && LIVE.data.schedule) || [];
+  const rounds = [...new Set([M.next_round, ...sch.map(g=>g.round)].filter(x=>x!=null))].sort((a,b)=>a-b);
+  if(fxRound==null || !rounds.includes(fxRound)) fxRound = M.next_round ?? rounds[0];
+  const fx = roundGames(fxRound);
+  const isPred = fxRound===M.next_round;
   const teamTop = {};
-  P.filter(p=>p.ranked).forEach(p=>{ if(!teamTop[p.team]||p.m[0].rank<teamTop[p.team].m[0].rank) teamTop[p.team]=p; });
+  if(isPred) P.filter(p=>p.ranked).forEach(p=>{ if(!teamTop[p.team]||p.m[0].rank<teamTop[p.team].m[0].rank) teamTop[p.team]=p; });
+  const byRaw = new Map(P.map(p=>[akey(p.raw,p.team),p]));
+  const team = (g,t)=>{
+    const st = gameStatus(g), ld = (st==='final'||st==='live') ? leaders(g.game,t) : null;
+    let sub = '';
+    if(ld){
+      const names = ld.ps.map(a=>{ const p=byRaw.get(akey(a.raw,a.team));
+        return p ? `<span class="pl" data-id="${p.id}">${esc(p.name)}</span>` : esc(fmtRaw(a.raw)); }).join(', ');
+      sub = `<small class="${ld.live?'lead-live':'lead-final'}">${ld.live?'מוביל עכשיו':'מוביל בפועל'}: ${names} (${f(ld.pir,0)})</small>`;
+    } else if(st==='scheduled' && teamTop[t]){ const tp=teamTop[t];
+      sub = `<small>מוביל צפוי: <span class="pl" data-id="${tp.id}">${esc(tp.name)}</span> (${f(tp.m[0].score,1)})</small>`; }
+    return `<div class="t">${esc(t)}${sub}</div>`;
+  };
   const groups = {};
   fx.forEach(g=>{
     const d = g.utc ? new Date(g.utc) : dateOnly(g.date);
     const key = d ? new Intl.DateTimeFormat('en-CA',{timeZone:TZ}).format(d) : g.date;
-    (groups[key] = groups[key]||[]).push({...g,_d:d});
+    (groups[key] = groups[key]||[]).push(g);
   });
-  const team = (t)=>{ const tp=teamTop[t];
-    return `<div class="t">${esc(t)}${tp?`<small>מוביל: <span class="pl" data-id="${tp.id}">${esc(tp.name)}</span> (${f(tp.m[0].score,1)})</small>`:''}</div>`; };
+  const i = rounds.indexOf(fxRound);
   $('#fixtures').innerHTML =
-    `<div class="card" style="margin-bottom:16px"><h2>מחזור ${M.next_round??''}</h2><div class="hint">שעות לפי שעון ישראל · "מוביל" = השחקן עם הסקור הגבוה בקבוצה לפי מודל 1</div></div>` +
-    Object.keys(groups).sort().map(k=>`<div class="day"><h3>${dayFmt.format(dateOnly(k))}</h3><div class="games">${
-      groups[k].map(g=>`<div class="game ${gameStatus(g)==='final'?'played':''}">
-        ${team(g.home)}
+    `<div class="card rnav" style="margin-bottom:16px">
+       <button class="btn ghost" id="fxPrev" ${i<=0?'disabled':''}>→ מחזור קודם</button>
+       <div><h2>מחזור ${fxRound??''}${isPred?' <span class="tag">תחזית פעילה</span>':''}</h2>
+       <div class="hint">שעות לפי שעון ישראל · ${isPred?'"מוביל צפוי" = הסקור הגבוה בקבוצה (מודל 1) · ':''}"מוביל בפועל" = ה-PIR הגבוה בקבוצה במשחק</div></div>
+       <button class="btn ghost" id="fxNext" ${i<0||i>=rounds.length-1?'disabled':''}>מחזור הבא ←</button></div>` +
+    (fx.length ? Object.keys(groups).sort().map(k=>`<div class="day"><h3>${dayFmt.format(dateOnly(k))}</h3><div class="games">${
+      groups[k].map(g=>`<div class="game ${gameStatus(g)==='final'?'played':''} ${gameStatus(g)==='live'?'is-live':''}">
+        ${team(g,g.home)}
         <div class="mid">${gameMid(g)}</div>
-        ${team(g.away)}</div>`).join('')}</div></div>`).join('');
+        ${team(g,g.away)}</div>`).join('')}</div></div>`).join('') : '<div class="empty">אין משחקים בלוח למחזור זה</div>');
+  $('#fxPrev').onclick = ()=>{ fxRound = rounds[i-1]; renderFixtures(); };
+  $('#fxNext').onclick = ()=>{ fxRound = rounds[i+1]; renderFixtures(); };
   $('#fixtures').querySelectorAll('.pl').forEach(el=>{el.style.cursor='pointer'; el.onclick=()=>openPlayer(+el.dataset.id);});
 }
 
@@ -672,11 +717,11 @@ $('#foot').innerHTML = `מודלים שאומנו על 2024/25–2025/26 (משק
 
 makeSearch($('#mainSearch'),'חפש שחקן… (שם או קבוצה)', p=>openPlayer(p.id), ()=>new Set());
 function renderAll(){
-  renderTops(); renderFixtures(); renderOpp();
+  updateSubline(); renderTops(); renderFixtures(); renderOpp();
   const ae = document.activeElement;   // do not rebuild the search area while the user is typing
   if(!(ae && ae.tagName==='INPUT' && $('#tab-search').contains(ae))) renderPlayer();
 }
-renderTops(); renderFixtures(); renderOpp(); readHash(); renderPlayer();
+updateSubline(); renderTops(); renderFixtures(); renderOpp(); readHash(); renderPlayer();
 loadLive().then(pollDirect);
 window.addEventListener('hashchange', ()=>{ readHash(); renderPlayer(); });
 })();
