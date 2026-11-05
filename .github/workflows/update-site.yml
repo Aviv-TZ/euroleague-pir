@@ -56,6 +56,7 @@ jobs:
           publish
           while [ "$(date -u +%H)" -ge 15 ] && [ "$(date -u +%H)" -lt 23 ]; do
             sleep 600
+            git pull -q --rebase origin main || true   # pick up code changes pushed meanwhile
             Rscript R/EuroLeague_auto_update_v11.R || echo "update failed"
             publish
           done
