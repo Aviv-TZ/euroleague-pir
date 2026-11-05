@@ -36,4 +36,4 @@ Frozen out-of-sample evaluation on E2026 rounds: 6, 7, 8, 9
 Distinct teams in player data: 20; in next fixtures: 18
 Teams with NO matching next fixture: Real Madrid | Panathinaikos AKTOR Athens
 Upcoming games: 9; next team fixtures: 18; eligible recommendations: 202; top picks: 10
-Created output/EuroLeague_2026-27_PIR_real_data.xlsx with 2061 rows and 2 Top 8 rankings; position counts: Guard 847, Forward 798, Center 416
+Created /home/runner/work/euroleague-pir/euroleague-pir/output/EuroLeague_2026-27_PIR_real_data.xlsx with 2061 rows and 2 Top 8 rankings; position counts: Guard 847, Forward 798, Center 416
