@@ -2,7 +2,8 @@ name: EuroLeague round update
 
 on:
   schedule:
-    - cron: '17 * * * *'      # every hour; the R script decides if a round ended 12h ago
+    - cron: '17 * * * *'           # every hour: round-end check + in-round results
+    - cron: '*/10 16-22 * * *'     # every 10 min during game hours (UTC) for live box scores
   workflow_dispatch:
     inputs:
       force:
@@ -20,7 +21,7 @@ concurrency:
 jobs:
   update:
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
 
