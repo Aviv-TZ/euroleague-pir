@@ -101,13 +101,17 @@ tbody tr:hover{background:var(--panel2)}
 .warn{background:#ff6b6b18;border:1px solid #ff6b6b55;border-radius:10px;padding:10px 12px;margin-top:12px}
 /* opponents */
 .opp-t th{cursor:pointer;user-select:none}
-.opp-t th.grp{cursor:default;text-align:center;border-bottom:none;color:var(--text);font-size:13.5px}
 .opp-t th.sorted{color:var(--accent)}
 .opp-t th.sorted:after{content:attr(data-dir);margin-inline-start:4px}
-.opp-t td.num{text-align:center}
-.opp-t td.sep,.opp-t th.sep{border-inline-start:2px solid var(--line)}
-.opp-t td.d{font-size:12px}
-.up{color:var(--good)} .down{color:var(--bad)}
+.opp-t td.num,.opp-t th.num{text-align:center}
+.opp-t td.cell{cursor:pointer;font-weight:600}
+.opp-t td.cell:hover,.opp-t td.cell.on{outline:2px solid var(--accent);outline-offset:-2px}
+.seg{display:inline-flex;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:3px;gap:2px}
+.seg button{background:none;border:none;color:var(--muted);font:inherit;font-size:13px;font-weight:600;padding:6px 14px;border-radius:8px;cursor:pointer}
+.seg button.on{background:var(--accent);color:#1a0f00}
+.opp-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+.matchup{margin-top:16px;border-top:3px solid var(--accent)}
+.matchup .x{float:left;background:#ffffff14;border:none;color:var(--muted);width:26px;height:26px;border-radius:50%;cursor:pointer}
 .legend{display:flex;gap:14px;flex-wrap:wrap;align-items:center;font-size:12.5px;color:var(--muted);margin-top:8px}
 .legend .sw{display:inline-block;width:46px;height:12px;border-radius:3px;background:linear-gradient(270deg,#ff6b6b99,transparent,#2ec47a99);vertical-align:middle;margin:0 6px}
 footer{color:var(--muted);font-size:12px;padding:10px 20px 30px;text-align:center}
@@ -235,42 +239,69 @@ function renderFixtures(){
 }
 
 // ---------- E. Opponents by position ----------
-const POS = [['Guard','גארדים'],['Forward','פורוורדים'],['Center','סנטרים']];
-let oppSort = {key:'Guard.season', dir:-1};
+const POS = [['Guard','גארדים','גארד'],['Forward','פורוורדים','פורוורד'],['Center','סנטרים','סנטר']];
+let oppView = 'season', oppSort = {key:'Guard', dir:-1}, oppSel = null;  // oppSel = {team,pos}
 function heat(v, base){
   if(v==null||!base) return '';
   const r = Math.max(-1, Math.min(1, (v/base-1)/0.30));
   const c = r>=0 ? '46,196,122' : '255,107,107';
   return `background:rgba(${c},${(Math.abs(r)*0.55).toFixed(3)})`;
 }
+function matchupPanel(){
+  if(!oppSel) return '';
+  const o = (D.opponents||[]).find(x=>x.team===oppSel.team); if(!o) return '';
+  const [pos,posPl] = POS.find(x=>x[0]===oppSel.pos);
+  const val = o[oppView][pos];
+  let body;
+  if(!o.next_vs) body = '<div class="empty">לקבוצה אין משחק במחזור הקרוב</div>';
+  else {
+    const list = P.filter(p=>p.team===o.next_vs && p.pos===pos).sort((a,b)=>(b.min||0)-(a.min||0));
+    body = list.length ? `<div class="scroll"><table>
+      <thead><tr><th>שחקן</th><th class="num">משחקים</th><th class="num">דקות ממוצע</th><th class="num">PIR ממוצע עונה</th></tr></thead>
+      <tbody>${list.map(p=>`<tr><td class="pl" data-id="${p.id}"><b>${esc(p.name)}</b><small>${esc(p.raw)}</small></td>
+        <td class="num">${p.games}</td><td class="num">${f(p.min,1)}</td><td class="num score">${f(p.avg,2)}</td></tr>`).join('')}</tbody></table></div>`
+      : '<div class="empty">אין שחקנים בעמדה זו</div>';
+  }
+  return `<div class="card matchup"><button class="x" id="mxClose" title="סגור">×</button>
+    <h2>${o.next_vs?`ה${posPl} של ${esc(o.next_vs)} מול ${esc(o.team)}`:esc(o.team)}</h2>
+    <div class="hint">${esc(o.team)} מאפשרת ל${posPl} ${f(val,2)} PIR בממוצע (${oppView==='season'?'עונה':'5 משחקים אחרונים'}; ממוצע ליגה ${f((D.league||{})[pos],2)})${o.next_vs?` · ${o.next_venue==='Home'?'משחק בית':'משחק חוץ'} של ${esc(o.team)}`:''} · ממוין לפי דקות</div>
+    ${body}</div>`;
+}
 function renderOpp(){
   const O = D.opponents||[], L = D.league||{};
   if(!O.length){ $('#oppView').innerHTML='<div class="empty">אין נתונים</div>'; return; }
-  const get = (o,key)=>{ if(key==='team') return o.team;
-    const [p,w] = key.split('.'); const s=o.season[p], l=o.last5[p];
-    return w==='season'?s : w==='last5'?l : (s!=null&&l!=null? l-s : null); };
+  const get = (o,k)=> k==='team' ? o.team : o[oppView][k];
   const rows = [...O].sort((a,b)=>{ const x=get(a,oppSort.key), y=get(b,oppSort.key);
     if(x==null) return 1; if(y==null) return -1;
     return (typeof x==='string' ? x.localeCompare(y) : x-y)*oppSort.dir; });
-  const th = (key,label,cls='')=>`<th class="num ${cls} ${oppSort.key===key?'sorted':''}" data-k="${key}" data-dir="${oppSort.dir>0?'▲':'▼'}">${label}</th>`;
+  const dir = oppSort.dir>0?'▲':'▼';
   $('#oppView').innerHTML = `<div class="card">
-    <h2>PIR שהיריבה מאפשרת לפי עמדה</h2>
-    <div class="hint">ממוצע PIR (משוקלל לפי דקות) של שחקני היריבות בכל עמדה מול כל קבוצה: כל העונה ובחמשת המשחקים האחרונים של הקבוצה. ערך גבוה = הגנה חלשה מול העמדה (טוב לשחקן שפוגש אותה). לחיצה על כותרת ממיינת.</div>
+    <div class="opp-top"><div>
+      <h2>PIR שהיריבה מאפשרת לפי עמדה</h2>
+      <div class="hint">ממוצע PIR (משוקלל לפי דקות) של שחקני היריבות בכל עמדה מול כל קבוצה. ערך גבוה = הגנה חלשה מול העמדה. לחיצה על כותרת ממיינת · <b>לחיצה על ערך מציגה את השחקנים מהיריבה הקרובה בעמדה הזו</b></div></div>
+      <div class="seg"><button data-v="season" class="${oppView==='season'?'on':''}">עונה</button><button data-v="last5" class="${oppView==='last5'?'on':''}">5 אחרונים</button></div></div>
     <div class="legend">ממוצע ליגה: ${POS.map(([p,h])=>`${h} <b>${f(L[p],2)}</b>`).join(' · ')}
       <span>קשה<span class="sw"></span>נוח (ביחס לממוצע הליגה בעמדה)</span></div>
     <div class="scroll" style="margin-top:12px"><table class="opp-t">
-      <thead><tr><th rowspan="2" data-k="team" class="${oppSort.key==='team'?'sorted':''}" data-dir="${oppSort.dir>0?'▲':'▼'}">קבוצה</th>
-        ${POS.map(([p,h])=>`<th colspan="3" class="grp sep">${h}</th>`).join('')}
-        <th rowspan="2" class="sep" style="cursor:default">משחק קרוב</th></tr>
-      <tr>${POS.map(([p])=>th(p+'.season','עונה','sep')+th(p+'.last5','5 אחרונים')+th(p+'.diff','שינוי')).join('')}</tr></thead>
-      <tbody>${rows.map(o=>`<tr><td><b>${esc(o.team)}</b></td>${POS.map(([p])=>{
-          const s=o.season[p], l=o.last5[p], d=(s!=null&&l!=null)?l-s:null;
-          return `<td class="num sep" style="${heat(s,L[p])}">${f(s,2)}</td><td class="num" style="${heat(l,L[p])}">${f(l,2)}</td>
-                  <td class="num d ${d>0?'up':d<0?'down':''}">${d==null?'–':(d>0?'▲':'▼')+f(Math.abs(d),2)}</td>`;}).join('')}
-        <td class="sep note">${o.next_vs?`${o.next_venue==='Home'?'נגד':'@'} ${esc(o.next_vs)}`:'–'}</td></tr>`).join('')}</tbody>
-    </table></div></div>`;
-  $('#oppView').querySelectorAll('th[data-k]').forEach(t=>t.onclick=()=>{
+      <thead><tr><th data-k="team" class="${oppSort.key==='team'?'sorted':''}" data-dir="${dir}">קבוצה</th>
+        ${POS.map(([p,h])=>`<th class="num ${oppSort.key===p?'sorted':''}" data-k="${p}" data-dir="${dir}">${h}</th>`).join('')}
+        <th style="cursor:default">משחק קרוב</th></tr></thead>
+      <tbody>${rows.map(o=>`<tr><td><b>${esc(o.team)}</b></td>${POS.map(([p])=>{const v=o[oppView][p];
+          const on = oppSel&&oppSel.team===o.team&&oppSel.pos===p;
+          return `<td class="num cell ${on?'on':''}" data-t="${esc(o.team)}" data-p="${p}" style="${heat(v,L[p])}">${f(v,2)}</td>`;}).join('')}
+        <td class="note">${o.next_vs?`${o.next_venue==='Home'?'נגד':'@'} ${esc(o.next_vs)}`:'–'}</td></tr>`).join('')}</tbody>
+    </table></div></div>
+    <div id="mxPanel">${matchupPanel()}</div>`;
+  const v = $('#oppView');
+  v.querySelectorAll('.seg button').forEach(b=>b.onclick=()=>{ oppView=b.dataset.v; renderOpp(); });
+  v.querySelectorAll('th[data-k]').forEach(t=>t.onclick=()=>{
     const k=t.dataset.k; oppSort = {key:k, dir: oppSort.key===k ? -oppSort.dir : (k==='team'?1:-1)}; renderOpp(); });
+  v.querySelectorAll('td.cell').forEach(td=>td.onclick=()=>{
+    const same = oppSel&&oppSel.team===td.dataset.t&&oppSel.pos===td.dataset.p;
+    oppSel = same ? null : {team:td.dataset.t, pos:td.dataset.p}; renderOpp();
+    if(oppSel) $('#mxPanel').scrollIntoView({behavior:'smooth',block:'nearest'}); });
+  const c = $('#mxClose'); if(c) c.onclick=()=>{ oppSel=null; renderOpp(); };
+  v.querySelectorAll('#mxPanel .pl').forEach(el=>el.onclick=()=>openPlayer(+el.dataset.id));
 }
 
 // ---------- Autocomplete ----------
