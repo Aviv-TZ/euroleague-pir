@@ -1,11 +1,13 @@
 # EuroLeague v11 - AUTOMATIC ROUND UPDATE (no training)
 #
-# Run this every hour (GitHub Actions / Windows Task Scheduler). It:
+# Run this every hour, and every 10 minutes during game hours. It:
 #   1. downloads only the 2026/27 schedule (one light request);
 #   2. finds the latest round whose games are ALL played;
 #   3. if that round ended >= 12 hours ago and was not published yet,
 #      runs run_euroleague_next_round() (prediction only, uses the saved .rds)
-#      and rebuilds the web page.
+#      and rebuilds the web page;
+#   4. on EVERY run updates live.json (finished games of the current round, games in
+#      progress, opponent-by-position table, each team's next game) - see EuroLeague_live_v11.R.
 #
 #   Rscript EuroLeague_auto_update_v11.R            # normal (only when due)
 #   Rscript EuroLeague_auto_update_v11.R --force    # run now regardless
@@ -78,11 +80,18 @@ el_parse_schedule <- function(x) {
     d <- regmatches(raw_date, regexpr('[0-9]{4}-[0-9]{2}-[0-9]{2}', raw_date))
     if (is.na(utc) && length(d))   # date only: assume a late (22:00 Israel) game
       utc <- as.POSIXct(paste(d, '22:00:00'), tz='Asia/Jerusalem')
+    side_score <- function(keys, flat) {
+      z <- number(val(g, flat)); if (is.finite(z)) return(z)
+      number(val(val(g, keys), c('score','points')))
+    }
     data.frame(Game=str1(val(g, c('gameCode','gamecode','game_code'))),
                Round=number(val(g, c('round','roundNumber'))),
                Date=if (length(d)) d else '', Utc=utc,
                Home=club(g, 'local'), Away=club(g, 'road'),
-               Played=played(g), stringsAsFactors=FALSE)
+               Played=played(g),
+               HomeScore=side_score(c('local','home'), c('localScore','homeScore')),
+               AwayScore=side_score(c('road','away'), c('roadScore','awayScore')),
+               stringsAsFactors=FALSE)
   }))
 }
 
@@ -126,7 +135,10 @@ el_auto_update <- function(force=FALSE) {
   schedule <- el_schedule()
   st <- el_round_status(schedule, last, delay, game_hours)
   message(st$reason)
-  if (!st$due && !force) return(invisible(FALSE))
+  source(file.path(code_dir, 'EuroLeague_live_v11.R'))
+  run_live <- function() tryCatch(el_live_update(schedule, site_dir, code_dir),
+                                  error=function(e) message('Live update failed: ', conditionMessage(e)))
+  if (!st$due && !force) { run_live(); return(invisible(FALSE)) }
   if (force) message('--force: running now')
 
   source(file.path(code_dir, 'EuroLeague_ranking_models_v11.R'))
@@ -143,13 +155,14 @@ el_auto_update <- function(force=FALSE) {
   late <- !is.null(st$due_utc) && Sys.time() > st$due_utc + 24*3600
   if (!round_ok && !late && !force) {
     message('Round ', st$round, ' box scores not complete in the API yet - will retry next run')
-    return(invisible(FALSE))
+    run_live(); return(invisible(FALSE))
   }
   export_euroleague_web(output_dir, site_dir, template, schedule=schedule,
                         extra_meta=list(last_complete_round=if (round_ok) st$round else max(parsed, na.rm=TRUE)))
   jsonlite::write_json(list(last_round=if (is.finite(st$round)) st$round else last,
                             updated_utc=format(Sys.time(), '%Y-%m-%dT%H:%M:%SZ', tz='UTC')),
                        state_file, auto_unbox=TRUE, pretty=TRUE)
+  run_live()
   invisible(TRUE)
 }
 

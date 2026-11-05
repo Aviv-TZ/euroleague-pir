@@ -114,6 +114,21 @@ tbody tr:hover{background:var(--panel2)}
 .matchup .x{float:left;background:#ffffff14;border:none;color:var(--muted);width:26px;height:26px;border-radius:50%;cursor:pointer}
 .legend{display:flex;gap:14px;flex-wrap:wrap;align-items:center;font-size:12.5px;color:var(--muted);margin-top:8px}
 .legend .sw{display:inline-block;width:46px;height:12px;border-radius:3px;background:linear-gradient(270deg,#ff6b6b99,transparent,#2ec47a99);vertical-align:middle;margin:0 6px}
+/* actual / live */
+.badge{display:inline-flex;align-items:center;gap:5px;border-radius:999px;padding:2px 9px;font-size:12px;font-weight:700;white-space:nowrap}
+.badge.final{background:#2ec47a26;color:var(--good);border:1px solid #2ec47a66}
+.badge.live{background:#ff3b3b26;color:#ff6b6b;border:1px solid #ff6b6b88}
+.badge.live i{width:7px;height:7px;border-radius:50%;background:#ff4d4d;animation:pulse 1.2s infinite}
+.badge.sm{padding:0 6px;font-size:11px;margin-inline-start:4px}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
+.actual{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;margin-top:12px;padding:10px 12px;border-radius:10px;font-size:14px}
+.actual small{flex-basis:100%;color:var(--muted);font-size:12px}
+.actual.final{background:#2ec47a14;border:1px solid #2ec47a55}
+.actual.live{background:#ff3b3b14;border:1px solid #ff6b6b66}
+.cmp td.sec.real{color:var(--good);background:#2ec47a1a}
+.cmp tr.real td{background:#2ec47a0a}
+.cmphead .phead h2{margin:0}
+.roundnote{margin-top:6px;font-size:12.5px;color:var(--accent)}
 footer{color:var(--muted);font-size:12px;padding:10px 20px 30px;text-align:center}
 .empty{color:var(--muted);padding:30px;text-align:center}
 </style>
@@ -190,7 +205,87 @@ function showTab(t){
 }
 document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{showTab(b.dataset.tab); syncHash();});
 
+function actualTag(p){ const a=getActual(p); if(!a) return '';
+  return a.status==='live' ? ` <span class="badge live sm" title="LIVE – PIR בפועל עד עכשיו"><i></i>${f(a.pir,0)}</span>`
+                           : ` <span class="badge final sm" title="שוחק – PIR בפועל">✓ ${f(a.pir,0)}</span>`; }
 const oppText = p => p.opp ? `${p.venue==='Home'?'נגד':'@'} ${p.opp}` : 'אין משחק במחזור';
+
+// ---------- Live / in-round results (live.json, refreshed by the server every 10-60 min) ----------
+const LIVE = {data:null, map:new Map(), direct:new Map(), round:M.next_round, nPlayed:0, nFinal:0, roundDone:false};
+const akey = (raw,team)=>raw+'||'+team;
+function rebuildLive(){
+  const L = LIVE.data; LIVE.map = new Map();
+  if(!L || (M.next_round && L.round!==M.next_round)) { LIVE.nPlayed=LIVE.nFinal=0; return; }
+  LIVE.round = L.round; LIVE.roundDone = L.round_finished>=L.round_games;
+  let rows = (L.actual||[]).map(a=>({...a, asof:L.updated_utc}));
+  // live rows fetched directly from the API in the browser replace the server's live rows
+  if(LIVE.direct.size){
+    rows = rows.filter(a=>a.status==='final' || !LIVE.direct.has(String(a.game)));
+    LIVE.direct.forEach((v,g)=>{ const lg=liveGame(g); if(!(lg&&lg.status==='final')) rows.push(...v); });
+  }
+  rows.sort((a,b)=>b.pir-a.pir);
+  rows.forEach(a=>{ a.rank = 1+rows.filter(b=>b.pir>a.pir).length; });
+  LIVE.nPlayed = rows.length; LIVE.nFinal = rows.filter(a=>a.status==='final').length;
+  // rank among finished games only for final rows
+  const fin = rows.filter(a=>a.status==='final');
+  fin.forEach(a=>{ a.rank = 1+fin.filter(b=>b.pir>a.pir).length; });
+  rows.forEach(a=>LIVE.map.set(akey(a.raw,a.team),a));
+}
+const getActual = p => LIVE.map.get(akey(p.raw,p.team)) || null;
+const teamNext = t => (LIVE.data && LIVE.data.next_game && LIVE.data.next_game[t]) || null;
+function nextAfter(p){
+  const a = getActual(p); if(!a || a.status!=='final') return '';
+  const n = teamNext(p.team);
+  return n ? ` · <span class="note">הבאה: ${n.venue==='Home'?'נגד':'@'} ${esc(n.vs)} (מחזור ${n.round})</span>` : '';
+}
+function liveGame(g){ return LIVE.data && (LIVE.data.games||[]).find(x=>String(x.game)===String(g)); }
+
+async function loadLive(){
+  if(location.protocol==='file:') return;
+  try{
+    const r = await fetch('live.json?t='+Date.now(), {cache:'no-store'});
+    if(!r.ok) return;
+    const j = await r.json();
+    if(LIVE.data && j.updated_utc===LIVE.data.updated_utc) return;
+    LIVE.data = j; rebuildLive(); renderAll();
+  }catch(e){}
+}
+// Best effort: if the EuroLeague API allows browser requests, read games in progress every minute.
+const API = 'https://api-live.euroleague.net/v2/competitions/E/seasons/E2026/games/';
+const secs = v => { if(v==null) return NaN; if(typeof v==='object') v=v.value??v.total??v.seconds;
+  const s=String(v); const m=s.match(/^(\d+):(\d{2})$/); return m? +m[1]*60+ +m[2] : +s; };
+const pname = o => { if(!o) return ''; if(typeof o!=='object') return String(o);
+  if(o.person) return pname(o.person); return o.name||o.fullName||[o.lastName,o.firstName].filter(Boolean).join(', '); };
+let directBlocked = false;
+async function pollDirect(){
+  if(directBlocked || !LIVE.data) return;
+  const now = Date.now();
+  const games = (LIVE.data.games||[]).filter(g=>g.status!=='final' && g.utc &&
+    now >= Date.parse(g.utc) && now <= Date.parse(g.utc)+3.5*3600e3);
+  if(!games.length) return;
+  let changed = false;
+  for(const g of games){
+    try{
+      const r = await fetch(API+g.game+'/stats'); if(!r.ok) continue;
+      let b = await r.json(); if(b.data && !b.local) b = b.data;
+      const rows = [];
+      for(const [side,team,opp] of [['local',g.home,g.away],['road',g.away,g.home]]){
+        const sec = b[side] || b[side==='local'?'home':'away']; if(!sec) continue;
+        let pl = sec.players||sec.playerStats||[]; if(pl.data) pl = pl.data;
+        for(const line of pl){
+          const st = line.stats||line.statistics||line;
+          const s = secs(st.timePlayed??st.minutesPlayed??st.minutes), pir = +(st.valuation??st.pir??st.PIR);
+          const name = pname(line.player||line.person);
+          if(name && s>0 && isFinite(pir)) rows.push({raw:name, team, opp, game:g.game, pir, min:Math.round(s/6)/10, status:'live', asof:new Date().toISOString()});
+        }
+      }
+      if(rows.length){ LIVE.direct.set(String(g.game), rows); changed = true; }
+    }catch(e){ directBlocked = true; return; }   // CORS blocked - rely on live.json
+  }
+  if(changed){ rebuildLive(); renderAll(); }
+}
+setInterval(loadLive, 5*60e3);
+setInterval(pollDirect, 60e3);
 
 // ---------- A. Top 15 ----------
 function renderTops(){
@@ -208,13 +303,21 @@ function renderTops(){
           <td><span class="tag">${p.pos_he}</span></td>
           <td>${esc(oppText(p))}<br><small class="note">${fmtShortDate(p.date)}</small></td>
           <td class="num score ${m.cls}c">${f(p.m[m.k].score,2)}</td>
-          <td class="num">${f(p.m[m.k].pir)}</td></tr>`).join('')}</tbody>
+          <td class="num">${f(p.m[m.k].pir)}${actualTag(p)}</td></tr>`).join('')}</tbody>
       </table></div></div>`;
   }).join('');
   $('#tops').querySelectorAll('.pl').forEach(td=>td.onclick=()=>openPlayer(+td.dataset.id));
 }
 
 // ---------- B. Fixtures ----------
+function gameStatus(g){ const lg=liveGame(g.game); return lg ? lg.status : (g.played?'final':'scheduled'); }
+function gameMid(g){
+  const lg = liveGame(g.game), st = gameStatus(g);
+  const sc = lg && lg.hs!=null && lg.as!=null ? `<b>${lg.as} – ${lg.hs}</b>` : '';   // LTR: away (left) – home (right)
+  if(st==='final') return (sc||'')+'סיום';
+  if(st==='live') return (sc||'')+'<span class="badge live"><i></i>LIVE</span>';
+  return (g.utc?`<b>${timeFmt.format(new Date(g.utc))}</b>`:'')+'בית · חוץ';
+}
 function renderFixtures(){
   const fx = D.fixtures||[];
   if(!fx.length){ $('#fixtures').innerHTML='<div class="empty">אין משחקים קרובים בלוח</div>'; return; }
@@ -231,9 +334,9 @@ function renderFixtures(){
   $('#fixtures').innerHTML =
     `<div class="card" style="margin-bottom:16px"><h2>מחזור ${M.next_round??''}</h2><div class="hint">שעות לפי שעון ישראל · "מוביל" = השחקן עם הסקור הגבוה בקבוצה לפי מודל 1</div></div>` +
     Object.keys(groups).sort().map(k=>`<div class="day"><h3>${dayFmt.format(dateOnly(k))}</h3><div class="games">${
-      groups[k].map(g=>`<div class="game ${g.played?'played':''}">
+      groups[k].map(g=>`<div class="game ${gameStatus(g)==='final'?'played':''}">
         ${team(g.home)}
-        <div class="mid">${g.utc?`<b>${timeFmt.format(new Date(g.utc))}</b>`:''}${g.played?'שוחק':'בית · חוץ'}</div>
+        <div class="mid">${gameMid(g)}</div>
         ${team(g.away)}</div>`).join('')}</div></div>`).join('');
   $('#fixtures').querySelectorAll('.pl').forEach(el=>{el.style.cursor='pointer'; el.onclick=()=>openPlayer(+el.dataset.id);});
 }
@@ -247,9 +350,16 @@ function heat(v, base){
   const c = r>=0 ? '46,196,122' : '255,107,107';
   return `background:rgba(${c},${(Math.abs(r)*0.55).toFixed(3)})`;
 }
+const OPP = ()=> (LIVE.data && LIVE.data.opponents && LIVE.data.opponents.length) ? LIVE.data.opponents : (D.opponents||[]);
+const LEAGUE = ()=> (LIVE.data && LIVE.data.league) ? LIVE.data.league : (D.league||{});
+function oppNext(o){ const n = teamNext(o.team);
+  if(n) return {vs:n.vs, venue:n.venue, round:n.round};
+  return o.next_vs ? {vs:o.next_vs, venue:o.next_venue, round:M.next_round} : null; }
+function playedThisRound(t){ return LIVE.data && (LIVE.data.games||[]).find(g=>g.status==='final' && (g.home===t||g.away===t)); }
 function matchupPanel(){
   if(!oppSel) return '';
-  const o = (D.opponents||[]).find(x=>x.team===oppSel.team); if(!o) return '';
+  const o0 = OPP().find(x=>x.team===oppSel.team); if(!o0) return '';
+  const nx = oppNext(o0); const o = {...o0, next_vs:nx&&nx.vs, next_venue:nx&&nx.venue};
   const [pos,posPl] = POS.find(x=>x[0]===oppSel.pos);
   const val = o[oppView][pos];
   let body;
@@ -264,12 +374,19 @@ function matchupPanel(){
   }
   return `<div class="card matchup"><button class="x" id="mxClose" title="סגור">×</button>
     <h2>${o.next_vs?`ה${posPl} של ${esc(o.next_vs)} מול ${esc(o.team)}`:esc(o.team)}</h2>
-    <div class="hint">${esc(o.team)} מאפשרת ל${posPl} ${f(val,2)} PIR בממוצע (${oppView==='season'?'עונה':'5 משחקים אחרונים'}; ממוצע ליגה ${f((D.league||{})[pos],2)})${o.next_vs?` · ${o.next_venue==='Home'?'משחק בית':'משחק חוץ'} של ${esc(o.team)}`:''} · ממוין לפי דקות</div>
+    <div class="hint">${esc(o.team)} מאפשרת ל${posPl} ${f(val,2)} PIR בממוצע (${oppView==='season'?'עונה':'5 משחקים אחרונים'}; ממוצע ליגה ${f((D.league||{})[pos],2)})${o.next_vs?` · ${o.next_venue==='Home'?'משחק בית':'משחק חוץ'} של ${esc(o.team)} במחזור ${nx.round}`:''} · ממוין לפי דקות</div>
     ${body}</div>`;
 }
+function nextCell(o){
+  const n = oppNext(o), pl = playedThisRound(o.team);
+  const nx = n ? `${n.venue==='Home'?'נגד':'@'} ${esc(n.vs)}${pl||n.round!==M.next_round?` <small>(מחזור ${n.round})</small>`:''}` : '–';
+  return pl ? `<span class="badge final sm">✓ שיחקה במחזור ${LIVE.round}</span> ${nx}` : nx;
+}
 function renderOpp(){
-  const O = D.opponents||[], L = D.league||{};
+  const O = OPP(), L = LEAGUE();
   if(!O.length){ $('#oppView').innerHTML='<div class="empty">אין נתונים</div>'; return; }
+  const LD = LIVE.data && LIVE.data.round===M.next_round ? LIVE.data : null;
+  const prog = LD ? `<div class="roundnote">מחזור ${LD.round}: ${LD.round_finished}/${LD.round_games} משחקים הסתיימו${LD.round_finished?' · הטבלה כבר כוללת אותם':''} · עודכן ${dayFmt.format(new Date(LD.updated_utc))} ${timeFmt.format(new Date(LD.updated_utc))}</div>` : '';
   const get = (o,k)=> k==='team' ? o.team : o[oppView][k];
   const rows = [...O].sort((a,b)=>{ const x=get(a,oppSort.key), y=get(b,oppSort.key);
     if(x==null) return 1; if(y==null) return -1;
@@ -278,18 +395,19 @@ function renderOpp(){
   $('#oppView').innerHTML = `<div class="card">
     <div class="opp-top"><div>
       <h2>PIR שהיריבה מאפשרת לפי עמדה</h2>
-      <div class="hint">ממוצע PIR (משוקלל לפי דקות) של שחקני היריבות בכל עמדה מול כל קבוצה. ערך גבוה = הגנה חלשה מול העמדה. לחיצה על כותרת ממיינת · <b>לחיצה על ערך מציגה את השחקנים מהיריבה הקרובה בעמדה הזו</b></div></div>
+      <div class="hint">ממוצע PIR (משוקלל לפי דקות) של שחקני היריבות בכל עמדה מול כל קבוצה. ערך גבוה = הגנה חלשה מול העמדה. לחיצה על כותרת ממיינת · <b>לחיצה על ערך מציגה את השחקנים מהיריבה הבאה בעמדה הזו</b></div>
+      ${prog}</div>
       <div class="seg"><button data-v="season" class="${oppView==='season'?'on':''}">עונה</button><button data-v="last5" class="${oppView==='last5'?'on':''}">5 אחרונים</button></div></div>
     <div class="legend">ממוצע ליגה: ${POS.map(([p,h])=>`${h} <b>${f(L[p],2)}</b>`).join(' · ')}
       <span>קשה<span class="sw"></span>נוח (ביחס לממוצע הליגה בעמדה)</span></div>
     <div class="scroll" style="margin-top:12px"><table class="opp-t">
       <thead><tr><th data-k="team" class="${oppSort.key==='team'?'sorted':''}" data-dir="${dir}">קבוצה</th>
         ${POS.map(([p,h])=>`<th class="num ${oppSort.key===p?'sorted':''}" data-k="${p}" data-dir="${dir}">${h}</th>`).join('')}
-        <th style="cursor:default">משחק קרוב</th></tr></thead>
+        <th style="cursor:default">המשחק הבא</th></tr></thead>
       <tbody>${rows.map(o=>`<tr><td><b>${esc(o.team)}</b></td>${POS.map(([p])=>{const v=o[oppView][p];
           const on = oppSel&&oppSel.team===o.team&&oppSel.pos===p;
           return `<td class="num cell ${on?'on':''}" data-t="${esc(o.team)}" data-p="${p}" style="${heat(v,L[p])}">${f(v,2)}</td>`;}).join('')}
-        <td class="note">${o.next_vs?`${o.next_venue==='Home'?'נגד':'@'} ${esc(o.next_vs)}`:'–'}</td></tr>`).join('')}</tbody>
+        <td class="note">${nextCell(o)}</td></tr>`).join('')}</tbody>
     </table></div></div>
     <div id="mxPanel">${matchupPanel()}</div>`;
   const v = $('#oppView');
@@ -357,28 +475,36 @@ function makeSearch(container, placeholder, onPick, getExclude){
 }
 
 // ---------- C. Player card ----------
-let current = null, compare = [];   // compare = list of ids (including current as first)
+let current = null, compare = [], mode = 'card';   // mode: 'card' | 'compare'
 function componentsTable(p, m){
-  const r = p.m[m.k], w = W[m.k], x = p.inputs, s = p.venue==='Home'?1:-1;
+  const r = p.m[m.k], w = W[m.k], x = p.inputs;
   const pc = v=>Math.round(v*100)+'%';
   return `<table class="comp">
-   <tr><td>בסיס PIR של השחקן<span class="f">(1−${f(w.PlayerLast5Weight,3)})·${f(p.avg,2)} + ${f(w.PlayerLast5Weight,3)}·${f(p.l5,2)}</span>
-     <span class="note">${pc(1-w.PlayerLast5Weight)} ממוצע עונה + ${pc(w.PlayerLast5Weight)} ממוצע 5 אחרונים</span></td><td class="num">${f(r.base,2)}</td></tr>
-   <tr><td>× פקטור יריבה (מול ${p.pos_he}ים)<span class="f">mix=(1−${f(w.OpponentLast5Weight,3)})·${f(x.msf,3)} + ${f(w.OpponentLast5Weight,3)}·${f(x.ml5f,3)} = ${f(r.mraw,3)}</span>
-     <span class="f">max(0.1, 1 + ${f(w.OpponentStrength,3)}·(mix−1))</span>
-     <span class="note">יריבה: ${f(x.msf,3)} עונה / ${f(x.ml5f,3)} ב-5 אחרונים (1 = ממוצע ליגה)</span></td><td class="num">${f(r.matchup,4)}</td></tr>
-   <tr><td>× פקטור דקות<span class="f">mix=(1−${f(w.Last5MinutesWeight,3)})·${f(x.mr,3)} + ${f(w.Last5MinutesWeight,3)}·${f(x.l5mr,3)} = ${f(r.mcomb,3)}</span>
-     <span class="f">1 − ${f(w.MinutesPenalty,3)}·(1−mix)</span>
-     <span class="note">יחס דקות מול המוביל בעמדה בקבוצה: ${f(x.mr,3)} עונה / ${f(x.l5mr,3)} ב-5 אחרונים</span></td><td class="num">${f(r.minf,4)}</td></tr>
-   <tr><td>× פקטור ${p.venue==='Home'?'בית':'חוץ'}<span class="f">exp(${f(w.HomeAdvantage,4)}·${s>0?'+1':'−1'})</span></td><td class="num">${f(r.home,4)}</td></tr>
-   <tr class="total"><td>= Score</td><td class="num ${m.cls}c">${f(r.score,3)}</td></tr>
+   <tr><td>בסיס PIR של השחקן<span class="note">${pc(1-w.PlayerLast5Weight)} ממוצע עונה + ${pc(w.PlayerLast5Weight)} ממוצע 5 אחרונים</span></td><td class="num">${f(r.base,2)}</td></tr>
+   <tr><td>פקטור יריבה (מול ${p.pos_he}ים)<span class="note">יריבה: ${f(x.msf,3)} עונה / ${f(x.ml5f,3)} ב-5 אחרונים (1 = ממוצע ליגה)</span></td><td class="num">${f(r.matchup,4)}</td></tr>
+   <tr><td>פקטור דקות<span class="note">יחס דקות מול המוביל בעמדה בקבוצה: ${f(x.mr,3)} עונה / ${f(x.l5mr,3)} ב-5 אחרונים</span></td><td class="num">${f(r.minf,4)}</td></tr>
+   <tr><td>פקטור ${p.venue==='Home'?'בית':'חוץ'}</td><td class="num">${f(r.home,4)}</td></tr>
+   <tr class="total"><td>Score</td><td class="num ${m.cls}c">${f(r.score,3)}</td></tr>
   </table>`;
+}
+function actualBanner(p){
+  const a = getActual(p); if(!a) return '';
+  const n = a.status==='live' ? LIVE.nPlayed : LIVE.nFinal;
+  const rk = a.rank!=null ? ` · דירוג ${a.rank} מתוך ${n} ${LIVE.roundDone?'ששיחקו במחזור':'ששיחקו עד כה במחזור'}` : '';
+  if(a.status==='live') return `<div class="actual live"><span class="badge live"><i></i>LIVE</span>
+     <span>משחק עכשיו נגד <b>${esc(a.opp)}</b> · PIR <b>${f(a.pir,0)}</b> · ${f(a.min,1)} דק'${rk}</span>
+     <small>נתונים חיים מתוך המשחק (עודכן ${a.asof?timeFmt.format(new Date(a.asof)):''}) – לא חיזוי</small></div>`;
+  return `<div class="actual final"><span class="badge final">✓ שוחק</span>
+     <span>שיחק נגד <b>${esc(a.opp)}</b> · PIR בפועל <b>${f(a.pir,0)}</b> · ${f(a.min,1)} דק'${rk}</span>
+     <small>תוצאת אמת של המשחק במחזור ${LIVE.round} – לא חיזוי</small></div>`;
 }
 function playerCard(p){
   const head = `<div class="phead"><div>
       <h2>${esc(p.name)}</h2>
       <div class="note">${esc(p.raw)} · ${esc(p.team)} · ${p.pos_he}</div></div>
-      <div class="opp">יריבה קרובה: <b>${esc(oppText(p))}</b>${p.date?` · ${fmtShortDate(p.date)}`:''}</div></div>
+      <button class="btn" id="goCompare">⇄ השוואה</button></div>
+    <div class="opp" style="margin-top:8px">יריבה במחזור: <b>${esc(oppText(p))}</b>${p.date?` · ${fmtShortDate(p.date)}`:''}${nextAfter(p)}</div>
+    ${actualBanner(p)}
     <div class="chips">
       <span class="chip">משחקים<b>${p.games}</b></span>
       <span class="chip">PIR עונה<b>${f(p.avg,2)}</b></span>
@@ -399,32 +525,38 @@ function playerCard(p){
   </div>`;
 }
 function renderPlayer(){
-  const pv = $('#playerView');
-  if(!current){ pv.innerHTML = '<div class="empty">התחל להקליד שם שחקן (באנגלית) או קבוצה</div>'; $('#cmpArea').innerHTML=''; return; }
+  const pv = $('#playerView'), ca = $('#cmpArea');
+  if(!current){ pv.innerHTML = '<div class="empty">התחל להקליד שם שחקן (באנגלית) או קבוצה</div>'; ca.innerHTML=''; return; }
+  if(mode==='compare'){ pv.innerHTML=''; renderCompare(); return; }
+  ca.innerHTML = '';
   pv.innerHTML = playerCard(byId.get(current));
-  renderCompare();
+  $('#goCompare').onclick = ()=>{ mode='compare'; compare=[current]; showCmpSearch=true; renderPlayer(); syncHash(); };
 }
-function openPlayer(id){ current=id; compare=[id]; showTab('search'); renderPlayer(); syncHash(); window.scrollTo({top:0,behavior:'smooth'}); }
+function openPlayer(id){ current=id; compare=[id]; mode='card'; showTab('search'); renderPlayer(); syncHash(); window.scrollTo({top:0,behavior:'smooth'}); }
 
-// ---------- D. Comparison (up to 4 players) ----------
+// ---------- D. Comparison (up to 4 players) - replaces the player card ----------
 let showCmpSearch = false;
 function renderCompare(){
   const area = $('#cmpArea');
   const full = compare.length>=4;
-  area.innerHTML = `<div class="cmpbar">
-      ${compare.map((id,i)=>`<span class="pchip"><i style="background:${CMP_COLORS[i]}"></i>${esc(byId.get(id).name)}${i>0?`<button data-rm="${id}" title="הסר">×</button>`:''}</span>`).join('')}
-      <button class="btn" id="addCmp" ${full?'disabled':''}>${compare.length>1?'+ הוסף שחקן להשוואה':'⇄ השוואה'}</button>
+  area.innerHTML = `<div class="card cmphead">
+      <div class="phead"><h2>השוואת שחקנים</h2><button class="btn ghost" id="closeCmp">✕ סגור השוואה</button></div>
+      <div class="cmpbar">
+      ${compare.map((id,i)=>`<span class="pchip"><i style="background:${CMP_COLORS[i]}"></i>${esc(byId.get(id).name)}${compare.length>1?`<button data-rm="${id}" title="הסר">×</button>`:''}</span>`).join('')}
+      <button class="btn" id="addCmp" ${full?'disabled':''}>+ הוסף שחקן</button>
       ${full?'<span class="note">מקסימום 4 שחקנים</span>':''}
+      </div>
+      <div class="sbox" id="cmpSearch" style="margin-top:12px;${showCmpSearch&&!full?'':'display:none'}"></div>
     </div>
-    <div class="sbox" id="cmpSearch" style="margin-top:12px;${showCmpSearch&&!full?'':'display:none'}"></div>
     <div id="cmpTable"></div>`;
-  area.querySelectorAll('[data-rm]').forEach(b=>b.onclick=()=>{compare=compare.filter(x=>x!==+b.dataset.rm); renderCompare(); syncHash();});
+  area.querySelectorAll('[data-rm]').forEach(b=>b.onclick=()=>{compare=compare.filter(x=>x!==+b.dataset.rm); current=compare[0]; renderCompare(); syncHash();});
   const inp = makeSearch($('#cmpSearch'),'חפש שחקן להשוואה…',p=>{
-      compare.push(p.id); showCmpSearch=false; renderCompare(); syncHash();
+      compare.push(p.id); showCmpSearch = compare.length<2; renderCompare(); syncHash();
     },()=>new Set(compare));
   $('#addCmp').onclick=()=>{ showCmpSearch=true; $('#cmpSearch').style.display=''; inp.focus(); };
+  $('#closeCmp').onclick=()=>{ mode='card'; current=compare[0]; compare=[current]; renderPlayer(); syncHash(); };
   if(showCmpSearch && !full) setTimeout(()=>inp.focus(),0);
-  if(compare.length>=2) $('#cmpTable').innerHTML = compareTable(compare.map(id=>byId.get(id)));
+  $('#cmpTable').innerHTML = compareTable(compare.map(id=>byId.get(id)));
   $('#cmpTable').querySelectorAll('.pl').forEach(el=>el.onclick=()=>openPlayer(+el.dataset.id));
 }
 function compareTable(ps){
@@ -433,15 +565,26 @@ function compareTable(ps){
     let best = null;
     if(opt.best){ const nums = vals.map(v=>typeof v==='number'?v:null).filter(v=>v!=null);
       if(nums.length>=2) best = opt.best==='min'?Math.min(...nums):Math.max(...nums); }
-    return `<tr><td>${label}</td>${vals.map(v=>`<td class="num ${best!=null&&v===best?'best':''}">${
+    return `<tr class="${opt.cls||''}"><td>${label}</td>${vals.map(v=>`<td class="num ${best!=null&&v===best?'best':''}">${
       typeof v==='number' ? f(v,opt.d??2) : (v??'–')}</td>`).join('')}</tr>`;
   };
-  const sec = t=>`<tr><td class="sec" colspan="${ps.length+1}">${t}</td></tr>`;
+  const sec = (t,cls='')=>`<tr><td class="sec ${cls}" colspan="${ps.length+1}">${t}</td></tr>`;
   const mm = (p,k,key)=>p.ranked?p.m[k][key]:null;
-  let h = `<div class="card cmp"><h2>השוואת שחקנים</h2><div class="hint">הערך הטוב ביותר בכל שורה מודגש בירוק</div><div class="scroll"><table>
+  const acts = ps.map(getActual);
+  let h = `<div class="card cmp"><div class="hint">הערך הטוב ביותר בכל שורה מודגש בירוק</div><div class="scroll"><table>
     <thead><tr><th></th>${ps.map((p,i)=>`<th class="pc"><span class="pl" data-id="${p.id}" style="cursor:pointer"><i class="dot" style="background:${CMP_COLORS[i]}"></i> <b>${esc(p.name)}</b></span><br><small class="note">${esc(p.team)} · ${p.pos_he}</small></th>`).join('')}</tr></thead><tbody>`;
+  if(acts.some(Boolean)){
+    const anyLive = acts.some(a=>a&&a.status==='live');
+    h += sec(`משחק המחזור – נתוני אמת${anyLive?' / LIVE':''} (לא חיזוי)`,'real');
+    h += row('סטטוס', (p,i)=>{const a=getActual(p); return !a?'טרם שיחק':a.status==='live'
+        ?'<span class="badge live"><i></i>LIVE</span>':'<span class="badge final">✓ שוחק</span>';}, {cls:'real'});
+    h += row('PIR בפועל', p=>{const a=getActual(p); return a?a.pir:null;}, {best:'max',d:0,cls:'real'});
+    h += row('דקות', p=>{const a=getActual(p); return a?a.min:null;}, {best:'max',d:1,cls:'real'});
+    h += row(`דירוג אמיתי במחזור`, p=>{const a=getActual(p); return a?a.rank:null;}, {best:'min',d:0,cls:'real'});
+    h += row('מתוך', p=>{const a=getActual(p); return a?(a.status==='live'?LIVE.nPlayed:LIVE.nFinal):null;}, {d:0,cls:'real'});
+  }
   h += sec('כללי');
-  h += row('יריבה קרובה', p=>p.opp?`<span dir="rtl">${esc(oppText(p))}</span>`:'אין משחק');
+  h += row('יריבה במחזור', p=>p.opp?`<span dir="rtl">${esc(oppText(p))}</span>`:'אין משחק');
   h += row('תאריך', p=>fmtShortDate(p.date)||'–');
   h += row('משחקים', p=>p.games, {d:0});
   h += row('PIR ממוצע עונה', p=>p.avg, {best:'max'});
@@ -454,7 +597,7 @@ function compareTable(ps){
   h += row('יחס דקות – עונה', p=>p.ranked?p.inputs.mr:null, {best:'max',d:3});
   h += row('יחס דקות – 5 אחרונים', p=>p.ranked?p.inputs.l5mr:null, {best:'max',d:3});
   for(const m of MODELS){
-    h += sec(`<span class="dot ${m.cls}"></span> ${m.long}`);
+    h += sec(`<span class="dot ${m.cls}"></span> ${m.long} – חיזוי`);
     h += row('<b>Score</b>', p=>mm(p,m.k,'score'), {best:'max',d:2});
     h += row('דירוג', p=>mm(p,m.k,'rank'), {best:'min',d:0});
     h += row('<b>PIR צפוי</b>', p=>mm(p,m.k,'pir'), {best:'max',d:1});
@@ -472,14 +615,14 @@ function compareTable(ps){
 // ---------- hash state ----------
 function syncHash(){
   const t = document.querySelector('nav button.on').dataset.tab;
-  const h = t==='search' && compare.length ? `search/${compare.join(',')}` : t;
+  const h = t==='search' && compare.length ? `${mode==='compare'?'compare':'search'}/${compare.join(',')}` : t;
   history.replaceState(null,'','#'+h);
 }
 function readHash(){
   const h = location.hash.slice(1);
-  if(h.startsWith('search')){
+  if(h.startsWith('search')||h.startsWith('compare')){
     const ids = (h.split('/')[1]||'').split(',').map(Number).filter(id=>byId.has(id)).slice(0,4);
-    if(ids.length){ current=ids[0]; compare=ids; }
+    if(ids.length){ current=ids[0]; compare=ids; mode = h.startsWith('compare')?'compare':'card'; showCmpSearch = mode==='compare'&&ids.length<2; }
     showTab('search');
   } else if(['top','fixtures','opp'].includes(h)) showTab(h);
 }
@@ -491,7 +634,14 @@ $('#foot').innerHTML = `מודלים שאומנו על 2024/25–2025/26 (משק
   ` · בקטסט על מחזורי 2026/27 (מחוץ למדגם)`;
 
 makeSearch($('#mainSearch'),'חפש שחקן… (שם או קבוצה)', p=>openPlayer(p.id), ()=>new Set());
+function renderAll(){
+  renderTops(); renderFixtures(); renderOpp();
+  const ae = document.activeElement;   // do not rebuild the search area while the user is typing
+  if(!(ae && ae.tagName==='INPUT' && $('#tab-search').contains(ae))) renderPlayer();
+}
 renderTops(); renderFixtures(); renderOpp(); readHash(); renderPlayer();
+loadLive().then(pollDirect);
+window.addEventListener('hashchange', ()=>{ readHash(); renderPlayer(); });
 })();
 </script>
 </body>
