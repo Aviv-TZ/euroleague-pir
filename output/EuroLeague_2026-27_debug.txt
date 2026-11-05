@@ -1,0 +1,39 @@
+Downloading games from official EuroLeague API, season E2026
+Games returned: 380 / API total: 380
+First game fields: id, identifier, gameCode, season, group, phaseType, round, roundAlias, roundName, played, date, confirmedDate, confirmedHour, localTimeZone, localDate, utcDate, local, road, audience, audienceConfirmed, socialFeed, operationsCode, referee1, referee2, referee3, referee4, venue, isNeutralVenue, gameStatus, winner
+Candidate games: 91
+Roster records available: 965
+First valid box score fields: local, road
+Game 91 local: 12 players; opponent=Panathinaikos AKTOR Athens; section fields=coach,players,team,total
+Game 91 road: 12 players; opponent=Real Madrid; section fields=coach,players,team,total
+Checked 10/91 games; valid player rows: 217
+Checked 20/91 games; valid player rows: 446
+Checked 30/91 games; valid player rows: 666
+Checked 40/91 games; valid player rows: 895
+Checked 50/91 games; valid player rows: 1126
+Checked 60/91 games; valid player rows: 1357
+Checked 70/91 games; valid player rows: 1586
+Checked 80/91 games; valid player rows: 1814
+Checked 90/91 games; valid player rows: 2038
+Successful box scores: 91; failed game requests: 0; valid rows: 2061; skipped records sampled: 100
+First skipped lines: 
+game 91 player FALL, MOUSTAPHA position 3 seconds 0 PIR 0 opponent Real Madrid
+game 91 player GRANT, JERIAN position 1 seconds 0 PIR 0 opponent Real Madrid
+game 89 player CASARIN, DAVIDE position 1 seconds 0 PIR 0 opponent Besiktas Istanbul
+game 89 player ZIZIC, ANTE position 3 seconds 0 PIR 0 opponent Virtus Bologna
+game 90 player DUNSTON, BRYANT position 3 seconds 0 PIR 0 opponent Armani Olimpia Milan
+game 90 player KONCHAR, JOHN position 2 seconds 0 PIR 0 opponent Armani Olimpia Milan
+game 90 player RICCI, GIAMPAOLO position 2 seconds 0 PIR 0 opponent Olympiacos Piraeus
+game 85 player ALVES DE SOUZA, THIERRY HENRY position 3 seconds 0 PIR 0 opponent LDLC ASVEL Villeurbanne
+game 85 player SOUZA, PEDRO position 2 seconds 0 PIR 0 opponent LDLC ASVEL Villeurbanne
+game 86 player LO, MAODO position 1 seconds 0 PIR 0 opponent Partizan Mozzart Bet Belgrade
+game 86 player ALLMAN, KYLE position 1 seconds 0 PIR 0 opponent Zalgiris Kaunas
+game 88 player PAPAGIANNIS, GEORGIOS position 3 seconds 0 PIR 0 opponent Panathinaikos AKTOR Athens
+Player rows by position: Guard=847; Forward=798; Center=416
+Recent-game window: 51 unique games across 20 opponents
+Fully completed rounds with parsed box scores: 1, 2, 3, 4, 5, 6, 7, 8, 9
+Frozen out-of-sample evaluation on E2026 rounds: 6, 7, 8, 9
+Distinct teams in player data: 20; in next fixtures: 18
+Teams with NO matching next fixture: Real Madrid | Panathinaikos AKTOR Athens
+Upcoming games: 9; next team fixtures: 18; eligible recommendations: 202; top picks: 10
+Created output/EuroLeague_2026-27_PIR_real_data.xlsx with 2061 rows and 2 Top 8 rankings; position counts: Guard 847, Forward 798, Center 416
