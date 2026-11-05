@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>יורוליג 2026/27 · תחזית PIR</title>
+<style>
+:root{
+  --bg:#0d1526; --panel:#152036; --panel2:#1b2a46; --line:#2a3b5c; --text:#e8eef9; --muted:#9aabc8;
+  --accent:#ff8a1f; --m1:#4fa3ff; --m2:#2ec4a0; --good:#2ec47a; --bad:#ff6b6b; --radius:14px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font-family:"Segoe UI",Rubik,Arial,"Noto Sans Hebrew",sans-serif;font-size:15px}
+a{color:inherit}
+header{background:linear-gradient(135deg,#142642,#0d1526 70%);border-bottom:1px solid var(--line);padding:18px 20px 0}
+.wrap{max-width:1200px;margin:0 auto}
+h1{margin:0;font-size:24px;display:flex;align-items:center;gap:10px}
+h1 .ball{width:26px;height:26px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#ffb066,#ff7a00 60%,#c95400);box-shadow:0 0 0 2px #0003 inset}
+.sub{color:var(--muted);font-size:13px;margin-top:6px}
+nav{display:flex;gap:4px;margin-top:16px;flex-wrap:wrap}
+nav button{background:none;border:none;color:var(--muted);font:inherit;font-weight:600;padding:10px 16px;border-radius:10px 10px 0 0;cursor:pointer}
+nav button.on{background:var(--bg);color:var(--text);box-shadow:inset 0 3px 0 var(--accent)}
+main{padding:20px}
+section.tab{display:none} section.tab.on{display:block}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+@media(max-width:900px){.grid2{grid-template-columns:1fr}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px}
+.card h2{margin:0 0 4px;font-size:18px;display:flex;align-items:center;gap:8px}
+.card .hint{color:var(--muted);font-size:12.5px;margin-bottom:12px}
+.dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+.dot.m1{background:var(--m1)} .dot.m2{background:var(--m2)}
+table{width:100%;border-collapse:collapse}
+th,td{padding:8px 8px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+th{color:var(--muted);font-weight:600;font-size:12.5px}
+td.num,th.num{text-align:left;font-variant-numeric:tabular-nums;direction:ltr}
+tbody tr:hover{background:var(--panel2)}
+.rk{width:30px;color:var(--muted);font-weight:700}
+.pl{cursor:pointer}
+.pl b{display:block;font-weight:600}
+.pl small{color:var(--muted);font-size:12px}
+.pl:hover b{color:var(--accent)}
+.tag{display:inline-block;padding:2px 8px;border-radius:999px;background:var(--panel2);border:1px solid var(--line);font-size:12px;color:var(--muted)}
+.scroll{overflow-x:auto}
+.score{font-weight:700}
+.m1c{color:var(--m1)} .m2c{color:var(--m2)}
+/* fixtures */
+.day{margin:6px 0 18px}
+.day h3{margin:0 0 10px;font-size:15px;color:var(--muted)}
+.games{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:12px}
+.game{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:14px;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px}
+.game .t{font-weight:600;text-align:center;line-height:1.3}
+.game .t small{display:block;color:var(--muted);font-weight:400;font-size:11.5px;margin-top:3px}
+.game .mid{text-align:center;color:var(--muted);font-size:13px}
+.game .mid b{display:block;color:var(--text);font-size:18px;direction:ltr}
+.game.played{opacity:.55}
+/* search */
+.sbox{position:relative;max-width:560px}
+.sbox input{width:100%;padding:13px 44px 13px 14px;border-radius:12px;border:1px solid var(--line);background:var(--panel);color:var(--text);font:inherit;font-size:16px;outline:none}
+.sbox input:focus{border-color:var(--accent);box-shadow:0 0 0 3px #ff8a1f33}
+.sbox:before{content:"⌕";position:absolute;right:14px;top:9px;font-size:22px;color:var(--muted)}
+.ac{position:absolute;top:calc(100% + 4px);right:0;left:0;background:var(--panel2);border:1px solid var(--line);border-radius:12px;z-index:20;max-height:360px;overflow:auto;display:none;box-shadow:0 12px 30px #0008}
+.ac.on{display:block}
+.ac div{padding:9px 12px;cursor:pointer;display:flex;justify-content:space-between;gap:10px;align-items:center}
+.ac div.sel,.ac div:hover{background:#ff8a1f22}
+.ac div b{font-weight:600}
+.ac div small{color:var(--muted);font-size:12px}
+.ac mark{background:none;color:var(--accent);font-weight:700}
+.ac .none{color:var(--muted);cursor:default}
+.player{margin-top:18px}
+.phead{display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between}
+.phead h2{font-size:22px;margin:0}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.chip{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:6px 10px;font-size:13px}
+.chip b{font-size:15px;margin-inline-start:6px;direction:ltr;display:inline-block}
+.opp{font-size:14px}
+.opp b{color:var(--accent)}
+.models{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}
+@media(max-width:900px){.models{grid-template-columns:1fr}}
+.model{border:1px solid var(--line);border-radius:var(--radius);padding:14px;background:var(--panel)}
+.model.m1{border-top:3px solid var(--m1)} .model.m2{border-top:3px solid var(--m2)}
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0 12px}
+.kpi{background:var(--panel2);border-radius:10px;padding:10px;text-align:center}
+.kpi span{display:block;color:var(--muted);font-size:12px}
+.kpi b{font-size:22px;direction:ltr;display:inline-block}
+.kpi small{display:block;color:var(--muted);font-size:11.5px;direction:ltr}
+.comp td{white-space:normal;vertical-align:top}
+.comp .f{display:block;color:var(--muted);font-size:11.5px;direction:ltr;text-align:right;margin-top:2px}
+.comp tr.total td{border-top:2px solid var(--line);font-weight:700}
+.btn{background:var(--accent);color:#1a0f00;border:none;border-radius:10px;padding:10px 16px;font:inherit;font-weight:700;cursor:pointer}
+.btn.ghost{background:none;color:var(--text);border:1px solid var(--line)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.cmpbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:18px}
+.pchip{display:flex;align-items:center;gap:8px;background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:6px 6px 6px 12px}
+.pchip i{font-style:normal;width:10px;height:10px;border-radius:50%}
+.pchip button{background:#ffffff14;border:none;color:var(--muted);width:22px;height:22px;border-radius:50%;cursor:pointer}
+.cmp{margin-top:16px}
+.cmp th.pc{text-align:left;min-width:150px}
+.cmp td.sec{background:var(--panel2);color:var(--accent);font-weight:700;font-size:13px}
+.cmp td.best{color:var(--good);font-weight:700}
+.note{color:var(--muted);font-size:12.5px;line-height:1.6}
+.warn{background:#ff6b6b18;border:1px solid #ff6b6b55;border-radius:10px;padding:10px 12px;margin-top:12px}
+footer{color:var(--muted);font-size:12px;padding:10px 20px 30px;text-align:center}
+.empty{color:var(--muted);padding:30px;text-align:center}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+  <h1><span class="ball"></span>יורוליג 2026/27 · דירוג ותחזית PIR</h1>
+  <div class="sub" id="subline"></div>
+  <nav>
+    <button data-tab="top" class="on">טופ 15</button>
+    <button data-tab="fixtures">לוח המחזור הקרוב</button>
+    <button data-tab="search">חיפוש והשוואת שחקנים</button>
+  </nav>
+</div></header>
+
+<main><div class="wrap">
+  <section class="tab on" id="tab-top">
+    <div class="grid2" id="tops"></div>
+  </section>
+
+  <section class="tab" id="tab-fixtures">
+    <div id="fixtures"></div>
+  </section>
+
+  <section class="tab" id="tab-search">
+    <div class="sbox" id="mainSearch"></div>
+    <div id="playerView"></div>
+    <div id="cmpArea"></div>
+  </section>
+</div></main>
+<footer id="foot"></footer>
+
+<script>
+const EL_DATA = /*__EL_DATA__*/null;
+(async function(){
+const D = EL_DATA || await fetch('data.json').then(r=>r.json());
+const P = D.players, M = D.meta;
+const byId = new Map(P.map(p=>[p.id,p]));
+const MODELS = [
+  {k:0, cls:'m1', name:'מודל 1', long:'מודל 1 · משקלים קבועים', color:'var(--m1)'},
+  {k:1, cls:'m2', name:'מודל 2', long:'מודל 2 · Walk-forward עם דגש לאחרונים', color:'var(--m2)'}
+];
+const W = [M.weights.m1, M.weights.m2];
+const CMP_COLORS = ['#ff8a1f','#4fa3ff','#2ec4a0','#d17bff'];
+const $ = (s,el=document)=>el.querySelector(s);
+const esc = s => String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const f = (x,d=1)=> x==null||isNaN(x) ? '–' : Number(x).toFixed(d);
+const norm = s => String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
+const nRanked = M.n_ranked;
+
+// ---------- dates ----------
+const TZ = 'Asia/Jerusalem';
+const dayFmt = new Intl.DateTimeFormat('he-IL',{weekday:'long',day:'numeric',month:'long',timeZone:TZ});
+const shortDay = new Intl.DateTimeFormat('he-IL',{weekday:'short',day:'2-digit',month:'2-digit',timeZone:TZ});
+const timeFmt = new Intl.DateTimeFormat('he-IL',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:TZ});
+const dateOnly = s => s ? new Date(s+'T12:00:00Z') : null;
+const fmtShortDate = s => s ? shortDay.format(dateOnly(s)) : '';
+const gen = new Date(M.generated_utc);
+$('#subline').textContent =
+  `עודכן: ${dayFmt.format(gen)} ${timeFmt.format(gen)}` +
+  (M.last_complete_round ? ` · אחרי מחזור ${M.last_complete_round}` : '') +
+  (M.next_round ? ` · תחזית למחזור ${M.next_round}` : '') +
+  ` · ${nRanked} שחקנים מדורגים`;
+
+// ---------- tabs ----------
+function showTab(t){
+  document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.tab===t));
+  document.querySelectorAll('section.tab').forEach(s=>s.classList.toggle('on',s.id==='tab-'+t));
+}
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{showTab(b.dataset.tab); syncHash();});
+
+const oppText = p => p.opp ? `${p.venue==='Home'?'נגד':'@'} ${p.opp}` : 'אין משחק במחזור';
+
+// ---------- A. Top 15 ----------
+function renderTops(){
+  $('#tops').innerHTML = MODELS.map(m=>{
+    const rows = P.filter(p=>p.ranked).sort((a,b)=>a.m[m.k].rank-b.m[m.k].rank).slice(0,15);
+    const bt = M.backtest && M.backtest['m'+(m.k+1)];
+    return `<div class="card">
+      <h2><span class="dot ${m.cls}"></span>${m.long}</h2>
+      <div class="hint">15 המובילים בסקור למחזור ${M.next_round??'הקרוב'}${bt?` · בבקטסט 2026/27 (מחזורים ${bt.rounds}): ממוצע ${bt.top10} פגיעות בטופ 10`:''}</div>
+      <div class="scroll"><table>
+        <thead><tr><th>#</th><th>שחקן</th><th>עמדה</th><th>יריבה</th><th class="num">Score</th><th class="num">PIR צפוי</th></tr></thead>
+        <tbody>${rows.map(p=>`<tr>
+          <td class="rk">${p.m[m.k].rank}</td>
+          <td class="pl" data-id="${p.id}"><b>${esc(p.name)}</b><small>${esc(p.team)}</small></td>
+          <td><span class="tag">${p.pos_he}</span></td>
+          <td>${esc(oppText(p))}<br><small class="note">${fmtShortDate(p.date)}</small></td>
+          <td class="num score ${m.cls}c">${f(p.m[m.k].score,2)}</td>
+          <td class="num">${f(p.m[m.k].pir)}</td></tr>`).join('')}</tbody>
+      </table></div></div>`;
+  }).join('');
+  $('#tops').querySelectorAll('.pl').forEach(td=>td.onclick=()=>openPlayer(+td.dataset.id));
+}
+
+// ---------- B. Fixtures ----------
+function renderFixtures(){
+  const fx = D.fixtures||[];
+  if(!fx.length){ $('#fixtures').innerHTML='<div class="empty">אין משחקים קרובים בלוח</div>'; return; }
+  const teamTop = {};
+  P.filter(p=>p.ranked).forEach(p=>{ if(!teamTop[p.team]||p.m[0].rank<teamTop[p.team].m[0].rank) teamTop[p.team]=p; });
+  const groups = {};
+  fx.forEach(g=>{
+    const d = g.utc ? new Date(g.utc) : dateOnly(g.date);
+    const key = d ? new Intl.DateTimeFormat('en-CA',{timeZone:TZ}).format(d) : g.date;
+    (groups[key] = groups[key]||[]).push({...g,_d:d});
+  });
+  const team = (t)=>{ const tp=teamTop[t];
+    return `<div class="t">${esc(t)}${tp?`<small>מוביל: <span class="pl" data-id="${tp.id}">${esc(tp.name)}</span> (${f(tp.m[0].score,1)})</small>`:''}</div>`; };
+  $('#fixtures').innerHTML =
+    `<div class="card" style="margin-bottom:16px"><h2>מחזור ${M.next_round??''}</h2><div class="hint">שעות לפי שעון ישראל · "מוביל" = השחקן עם הסקור הגבוה בקבוצה לפי מודל 1</div></div>` +
+    Object.keys(groups).sort().map(k=>`<div class="day"><h3>${dayFmt.format(dateOnly(k))}</h3><div class="games">${
+      groups[k].map(g=>`<div class="game ${g.played?'played':''}">
+        ${team(g.home)}
+        <div class="mid">${g.utc?`<b>${timeFmt.format(new Date(g.utc))}</b>`:''}${g.played?'שוחק':'בית · חוץ'}</div>
+        ${team(g.away)}</div>`).join('')}</div></div>`).join('');
+  $('#fixtures').querySelectorAll('.pl').forEach(el=>{el.style.cursor='pointer'; el.onclick=()=>openPlayer(+el.dataset.id);});
+}
+
+// ---------- Autocomplete ----------
+const INDEX = P.map(p=>({p, hay:norm(p.name+' '+p.raw+' '+p.team), nm:norm(p.name+' '+p.raw)}));
+function searchPlayers(q, exclude){
+  const toks = norm(q).split(/[\s,]+/).filter(Boolean);
+  if(!toks.length) return [];
+  const res = [];
+  for(const it of INDEX){
+    if(exclude.has(it.p.id)) continue;
+    if(!toks.every(t=>it.hay.includes(t))) continue;
+    const words = it.nm.split(/[\s,]+/);
+    const pref = toks.every(t=>words.some(w=>w.startsWith(t)));
+    res.push({p:it.p, s:(pref?0:2)+(it.p.ranked?0:1)});
+  }
+  res.sort((a,b)=>a.s-b.s || (b.p.avg||0)-(a.p.avg||0));
+  return res.slice(0,12).map(r=>r.p);
+}
+function hl(text,q){
+  let out = esc(text);
+  norm(q).split(/[\s,]+/).filter(t=>t.length>0).forEach(t=>{
+    const i = norm(text).indexOf(t);
+    if(i>=0){ out = esc(text.slice(0,i))+'<mark>'+esc(text.slice(i,i+t.length))+'</mark>'+esc(text.slice(i+t.length)); }
+  });
+  return out;
+}
+function makeSearch(container, placeholder, onPick, getExclude){
+  container.innerHTML = `<input type="search" autocomplete="off" placeholder="${placeholder}"><div class="ac"></div>`;
+  const inp = $('input',container), ac = $('.ac',container);
+  let items=[], sel=-1;
+  const draw = ()=>{
+    const q = inp.value.trim();
+    if(!q){ ac.classList.remove('on'); return; }
+    items = searchPlayers(q, getExclude());
+    ac.innerHTML = items.length ? items.map((p,i)=>`<div data-i="${i}" class="${i===sel?'sel':''}">
+        <span><b>${hl(p.name,q)}</b> <small>· ${esc(p.raw)}</small></span>
+        <small>${esc(p.team)} · ${p.pos_he}${p.ranked?'':' · לא מדורג'}</small></div>`).join('')
+      : '<div class="none">לא נמצא שחקן</div>';
+    ac.classList.add('on');
+    ac.querySelectorAll('[data-i]').forEach(d=>d.onmousedown=e=>{e.preventDefault(); pick(+d.dataset.i);});
+  };
+  const pick = i=>{ const p=items[i]; if(!p) return; inp.value=''; ac.classList.remove('on'); sel=-1; onPick(p); };
+  inp.oninput = ()=>{ sel=0; draw(); };
+  inp.onkeydown = e=>{
+    if(e.key==='ArrowDown'){ sel=Math.min(items.length-1,sel+1); draw(); e.preventDefault(); }
+    else if(e.key==='ArrowUp'){ sel=Math.max(0,sel-1); draw(); e.preventDefault(); }
+    else if(e.key==='Enter'){ pick(sel<0?0:sel); }
+    else if(e.key==='Escape'){ ac.classList.remove('on'); }
+  };
+  inp.onblur = ()=>setTimeout(()=>ac.classList.remove('on'),120);
+  inp.onfocus = ()=>{ if(inp.value.trim()) draw(); };
+  return inp;
+}
+
+// ---------- C. Player card ----------
+let current = null, compare = [];   // compare = list of ids (including current as first)
+function componentsTable(p, m){
+  const r = p.m[m.k], w = W[m.k], x = p.inputs, s = p.venue==='Home'?1:-1;
+  const pc = v=>Math.round(v*100)+'%';
+  return `<table class="comp">
+   <tr><td>בסיס PIR של השחקן<span class="f">(1−${f(w.PlayerLast5Weight,3)})·${f(p.avg,2)} + ${f(w.PlayerLast5Weight,3)}·${f(p.l5,2)}</span>
+     <span class="note">${pc(1-w.PlayerLast5Weight)} ממוצע עונה + ${pc(w.PlayerLast5Weight)} ממוצע 5 אחרונים</span></td><td class="num">${f(r.base,2)}</td></tr>
+   <tr><td>× פקטור יריבה (מול ${p.pos_he}ים)<span class="f">mix=(1−${f(w.OpponentLast5Weight,3)})·${f(x.msf,3)} + ${f(w.OpponentLast5Weight,3)}·${f(x.ml5f,3)} = ${f(r.mraw,3)}</span>
+     <span class="f">max(0.1, 1 + ${f(w.OpponentStrength,3)}·(mix−1))</span>
+     <span class="note">יריבה: ${f(x.msf,3)} עונה / ${f(x.ml5f,3)} ב-5 אחרונים (1 = ממוצע ליגה)</span></td><td class="num">${f(r.matchup,4)}</td></tr>
+   <tr><td>× פקטור דקות<span class="f">mix=(1−${f(w.Last5MinutesWeight,3)})·${f(x.mr,3)} + ${f(w.Last5MinutesWeight,3)}·${f(x.l5mr,3)} = ${f(r.mcomb,3)}</span>
+     <span class="f">1 − ${f(w.MinutesPenalty,3)}·(1−mix)</span>
+     <span class="note">יחס דקות מול המוביל בעמדה בקבוצה: ${f(x.mr,3)} עונה / ${f(x.l5mr,3)} ב-5 אחרונים</span></td><td class="num">${f(r.minf,4)}</td></tr>
+   <tr><td>× פקטור ${p.venue==='Home'?'בית':'חוץ'}<span class="f">exp(${f(w.HomeAdvantage,4)}·${s>0?'+1':'−1'})</span></td><td class="num">${f(r.home,4)}</td></tr>
+   <tr class="total"><td>= Score</td><td class="num ${m.cls}c">${f(r.score,3)}</td></tr>
+  </table>`;
+}
+function playerCard(p){
+  const head = `<div class="phead"><div>
+      <h2>${esc(p.name)}</h2>
+      <div class="note">${esc(p.raw)} · ${esc(p.team)} · ${p.pos_he}</div></div>
+      <div class="opp">יריבה קרובה: <b>${esc(oppText(p))}</b>${p.date?` · ${fmtShortDate(p.date)}`:''}</div></div>
+    <div class="chips">
+      <span class="chip">משחקים<b>${p.games}</b></span>
+      <span class="chip">PIR עונה<b>${f(p.avg,2)}</b></span>
+      <span class="chip">PIR ${p.l5n} אחרונים<b>${f(p.l5,2)}</b></span>
+      <span class="chip">דקות עונה<b>${f(p.min,1)}</b></span>
+      <span class="chip">דקות ${p.l5n} אחרונים<b>${f(p.l5min,1)}</b></span></div>`;
+  if(!p.ranked) return `<div class="card player">${head}<div class="warn">השחקן לא מדורג במחזור זה: ${esc(p.reason)}. לכן אין לו סקור ותחזית PIR.</div></div>`;
+  return `<div class="card player">${head}
+    <div class="models">${MODELS.map(m=>{const r=p.m[m.k]; return `<div class="model ${m.cls}">
+      <h2><span class="dot ${m.cls}"></span>${m.long}</h2>
+      <div class="kpis">
+        <div class="kpi"><span>Score</span><b class="${m.cls}c">${f(r.score,2)}</b></div>
+        <div class="kpi"><span>דירוג</span><b>#${r.rank}</b><small>מתוך ${nRanked}</small></div>
+        <div class="kpi"><span>PIR צפוי</span><b>${f(r.pir,1)}</b><small>${r.lo!=null?`${f(r.lo,1)} – ${f(r.hi,1)}`:''}</small></div>
+      </div>
+      ${componentsTable(p,m)}</div>`;}).join('')}</div>
+    <p class="note">PIR צפוי = כיול של הסקור לפי תוצאות אמת של עונת 2026/27 (בהנחה שהשחקן משחק). הטווח = 80% מהמקרים.</p>
+  </div>`;
+}
+function renderPlayer(){
+  const pv = $('#playerView');
+  if(!current){ pv.innerHTML = '<div class="empty">התחל להקליד שם שחקן (באנגלית) או קבוצה</div>'; $('#cmpArea').innerHTML=''; return; }
+  pv.innerHTML = playerCard(byId.get(current));
+  renderCompare();
+}
+function openPlayer(id){ current=id; compare=[id]; showTab('search'); renderPlayer(); syncHash(); window.scrollTo({top:0,behavior:'smooth'}); }
+
+// ---------- D. Comparison (up to 4 players) ----------
+let showCmpSearch = false;
+function renderCompare(){
+  const area = $('#cmpArea');
+  const full = compare.length>=4;
+  area.innerHTML = `<div class="cmpbar">
+      ${compare.map((id,i)=>`<span class="pchip"><i style="background:${CMP_COLORS[i]}"></i>${esc(byId.get(id).name)}${i>0?`<button data-rm="${id}" title="הסר">×</button>`:''}</span>`).join('')}
+      <button class="btn" id="addCmp" ${full?'disabled':''}>${compare.length>1?'+ הוסף שחקן להשוואה':'⇄ השוואה'}</button>
+      ${full?'<span class="note">מקסימום 4 שחקנים</span>':''}
+    </div>
+    <div class="sbox" id="cmpSearch" style="margin-top:12px;${showCmpSearch&&!full?'':'display:none'}"></div>
+    <div id="cmpTable"></div>`;
+  area.querySelectorAll('[data-rm]').forEach(b=>b.onclick=()=>{compare=compare.filter(x=>x!==+b.dataset.rm); renderCompare(); syncHash();});
+  const inp = makeSearch($('#cmpSearch'),'חפש שחקן להשוואה…',p=>{
+      compare.push(p.id); showCmpSearch=false; renderCompare(); syncHash();
+    },()=>new Set(compare));
+  $('#addCmp').onclick=()=>{ showCmpSearch=true; $('#cmpSearch').style.display=''; inp.focus(); };
+  if(showCmpSearch && !full) setTimeout(()=>inp.focus(),0);
+  if(compare.length>=2) $('#cmpTable').innerHTML = compareTable(compare.map(id=>byId.get(id)));
+  $('#cmpTable').querySelectorAll('.pl').forEach(el=>el.onclick=()=>openPlayer(+el.dataset.id));
+}
+function compareTable(ps){
+  const row = (label, get, opt={})=>{
+    const vals = ps.map(get);
+    let best = null;
+    if(opt.best){ const nums = vals.map(v=>typeof v==='number'?v:null).filter(v=>v!=null);
+      if(nums.length>=2) best = opt.best==='min'?Math.min(...nums):Math.max(...nums); }
+    return `<tr><td>${label}</td>${vals.map(v=>`<td class="num ${best!=null&&v===best?'best':''}">${
+      typeof v==='number' ? f(v,opt.d??2) : (v??'–')}</td>`).join('')}</tr>`;
+  };
+  const sec = t=>`<tr><td class="sec" colspan="${ps.length+1}">${t}</td></tr>`;
+  const mm = (p,k,key)=>p.ranked?p.m[k][key]:null;
+  let h = `<div class="card cmp"><h2>השוואת שחקנים</h2><div class="hint">הערך הטוב ביותר בכל שורה מודגש בירוק</div><div class="scroll"><table>
+    <thead><tr><th></th>${ps.map((p,i)=>`<th class="pc"><span class="pl" data-id="${p.id}" style="cursor:pointer"><i class="dot" style="background:${CMP_COLORS[i]}"></i> <b>${esc(p.name)}</b></span><br><small class="note">${esc(p.team)} · ${p.pos_he}</small></th>`).join('')}</tr></thead><tbody>`;
+  h += sec('כללי');
+  h += row('יריבה קרובה', p=>p.opp?`<span dir="rtl">${esc(oppText(p))}</span>`:'אין משחק');
+  h += row('תאריך', p=>fmtShortDate(p.date)||'–');
+  h += row('משחקים', p=>p.games, {d:0});
+  h += row('PIR ממוצע עונה', p=>p.avg, {best:'max'});
+  h += row('PIR ממוצע 5 אחרונים', p=>p.l5, {best:'max'});
+  h += row('דקות ממוצע עונה', p=>p.min, {best:'max',d:1});
+  h += row('דקות ממוצע 5 אחרונים', p=>p.l5min, {best:'max',d:1});
+  h += sec('קלטים משותפים לשני המודלים');
+  h += row('פקטור יריבה – עונה', p=>p.ranked?p.inputs.msf:null, {best:'max',d:3});
+  h += row('פקטור יריבה – 5 אחרונים', p=>p.ranked?p.inputs.ml5f:null, {best:'max',d:3});
+  h += row('יחס דקות – עונה', p=>p.ranked?p.inputs.mr:null, {best:'max',d:3});
+  h += row('יחס דקות – 5 אחרונים', p=>p.ranked?p.inputs.l5mr:null, {best:'max',d:3});
+  for(const m of MODELS){
+    h += sec(`<span class="dot ${m.cls}"></span> ${m.long}`);
+    h += row('<b>Score</b>', p=>mm(p,m.k,'score'), {best:'max',d:2});
+    h += row('דירוג', p=>mm(p,m.k,'rank'), {best:'min',d:0});
+    h += row('<b>PIR צפוי</b>', p=>mm(p,m.k,'pir'), {best:'max',d:1});
+    h += row('טווח PIR (80%)', p=>p.ranked&&p.m[m.k].lo!=null?`${f(p.m[m.k].lo,1)} – ${f(p.m[m.k].hi,1)}`:'–');
+    h += row('בסיס PIR', p=>mm(p,m.k,'base'), {best:'max',d:2});
+    h += row('פקטור יריבה', p=>mm(p,m.k,'matchup'), {best:'max',d:4});
+    h += row('פקטור דקות', p=>mm(p,m.k,'minf'), {best:'max',d:4});
+    h += row('פקטור בית/חוץ', p=>mm(p,m.k,'home'), {best:'max',d:4});
+  }
+  const unr = ps.filter(p=>!p.ranked);
+  h += `</tbody></table></div>${unr.length?`<div class="warn">${unr.map(p=>`${esc(p.name)}: ${esc(p.reason)}`).join('<br>')}</div>`:''}</div>`;
+  return h;
+}
+
+// ---------- hash state ----------
+function syncHash(){
+  const t = document.querySelector('nav button.on').dataset.tab;
+  const h = t==='search' && compare.length ? `search/${compare.join(',')}` : t;
+  history.replaceState(null,'','#'+h);
+}
+function readHash(){
+  const h = location.hash.slice(1);
+  if(h.startsWith('search')){
+    const ids = (h.split('/')[1]||'').split(',').map(Number).filter(id=>byId.has(id)).slice(0,4);
+    if(ids.length){ current=ids[0]; compare=ids; }
+    showTab('search');
+  } else if(['top','fixtures'].includes(h)) showTab(h);
+}
+
+// ---------- footer ----------
+const bt = M.backtest||{};
+$('#foot').innerHTML = `מודלים שאומנו על 2024/25–2025/26 (משקלים קפואים) · ` +
+  MODELS.map(m=>{const b=bt['m'+(m.k+1)]; return b?`${m.name}: NDCG@10 ${b.ndcg}, Spearman ${b.spearman}, טופ 10 ${b.top10}/10, טופ 30 ${b.top30}/30`:''}).filter(Boolean).join(' · ') +
+  ` · בקטסט על מחזורי 2026/27 (מחוץ למדגם)`;
+
+makeSearch($('#mainSearch'),'חפש שחקן… (שם או קבוצה)', p=>openPlayer(p.id), ()=>new Set());
+renderTops(); renderFixtures(); readHash(); renderPlayer();
+})();
+</script>
+</body>
+</html>

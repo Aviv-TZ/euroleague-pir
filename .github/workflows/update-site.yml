@@ -1,0 +1,46 @@
+name: EuroLeague round update
+
+on:
+  schedule:
+    - cron: '17 * * * *'      # every hour; the R script decides if a round ended 12h ago
+  workflow_dispatch:
+    inputs:
+      force:
+        description: 'Run now even if no new round finished'
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: el-update
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+
+      - name: Install R packages
+        run: Rscript -e 'install.packages(c("httr","jsonlite","openxlsx"))'
+
+      - name: Run update (prediction only, no training)
+        env:
+          TZ: Asia/Jerusalem
+        run: Rscript R/EuroLeague_auto_update_v11.R ${{ inputs.force && '--force' || '' }}
+
+      - name: Commit new page
+        run: |
+          git config user.name  "el-bot"
+          git config user.email "el-bot@users.noreply.github.com"
+          git add docs output
+          if git diff --cached --quiet; then echo "Nothing new"; exit 0; fi
+          git commit -m "Update EuroLeague page $(date -u +%Y-%m-%dT%H:%MZ)"
+          git push
