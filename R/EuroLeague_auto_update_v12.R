@@ -1,4 +1,4 @@
-# EuroLeague v11 - AUTOMATIC ROUND UPDATE (no training)
+# EuroLeague v12 (FANTASY POINTS) - AUTOMATIC ROUND UPDATE (no training)
 #
 # Run this every hour, and every 10 minutes during game hours. It:
 #   1. downloads only the 2026/27 schedule (one light request);
@@ -7,10 +7,10 @@
 #      runs run_euroleague_next_round() (prediction only, uses the saved .rds)
 #      and rebuilds the web page;
 #   4. on EVERY run updates live.json (finished games of the current round, games in
-#      progress, opponent-by-position table, each team's next game) - see EuroLeague_live_v11.R.
+#      progress, opponent-by-position table, each team's next game) - see EuroLeague_live_v12.R.
 #
-#   Rscript EuroLeague_auto_update_v11.R            # normal (only when due)
-#   Rscript EuroLeague_auto_update_v11.R --force    # run now regardless
+#   Rscript EuroLeague_auto_update_v12.R            # normal (only when due)
+#   Rscript EuroLeague_auto_update_v12.R --force    # run now regardless
 #
 # Paths (optional environment variables; defaults = repository layout):
 #   EL_CODE_DIR    folder with the R files            (default: this script's folder)
@@ -135,15 +135,15 @@ el_auto_update <- function(force=FALSE) {
   schedule <- el_schedule()
   st <- el_round_status(schedule, last, delay, game_hours)
   message(st$reason)
-  source(file.path(code_dir, 'EuroLeague_live_v11.R'))
+  source(file.path(code_dir, 'EuroLeague_live_v12.R'))
   run_live <- function() tryCatch(el_live_update(schedule, site_dir, code_dir),
                                   error=function(e) message('Live update failed: ', conditionMessage(e)))
   if (!st$due && !force) { run_live(); return(invisible(FALSE)) }
   if (force) message('--force: running now')
 
-  source(file.path(code_dir, 'EuroLeague_ranking_models_v11.R'))
-  source(file.path(code_dir, 'EuroLeague_run_next_round_v11.R'))
-  source(file.path(code_dir, 'EuroLeague_web_export_v11.R'))
+  source(file.path(code_dir, 'EuroLeague_ranking_models_v12.R'))
+  source(file.path(code_dir, 'EuroLeague_run_next_round_v12.R'))
+  source(file.path(code_dir, 'EuroLeague_web_export_v12.R'))
 
   run_euroleague_next_round(output_dir)    # prediction only - NO training
 

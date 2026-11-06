@@ -1,0 +1,7 @@
+"Parameter","Model1","Model2"
+"PlayerLast5Weight",0.115948031231603,0.15
+"OpponentLast5Weight",0.025,0.493749939719535
+"OpponentStrength",0.263272437242522,0.2
+"MinutesPenalty",0.505428343547728,0.550916445638316
+"Last5MinutesWeight",1,0.8395
+"HomeAdvantage",0.0327633028289911,0.0474401460832405
