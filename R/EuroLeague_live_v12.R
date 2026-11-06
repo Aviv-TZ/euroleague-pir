@@ -1,6 +1,6 @@
-# EuroLeague v11 - LIVE / IN-ROUND LAYER (no training, no model re-scoring)
+# EuroLeague v12 (FANTASY POINTS) - LIVE / IN-ROUND LAYER (no training, no model re-scoring)
 #
-# Called by EuroLeague_auto_update_v11.R on every scheduled run. Writes
+# Called by EuroLeague_auto_update_v12.R on every scheduled run. Writes
 # <site_dir>/live.json, which the page reads on top of the frozen round predictions:
 #   * actual PIR / minutes / real rank for players whose game in the current round is FINISHED
 #   * live PIR / minutes for games IN PROGRESS (clearly flagged as live)
@@ -44,6 +44,22 @@ el_get_json <- function(path, season='E2026') {
   NULL
 }
 
+# Fantasy points of one box-score line; `g(keys)` returns a stat (camelCase or PascalCase keys).
+# Same rules as el_fantasy_points() in EuroLeague_ranking_models_v12.R.
+el_fp_line <- function(g) {
+  v <- function(...) { x <- g(c(...)); if (is.finite(x)) x else 0 }
+  if (!is.finite(g(c('valuation','Valuation')))) return(NA_real_)
+  pts <- v('points','Points'); reb <- v('totalRebounds','TotalRebounds'); ast <- v('assistances','Assistances')
+  stl <- v('steals','Steals'); blk <- v('blocksFavour','BlocksFavour')
+  miss <- (v('fieldGoalsAttempted2','FieldGoalsAttempted2') - v('fieldGoalsMade2','FieldGoalsMade2')) +
+          (v('fieldGoalsAttempted3','FieldGoalsAttempted3') - v('fieldGoalsMade3','FieldGoalsMade3')) +
+          (v('freeThrowsAttempted','FreeThrowsAttempted') - v('freeThrowsMade','FreeThrowsMade'))
+  tens <- (pts>=10) + (reb>=10) + (ast>=10) + (stl>=10) + (blk>=10)
+  pts + 2*reb + 2*ast + 3*stl + 3*blk + v('foulsReceived','FoulsReceived') - 2*v('turnovers','Turnovers') -
+    miss - v('foulsCommited','FoulsCommited','foulsCommitted','FoulsCommitted') +
+    ifelse(tens>=3, 20, ifelse(tens>=2, 10, 0))
+}
+
 # Player lines of ONE game box score (used only for games in progress).
 el_live_box <- function(game_id, home, away) {
   h <- el_live_helpers
@@ -64,7 +80,7 @@ el_live_box <- function(game_id, home, away) {
       stats <- h$val(line, c('stats','statistics')); if (is.null(stats)) stats <- line
       name <- h$str1(h$val(person, c('person')) %||% person)
       secs <- h$number(h$val(stats, c('timePlayed','minutesPlayed','minutes','min')))
-      pir <- h$number(h$val(stats, c('valuation','pir','PIR','rating')))
+      pir <- el_fp_line(function(k) h$number(h$val(stats, k)))   # fantasy points
       pts <- h$number(h$val(stats, c('points','pts','Points')))
       if (!nzchar(name) || !is.finite(secs) || secs <= 0 || !is.finite(pir)) next
       out[[length(out)+1L]] <- data.frame(Game=game_id, Player=name,
@@ -103,7 +119,7 @@ el_parse_legacy_box <- function(x, game_id, home, away) {
     for (pl in h$val(st[[k]], c('PlayersStats','playersStats'))) {
       name <- h$str1(h$val(pl, c('Player','player')))
       secs <- h$number(h$val(pl, c('Minutes','minutes')))
-      pir <- h$number(h$val(pl, c('Valuation','valuation')))
+      pir <- el_fp_line(function(k) h$number(h$val(pl, k)))      # fantasy points
       pts <- h$number(h$val(pl, c('Points','points')))
       if (!nzchar(name) || toupper(name) %in% c('TEAM','TOTAL') || !is.finite(secs) || secs <= 0 || !is.finite(pir)) next
       out[[length(out)+1L]] <- data.frame(Game=game_id, Player=trimws(name),
@@ -137,6 +153,23 @@ el_opponent_tables <- function(raw, meta) {
   list(opponents=opponents, league=league)
 }
 
+# Every finished game: score + each team's top fantasy scorer(s) (ties: all of them).
+el_past_games <- function(raw, s) {
+  g <- s[s$Played & s$Game %in% raw$Game,,drop=FALSE]
+  g <- g[order(g$Round, g$Utc),,drop=FALSE]
+  lead <- function(game, team) {
+    d <- raw[raw$Game == game & raw$Team == team,,drop=FALSE]
+    if (!nrow(d)) return(NULL)
+    m <- max(d$PIR); list(raw=as.list(d$Player[d$PIR == m]), fp=m)
+  }
+  lapply(seq_len(nrow(g)), function(i) list(game=g$Game[i], round=g$Round[i], date=g$Date[i],
+    utc=if (!is.na(g$Utc[i])) format(g$Utc[i], '%Y-%m-%dT%H:%M:%SZ', tz='UTC') else NULL,
+    home=g$Home[i], away=g$Away[i],
+    hs=if (is.finite(g$HomeScore[i])) g$HomeScore[i] else NULL,
+    as=if (is.finite(g$AwayScore[i])) g$AwayScore[i] else NULL,
+    lead_home=lead(g$Game[i], g$Home[i]), lead_away=lead(g$Game[i], g$Away[i])))
+}
+
 el_live_update <- function(schedule, site_dir, code_dir, now=Sys.time()) {
   data_file <- file.path(site_dir, 'data.json')
   if (!file.exists(data_file)) return(invisible(FALSE))
@@ -158,15 +191,28 @@ el_live_update <- function(schedule, site_dir, code_dir, now=Sys.time()) {
   # ---- finished games: full box-score collection, only when something new finished ----
   same_finished <- identical(as.character(unlist(prev$finished_ids)), as.character(finished)) &&
                    identical(as.numeric(prev$round), as.numeric(R))
-  final_rows <- NULL; tables <- NULL
+  final_rows <- NULL; tables <- NULL; past_games <- NULL
   if (!same_finished) {
     if (!exists('build_euroleague_2026_27', mode='function'))
-      source(file.path(code_dir, 'EuroLeague_ranking_models_v11.R'))
+      source(file.path(code_dir, 'EuroLeague_ranking_models_v12.R'))
     col <- tryCatch(build_euroleague_2026_27(file.path(tempdir(), 'el_live_collect'), mode='collect'),
                     error=function(e) { message('Live collect failed: ', conditionMessage(e)); NULL })
     if (!is.null(col)) {
       raw <- col$raw[col$raw$Game %in% finished,,drop=FALSE]   # in-progress games never enter the tables
+      # Positions for the opponent table follow the sport5 fantasy site where they differ
+      if (!exists('el_web_prices', mode='function'))
+        source(file.path(code_dir, 'EuroLeague_web_export_v12.R'), encoding='UTF-8')
+      pr <- tryCatch(el_web_prices(), error=function(e) NULL)
+      if (!is.null(pr)) {
+        pr <- pr[!is.na(pr$raw) & pr$s5pos %in% c('Guard','Forward','Center'),,drop=FALSE]
+        k <- match(paste(raw$Player, raw$Team), paste(pr$raw, pr$team))
+        k2 <- match(raw$Player, pr$raw); k[is.na(k)] <- k2[is.na(k)]
+        changed <- !is.na(k) & raw$Position != pr$s5pos[ifelse(is.na(k), 1, k)]
+        raw$Position[!is.na(k)] <- pr$s5pos[k[!is.na(k)]]
+        message('Opponent table: ', sum(changed), ' player rows re-assigned to the sport5 position')
+      }
       tables <- el_opponent_tables(raw, col$meta[col$meta$Game %in% finished,,drop=FALSE])
+      past_games <- el_past_games(raw, s)
       fr <- raw[raw$Game %in% rg$Game,,drop=FALSE]
       final_rows <- if (nrow(fr)) data.frame(Game=fr$Game, Player=fr$Player, Team=fr$Team,
         Opponent=fr$Opponent, Minutes=fr$Minutes, PIR=fr$PIR, stringsAsFactors=FALSE) else
@@ -181,6 +227,7 @@ el_live_update <- function(schedule, site_dir, code_dir, now=Sys.time()) {
       Opponent=vapply(pa, `[[`, '', 'opp'), Minutes=vapply(pa, function(x) as.numeric(x$min), 0),
       PIR=vapply(pa, function(x) as.numeric(x$pir), 0), stringsAsFactors=FALSE) else NULL
     tables <- list(opponents=prev$opponents, league=prev$league)
+    past_games <- prev$past_games
   }
 
   # ---- games in progress (only current-round games are displayed as live) ----
@@ -245,7 +292,7 @@ el_live_update <- function(schedule, site_dir, code_dir, now=Sys.time()) {
               round_finished=sum(rg$Played), round_games=nrow(rg),
               n_played=if (is.null(rows)) 0L else nrow(rows),
               games=games, actual=actual, next_game=nxt,
-              opponents=tables$opponents, league=tables$league,
+              opponents=tables$opponents, league=tables$league, past_games=past_games,
               debug=unname(as.list(.el_dbg)))
   body <- jsonlite::toJSON(out, auto_unbox=TRUE, null='null', na='null', digits=NA)
   prev_body <- if (length(prev)) { prev$updated_utc <- NULL

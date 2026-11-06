@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>יורוליג 2026/27 · תחזית PIR</title>
+<title>יורוליג 2026/27 · תחזית נקודות פנטזי</title>
 <style>
 :root{
   --bg:#0d1526; --panel:#152036; --panel2:#1b2a46; --line:#2a3b5c; --text:#e8eef9; --muted:#9aabc8;
@@ -144,19 +144,40 @@ tbody tr:hover{background:var(--panel2)}
 .game.is-live{border-color:#ff6b6b88}
 .game .t small.lead-final{color:var(--good)}
 .game .t small.lead-live{color:#ff8b8b}
+/* top15 actual column + hits table */
+td.act small{display:block;font-size:11px;color:var(--muted);margin-top:2px;white-space:nowrap}
+td.act .up{color:var(--good)} td.act .down{color:var(--bad)}
+.hits th.grp{text-align:center}
+.hits td.best{color:var(--good);font-weight:700}
+.hits tr.avg td{border-top:2px solid var(--line)}
+.hits tr.partial td{opacity:.85}
+.hits td small.note{font-size:11px}
+/* builder */
+.bctl{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center;margin-top:8px}
+.bctl input[type=range]{width:260px;vertical-align:middle;margin-inline-start:8px;accent-color:var(--accent)}
+.bctl .chk{font-size:13px;color:var(--muted)}
+.badge.cap{background:#ff8a1f26;color:var(--accent);border:1px solid #ff8a1f88}
+.five tfoot td{border-top:2px solid var(--line);font-size:15px}
+.chip.warnchip{border-color:#ff6b6b88;color:#ff8b8b}
+/* keep wide tables inside their column */
+.grid2>*{min-width:0}
+#tops td:nth-child(3){white-space:normal;min-width:110px}
+#tops th,#tops td{padding:7px 5px}
+#tops td.pl{white-space:normal;min-width:120px}
 footer{color:var(--muted);font-size:12px;padding:10px 20px 30px;text-align:center}
 .empty{color:var(--muted);padding:30px;text-align:center}
 </style>
 </head>
 <body>
 <header><div class="wrap">
-  <h1><span class="ball"></span>יורוליג 2026/27 · דירוג ותחזית PIR</h1>
+  <h1><span class="ball"></span>יורוליג 2026/27 · דירוג ותחזית נקודות פנטזי</h1>
   <div class="sub" id="subline"></div>
   <nav>
     <button data-tab="top" class="on">טופ 15</button>
     <button data-tab="fixtures">לוח המחזור הקרוב</button>
     <button data-tab="search">חיפוש והשוואת שחקנים</button>
     <button data-tab="opp">יריבות לפי עמדה</button>
+    <button data-tab="build">חמישייה אידיאלית</button>
   </nav>
 </div></header>
 
@@ -171,6 +192,10 @@ footer{color:var(--muted);font-size:12px;padding:10px 20px 30px;text-align:cente
 
   <section class="tab" id="tab-opp">
     <div id="oppView"></div>
+  </section>
+
+  <section class="tab" id="tab-build">
+    <div id="builderView"></div>
   </section>
 
   <section class="tab" id="tab-search">
@@ -223,8 +248,8 @@ function showTab(t){
 document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{showTab(b.dataset.tab); syncHash();});
 
 function actualTag(p){ const a=getActual(p); if(!a) return '';
-  return a.status==='live' ? ` <span class="badge live sm" title="LIVE – PIR בפועל עד עכשיו"><i></i>${f(a.pir,0)}</span>`
-                           : ` <span class="badge final sm" title="שוחק – PIR בפועל">✓ ${f(a.pir,0)}</span>`; }
+  return a.status==='live' ? ` <span class="badge live sm" title="LIVE – פנטזי בפועל עד עכשיו"><i></i>${f(a.pir,0)}</span>`
+                           : ` <span class="badge final sm" title="שוחק – פנטזי בפועל">✓ ${f(a.pir,0)}</span>`; }
 const oppText = p => p.opp ? `${p.venue==='Home'?'נגד':'@'} ${p.opp}` : 'אין משחק במחזור';
 
 // ---------- Live / in-round results (live.json, refreshed by the server every 10-60 min) ----------
@@ -274,6 +299,15 @@ const secs = v => { if(v==null) return NaN; if(typeof v==='object') v=v.value??v
   const s=String(v); const m=s.match(/^(\d+):(\d{2})$/); return m? +m[1]*60+ +m[2] : +s; };
 const pname = o => { if(!o) return ''; if(typeof o!=='object') return String(o);
   if(o.person) return pname(o.person); return o.name||o.fullName||[o.lastName,o.firstName].filter(Boolean).join(', '); };
+// Fantasy points of one v2 box-score line (sport5 rules; same as the R pipeline).
+function fpLine(st){
+  const v = k => { const x = +(st[k]); return isFinite(x) ? x : 0; };
+  if(st.valuation==null) return NaN;
+  const pts=v('points'), reb=v('totalRebounds'), ast=v('assistances'), stl=v('steals'), blk=v('blocksFavour');
+  const miss=(v('fieldGoalsAttempted2')-v('fieldGoalsMade2'))+(v('fieldGoalsAttempted3')-v('fieldGoalsMade3'))+(v('freeThrowsAttempted')-v('freeThrowsMade'));
+  const tens=[pts,reb,ast,stl,blk].filter(x=>x>=10).length;
+  return pts+2*reb+2*ast+3*stl+3*blk+v('foulsReceived')-2*v('turnovers')-miss-(v('foulsCommited')||v('foulsCommitted'))+(tens>=3?20:tens>=2?10:0);
+}
 let directBlocked = false;
 async function pollDirect(){
   if(directBlocked || !LIVE.data) return;
@@ -292,7 +326,7 @@ async function pollDirect(){
         let pl = sec.players||sec.playerStats||[]; if(pl.data) pl = pl.data;
         for(const line of pl){
           const st = line.stats||line.statistics||line;
-          const s = secs(st.timePlayed??st.minutesPlayed??st.minutes), pir = +(st.valuation??st.pir??st.PIR);
+          const s = secs(st.timePlayed??st.minutesPlayed??st.minutes), pir = fpLine(st);
           const name = pname(line.player||line.person);
           if(name && s>0 && isFinite(pir)) rows.push({raw:name, team, opp, game:g.game, pir, min:Math.round(s/6)/10, status:'live', asof:new Date().toISOString()});
         }
@@ -306,25 +340,71 @@ setInterval(loadLive, 5*60e3);
 setInterval(pollDirect, 60e3);
 
 // ---------- A. Top 15 ----------
+function actualCell(p, k){
+  const a = getActual(p); if(!a) return '<td class="num note">–</td>';
+  const pr = p.m[k], d = a.rank - pr.rank, dv = a.pir - pr.pir;
+  const dTxt = d===0 ? 'בדיוק' : (d>0 ? `▼${d}` : `▲${-d}`);
+  return `<td class="num act ${a.status}">
+    <span class="badge ${a.status} sm">${a.status==='live'?'<i></i>':'✓ '}${f(a.pir,0)}</span>
+    <small>מקום ${a.rank} <span class="${d>0?'down':d<0?'up':''}" title="הפרש מקומות מול הדירוג החזוי">(${dTxt})</span> · ${dv>=0?'+':''}${f(dv,0)}</small></td>`;
+}
 function renderTops(){
   $('#tops').innerHTML = MODELS.map(m=>{
     const rows = P.filter(p=>p.ranked).sort((a,b)=>a.m[m.k].rank-b.m[m.k].rank).slice(0,15);
-    const bt = M.backtest && M.backtest['m'+(m.k+1)];
+    const RH = (D.round_hits||[]), avg10 = RH.length ? RH.reduce((s,h)=>s+h['m'+(m.k+1)].t10,0)/RH.length : null;
     return `<div class="card">
       <h2><span class="dot ${m.cls}"></span>${m.long}</h2>
-      <div class="hint">15 המובילים בסקור למחזור ${M.next_round??'הקרוב'}${bt?` · בבקטסט 2026/27 (מחזורים ${bt.rounds}): ממוצע ${bt.top10} פגיעות בטופ 10`:''}</div>
+      <div class="hint">15 המובילים בסקור למחזור ${M.next_round??'הקרוב'}${avg10!=null?` · העונה (מחזורים ${RH[0].round}–${RH[RH.length-1].round}): ממוצע ${f(avg10,1)} פגיעות בטופ 10`:''}</div>
       <div class="scroll"><table>
-        <thead><tr><th>#</th><th>שחקן</th><th>עמדה</th><th>יריבה</th><th class="num">Score</th><th class="num">PIR צפוי</th></tr></thead>
+        <thead><tr><th>#</th><th>שחקן</th><th>יריבה</th><th class="num">Score</th><th class="num">פנטזי צפוי</th><th class="num" title="ניקוד בפועל · מקום אמיתי במחזור (פספוס מול החיזוי) · הפרש נקודות">בפועל</th></tr></thead>
         <tbody>${rows.map(p=>`<tr>
           <td class="rk">${p.m[m.k].rank}</td>
-          <td class="pl" data-id="${p.id}"><b>${esc(p.name)}</b><small>${esc(p.team)}</small></td>
-          <td><span class="tag">${p.pos_he}</span></td>
+          <td class="pl" data-id="${p.id}"><b>${esc(p.name)}</b><small>${esc(p.team)} · ${p.pos_he}</small></td>
           <td>${esc(oppText(p))}<br><small class="note">${fmtShortDate(p.date)}</small></td>
           <td class="num score ${m.cls}c">${f(p.m[m.k].score,2)}</td>
-          <td class="num">${f(p.m[m.k].pir)}${actualTag(p)}</td></tr>`).join('')}</tbody>
+          <td class="num">${f(p.m[m.k].pir)}</td>
+          ${actualCell(p,m.k)}</tr>`).join('')}</tbody>
       </table></div></div>`;
-  }).join('');
+  }).join('') + hitsTable();
   $('#tops').querySelectorAll('.pl').forEach(td=>td.onclick=()=>openPlayer(+td.dataset.id));
+}
+// Hits per round: predicted top K vs actual top K among everyone who played (ties at the cutoff count).
+function currentRoundHits(){
+  const rows = LIVE.rows||[]; if(!rows.length) return null;
+  const pir = rows.map(a=>a.pir).sort((a,b)=>b-a);
+  const ks = {t10:10,t30:30,t50:50}, out = {round:LIVE.round, n_played:rows.length, partial:!LIVE.roundDone, m1:{}, m2:{}};
+  for(const [key,k] of Object.entries(ks)){
+    const th = pir[Math.min(k,pir.length)-1];
+    const act = new Set(rows.filter(a=>a.pir>=th).map(a=>akey(a.raw,a.team)));
+    for(const m of MODELS){
+      const top = P.filter(p=>p.ranked).sort((a,b)=>a.m[m.k].rank-b.m[m.k].rank).slice(0,k);
+      out['m'+(m.k+1)][key] = top.filter(p=>act.has(akey(p.raw,p.team))).length;
+    }
+  }
+  return out;
+}
+function hitsTable(){
+  const H = [...(D.round_hits||[])];
+  const cur = currentRoundHits();
+  if(cur && !H.some(h=>h.round===cur.round)) H.push(cur);
+  if(!H.length) return '';
+  const full = H.filter(h=>!h.partial);
+  const avg = (mk,t)=> full.length ? (full.reduce((s,h)=>s+h[mk][t],0)/full.length) : null;
+  const cell = (h,mk,t,k)=>{ const v=h[mk][t], o=h[mk==='m1'?'m2':'m1'][t];
+    return `<td class="num ${v>o?'best':''}">${v}<small class="note">/${k}</small></td>`; };
+  return `<div class="card hits" style="grid-column:1/-1">
+    <h2>פגיעות לפי מחזור</h2>
+    <div class="hint">כמה מהשחקנים שהמודל דירג בטופ K סיימו בפועל בטופ K של המחזור (מתוך כל מי ששיחק; שוויון בקו החיתוך נספר) · מחזורים קודמים = מבחן מחוץ למדגם עם המשקלים הקפואים · ירוק = המודל שפגע יותר</div>
+    <div class="scroll"><table>
+      <thead><tr><th rowspan="2">מחזור</th><th rowspan="2" class="num">שיחקו</th>
+        <th colspan="3" class="grp m1c">מודל 1</th><th colspan="3" class="grp m2c">מודל 2</th></tr>
+        <tr><th class="num">טופ 10</th><th class="num">טופ 30</th><th class="num">טופ 50</th><th class="num">טופ 10</th><th class="num">טופ 30</th><th class="num">טופ 50</th></tr></thead>
+      <tbody>${H.sort((a,b)=>a.round-b.round).map(h=>`<tr${h.partial?' class="partial"':''}><td><b>${h.round}</b>${h.partial?' <span class="badge live sm">חלקי</span>':''}</td>
+        <td class="num">${h.n_played}</td>
+        ${cell(h,'m1','t10',10)}${cell(h,'m1','t30',30)}${cell(h,'m1','t50',50)}
+        ${cell(h,'m2','t10',10)}${cell(h,'m2','t30',30)}${cell(h,'m2','t50',50)}</tr>`).join('')}
+      ${full.length?`<tr class="avg"><td><b>ממוצע</b></td><td></td>${['m1','m2'].map(mk=>['t10','t30','t50'].map(t=>`<td class="num"><b>${f(avg(mk,t),1)}</b></td>`).join('')).join('')}</tr>`:''}
+      </tbody></table></div></div>`;
 }
 
 // ---------- B. Fixtures (current + future rounds) ----------
@@ -340,20 +420,23 @@ function gameMid(g){
   if(st==='live') return sc+'<span class="badge live"><i></i>LIVE</span>';
   return (g.utc?`<b>${timeFmt.format(new Date(g.utc))}</b>`:'')+'בית · חוץ';
 }
-function leaders(game, team){   // actual top PIR in this game for this team (ties: all of them)
+function leaders(game, team){   // actual top fantasy points in this game for this team (ties: all of them)
   const rows = (LIVE.rows||[]).filter(a=>String(a.game)===String(game) && a.team===team);
   if(!rows.length) return null;
   const top = Math.max(...rows.map(a=>a.pir));
   return {pir:top, live:rows[0].status==='live', ps:rows.filter(a=>a.pir===top)};
 }
 function roundGames(r){
+  const past = (LIVE.data && LIVE.data.past_games) || [];
+  if(M.next_round!=null && r < M.next_round) return past.filter(g=>g.round===r).map(g=>({...g, status:'final'}));
   const sch = LIVE.data && LIVE.data.schedule;
   if(sch && sch.length) return sch.filter(g=>g.round===r);
   return r===M.next_round ? (D.fixtures||[]) : [];
 }
 function renderFixtures(){
   const sch = (LIVE.data && LIVE.data.schedule) || [];
-  const rounds = [...new Set([M.next_round, ...sch.map(g=>g.round)].filter(x=>x!=null))].sort((a,b)=>a-b);
+  const past = (LIVE.data && LIVE.data.past_games) || [];
+  const rounds = [...new Set([M.next_round, ...sch.map(g=>g.round), ...past.map(g=>g.round)].filter(x=>x!=null))].sort((a,b)=>a-b);
   if(fxRound==null || !rounds.includes(fxRound)) fxRound = M.next_round ?? rounds[0];
   const fx = roundGames(fxRound);
   const isPred = fxRound===M.next_round;
@@ -361,7 +444,10 @@ function renderFixtures(){
   if(isPred) P.filter(p=>p.ranked).forEach(p=>{ if(!teamTop[p.team]||p.m[0].rank<teamTop[p.team].m[0].rank) teamTop[p.team]=p; });
   const byRaw = new Map(P.map(p=>[akey(p.raw,p.team),p]));
   const team = (g,t)=>{
-    const st = gameStatus(g), ld = (st==='final'||st==='live') ? leaders(g.game,t) : null;
+    const st = gameStatus(g);
+    const stored = t===g.home ? g.lead_home : t===g.away ? g.lead_away : null;   // earlier rounds
+    const ld = stored ? {pir:stored.fp, live:false, ps:(stored.raw||[]).map(r=>({raw:r, team:t}))}
+             : (st==='final'||st==='live') ? leaders(g.game,t) : null;
     let sub = '';
     if(ld){
       const names = ld.ps.map(a=>{ const p=byRaw.get(akey(a.raw,a.team));
@@ -381,8 +467,8 @@ function renderFixtures(){
   $('#fixtures').innerHTML =
     `<div class="card rnav" style="margin-bottom:16px">
        <button class="btn ghost" id="fxPrev" ${i<=0?'disabled':''}>→ מחזור קודם</button>
-       <div><h2>מחזור ${fxRound??''}${isPred?' <span class="tag">תחזית פעילה</span>':''}</h2>
-       <div class="hint">שעות לפי שעון ישראל · ${isPred?'"מוביל צפוי" = הסקור הגבוה בקבוצה (מודל 1) · ':''}"מוביל בפועל" = ה-PIR הגבוה בקבוצה במשחק</div></div>
+       <div><h2>מחזור ${fxRound??''}${isPred?' <span class="tag">תחזית פעילה</span>':(M.next_round!=null&&fxRound<M.next_round?' <span class="tag">הסתיים</span>':'')}</h2>
+       <div class="hint">שעות לפי שעון ישראל · ${isPred?'"מוביל צפוי" = הסקור הגבוה בקבוצה (מודל 1) · ':''}"מוביל בפועל" = ניקוד הפנטזי הגבוה בקבוצה במשחק</div></div>
        <button class="btn ghost" id="fxNext" ${i<0||i>=rounds.length-1?'disabled':''}>מחזור הבא ←</button></div>` +
     (fx.length ? Object.keys(groups).sort().map(k=>`<div class="day"><h3>${dayFmt.format(dateOnly(k))}</h3><div class="games">${
       groups[k].map(g=>`<div class="game ${gameStatus(g)==='final'?'played':''} ${gameStatus(g)==='live'?'is-live':''}">
@@ -418,16 +504,16 @@ function matchupPanel(){
   let body;
   if(!o.next_vs) body = '<div class="empty">לקבוצה אין משחק במחזור הקרוב</div>';
   else {
-    const list = P.filter(p=>p.team===o.next_vs && p.pos===pos).sort((a,b)=>(b.min||0)-(a.min||0));
+    const list = P.filter(p=>p.team===o.next_vs && (p.s5pos||p.pos)===pos).sort((a,b)=>(b.min||0)-(a.min||0));
     body = list.length ? `<div class="scroll"><table>
-      <thead><tr><th>שחקן</th><th class="num">משחקים</th><th class="num">דקות ממוצע</th><th class="num">PIR ממוצע עונה</th></tr></thead>
+      <thead><tr><th>שחקן</th><th class="num">משחקים</th><th class="num">דקות ממוצע</th><th class="num">פנטזי ממוצע עונה</th></tr></thead>
       <tbody>${list.map(p=>`<tr><td class="pl" data-id="${p.id}"><b>${esc(p.name)}</b><small>${esc(p.raw)}</small></td>
         <td class="num">${p.games}</td><td class="num">${f(p.min,1)}</td><td class="num score">${f(p.avg,2)}</td></tr>`).join('')}</tbody></table></div>`
       : '<div class="empty">אין שחקנים בעמדה זו</div>';
   }
   return `<div class="card matchup"><button class="x" id="mxClose" title="סגור">×</button>
     <h2>${o.next_vs?`ה${posPl} של ${esc(o.next_vs)} מול ${esc(o.team)}`:esc(o.team)}</h2>
-    <div class="hint">${esc(o.team)} מאפשרת ל${posPl} ${f(val,2)} PIR בממוצע (${oppView==='season'?'עונה':'5 משחקים אחרונים'}; ממוצע ליגה ${f((D.league||{})[pos],2)})${o.next_vs?` · ${o.next_venue==='Home'?'משחק בית':'משחק חוץ'} של ${esc(o.team)} במחזור ${nx.round}`:''} · ממוין לפי דקות</div>
+    <div class="hint">${esc(o.team)} מאפשרת ל${posPl} ${f(val,2)} פנטזי בממוצע (${oppView==='season'?'עונה':'5 משחקים אחרונים'}; ממוצע ליגה ${f((D.league||{})[pos],2)})${o.next_vs?` · ${o.next_venue==='Home'?'משחק בית':'משחק חוץ'} של ${esc(o.team)} במחזור ${nx.round}`:''} · ממוין לפי דקות</div>
     ${body}</div>`;
 }
 function nextCell(o){
@@ -447,8 +533,8 @@ function renderOpp(){
   const dir = oppSort.dir>0?'▲':'▼';
   $('#oppView').innerHTML = `<div class="card">
     <div class="opp-top"><div>
-      <h2>PIR שהיריבה מאפשרת לפי עמדה</h2>
-      <div class="hint">ממוצע PIR (משוקלל לפי דקות) של שחקני היריבות בכל עמדה מול כל קבוצה. ערך גבוה = הגנה חלשה מול העמדה. לחיצה על כותרת ממיינת · <b>לחיצה על ערך מציגה את השחקנים מהיריבה הבאה בעמדה הזו</b></div>
+      <h2>נקודות פנטזי שהיריבה מאפשרת לפי עמדה</h2>
+      <div class="hint">ממוצע פנטזי (משוקלל לפי דקות) של שחקני היריבות בכל עמדה מול כל קבוצה. ערך גבוה = הגנה חלשה מול העמדה. לחיצה על כותרת ממיינת · <b>לחיצה על ערך מציגה את השחקנים מהיריבה הבאה בעמדה הזו</b></div>
       ${prog}</div>
       <div class="seg"><button data-v="season" class="${oppView==='season'?'on':''}">עונה</button><button data-v="last5" class="${oppView==='last5'?'on':''}">5 אחרונים</button></div></div>
     <div class="legend">ממוצע ליגה: ${POS.map(([p,h])=>`${h} <b>${f(L[p],2)}</b>`).join(' · ')}
@@ -475,8 +561,91 @@ function renderOpp(){
   v.querySelectorAll('#mxPanel .pl').forEach(el=>el.onclick=()=>openPlayer(+el.dataset.id));
 }
 
+// ---------- F. Ideal five (sport5 rules: 5 starters, 1-3 G / 1-3 F / 1-2 C, max 2 per club, captain x2) ----------
+const BUILD = {budget:null, model:1, injured:true};
+const POS3 = ['Guard','Forward','Center'];
+const LIM = {Guard:[1,3], Forward:[1,3], Center:[1,2]};
+function buildPool(){
+  return P.filter(p=>p.ranked && p.price!=null && p.s5pos && POS3.includes(p.s5pos) && !(BUILD.injured && p.injured))
+          .map(p=>({p, fp:p.m[BUILD.model].pir, price:p.price, pos:p.s5pos, team:p.team}))
+          .filter(x=>x.fp!=null);
+}
+// keep a player only if fewer than 3 same-position players are both cheaper-or-equal and better
+// (3 instead of 1 so the max-2-per-club rule can still be satisfied)
+function prune(pool, budget){
+  return pool.filter(x=>x.price<=budget && pool.filter(y=>y!==x && y.pos===x.pos && y.price<=x.price && y.fp>=x.fp && (y.price<x.price||y.fp>x.fp)).length<3);
+}
+function solveFive(budget){
+  const c = prune(buildPool(), budget).sort((a,b)=>b.fp-a.fp);
+  let best = null, bestVal = -Infinity;
+  const cnt = {Guard:0, Forward:0, Center:0}, team = {}, pick = [];
+  function feasibleEnd(){ return POS3.every(q=>cnt[q]>=LIM[q][0]); }
+  function rec(i, cost, sum, cap){
+    if(pick.length===5){ if(feasibleEnd()){ const v=sum+cap; if(v>bestVal){bestVal=v; best=[...pick];} } return; }
+    const need = 5-pick.length;
+    // optimistic bound: next `need` best fp from i (sorted desc) + captain bonus
+    let ub = sum, mx = cap;
+    for(let j=i, t=0; j<c.length && t<need; j++, t++){ ub+=c[j].fp; if(t===0) mx=Math.max(mx,c[j].fp); }
+    if(ub+mx <= bestVal) return;
+    // minimum required slots per position must still fit
+    const req = POS3.reduce((s,q)=>s+Math.max(0,LIM[q][0]-cnt[q]),0); if(req>need) return;
+    for(let j=i; j<c.length; j++){
+      const x = c[j];
+      if(cost+x.price>budget || cnt[x.pos]>=LIM[x.pos][1] || (team[x.team]||0)>=2) continue;
+      cnt[x.pos]++; team[x.team]=(team[x.team]||0)+1; pick.push(x);
+      rec(j+1, cost+x.price, sum+x.fp, Math.max(cap,x.fp));
+      pick.pop(); team[x.team]--; cnt[x.pos]--;
+    }
+  }
+  rec(0,0,0,0);
+  return best ? {five:best, total:bestVal} : null;
+}
+function renderBuilder(){
+  const prices = P.filter(p=>p.price!=null);
+  if(!prices.length){ $('#builderView').innerHTML='<div class="empty">אין כרגע מחירי שחקנים מאתר הפנטזי</div>'; return; }
+  const minBy = q => Math.min(...prices.filter(p=>p.s5pos===q).map(p=>p.price));
+  const coachMin = (D.coaches||[]).length ? Math.min(...D.coaches.map(c=>c.price)) : 5;
+  const benchMin = minBy('Guard')+minBy('Forward')+minBy('Center');
+  const defBudget = Math.round((100 - benchMin - coachMin)*2)/2;
+  if(BUILD.budget==null) BUILD.budget = defBudget;
+  const r = solveFive(BUILD.budget);
+  const pos_he = {Guard:'גארד', Forward:'פורוורד', Center:'סנטר'};
+  let body = '<div class="empty">אין הרכב חוקי בתקציב הזה</div>';
+  if(r){
+    const five = [...r.five].sort((a,b)=>POS3.indexOf(a.pos)-POS3.indexOf(b.pos) || b.fp-a.fp);
+    const cap = r.five.reduce((a,b)=>b.fp>a.fp?b:a);
+    const spent = r.five.reduce((s,x)=>s+x.price,0);
+    body = `<div class="scroll"><table class="five">
+      <thead><tr><th>שחקן</th><th>עמדה</th><th>יריבה</th><th class="num">מחיר</th><th class="num">פנטזי צפוי</th></tr></thead>
+      <tbody>${five.map(x=>`<tr><td class="pl" data-id="${x.p.id}"><b>${esc(x.p.name)}${x===cap?' <span class="badge cap sm">קפטן ×2</span>':''}</b><small>${esc(x.p.he||'')} · ${esc(x.p.team)}</small></td>
+        <td><span class="tag">${pos_he[x.pos]}</span></td><td>${esc(oppText(x.p))}</td>
+        <td class="num">${f(x.price,1)}M</td><td class="num"><b>${f(x.fp,1)}</b>${x===cap?`<small class="note"> (×2 = ${f(2*x.fp,1)})</small>`:''}</td></tr>`).join('')}</tbody>
+      <tfoot><tr><td colspan="3"><b>סה"כ צפוי (כולל קפטן)</b></td><td class="num">${f(spent,1)}M</td><td class="num"><b class="m${BUILD.model+1}c">${f(r.total,1)}</b></td></tr></tfoot>
+    </table></div>
+    <p class="note">נשאר מהתקציב לחמישייה: ${f(BUILD.budget-spent,1)}M</p>`;
+  }
+  $('#builderView').innerHTML = `<div class="card">
+    <h2>חמישייה אידיאלית למחזור ${M.next_round??''}</h2>
+    <div class="hint">לפי חוקי הפנטזי של ערוץ הספורט: 5 שחקני חמישייה (1–3 גארדים, 1–3 פורוורדים, 1–2 סנטרים), עד 2 שחקנים מאותה קבוצה, הקפטן (הצפוי הגבוה) מקבל ניקוד כפול. מחירים ועמדות מאתר הפנטזי. בלי מאמן וספסל – אין מקור לסיכויי הניצחון.</div>
+    <div class="bctl">
+      <label>תקציב לחמישייה: <b>${f(BUILD.budget,1)}M</b>
+        <input type="range" id="bBudget" min="25" max="85" step="0.5" value="${BUILD.budget}"></label>
+      <span class="note">ברירת מחדל ${f(defBudget,1)}M = 100M פחות הספסל הזול ביותר (${f(benchMin,1)}M) והמאמן הזול (${f(coachMin,1)}M)</span>
+      <div class="seg" id="bModel">${MODELS.map(m=>`<button data-k="${m.k}" class="${BUILD.model===m.k?'on':''}">${m.name}</button>`).join('')}</div>
+      <label class="chk"><input type="checkbox" id="bInj" ${BUILD.injured?'checked':''}> בלי פצועים/חסרים</label>
+    </div></div>
+    <div class="card" style="margin-top:16px">${body}</div>`;
+  const v = $('#builderView');
+  const slider = $('#bBudget');
+  slider.oninput = ()=>{ v.querySelector('.bctl b').textContent = f(+slider.value,1)+'M'; };
+  slider.onchange = ()=>{ BUILD.budget = +slider.value; renderBuilder(); };
+  v.querySelectorAll('#bModel button').forEach(b=>b.onclick=()=>{ BUILD.model=+b.dataset.k; renderBuilder(); });
+  $('#bInj').onchange = e=>{ BUILD.injured = e.target.checked; renderBuilder(); };
+  v.querySelectorAll('.pl').forEach(el=>el.onclick=()=>openPlayer(+el.dataset.id));
+}
+
 // ---------- Autocomplete ----------
-const INDEX = P.map(p=>({p, hay:norm(p.name+' '+p.raw+' '+p.team), nm:norm(p.name+' '+p.raw)}));
+const INDEX = P.map(p=>({p, hay:norm(p.name+' '+p.raw+' '+p.team+' '+(p.he||'')), nm:norm(p.name+' '+p.raw+' '+(p.he||''))}));
 function searchPlayers(q, exclude){
   const toks = norm(q).split(/[\s,]+/).filter(Boolean);
   if(!toks.length) return [];
@@ -508,7 +677,7 @@ function makeSearch(container, placeholder, onPick, getExclude){
     if(!q){ ac.classList.remove('on'); return; }
     items = searchPlayers(q, getExclude());
     ac.innerHTML = items.length ? items.map((p,i)=>`<div data-i="${i}" class="${i===sel?'sel':''}">
-        <span><b>${hl(p.name,q)}</b> <small>· ${esc(p.raw)}</small></span>
+        <span><b>${hl(p.name,q)}</b> <small>· ${esc(p.he||p.raw)}</small></span>
         <small>${esc(p.team)} · ${p.pos_he}${p.ranked?'':' · לא מדורג'}</small></div>`).join('')
       : '<div class="none">לא נמצא שחקן</div>';
     ac.classList.add('on');
@@ -533,7 +702,7 @@ function componentsTable(p, m){
   const r = p.m[m.k], w = W[m.k], x = p.inputs;
   const pc = v=>Math.round(v*100)+'%';
   return `<table class="comp">
-   <tr><td>בסיס PIR של השחקן<span class="note">${pc(1-w.PlayerLast5Weight)} ממוצע עונה + ${pc(w.PlayerLast5Weight)} ממוצע 5 אחרונים</span></td><td class="num">${f(r.base,2)}</td></tr>
+   <tr><td>בסיס פנטזי של השחקן<span class="note">${pc(1-w.PlayerLast5Weight)} ממוצע עונה + ${pc(w.PlayerLast5Weight)} ממוצע 5 אחרונים</span></td><td class="num">${f(r.base,2)}</td></tr>
    <tr><td>פקטור יריבה (מול ${p.pos_he}ים)<span class="note">יריבה: ${f(x.msf,3)} עונה / ${f(x.ml5f,3)} ב-5 אחרונים (1 = ממוצע ליגה)</span></td><td class="num">${f(r.matchup,4)}</td></tr>
    <tr><td>פקטור דקות<span class="note">יחס דקות מול המוביל בעמדה בקבוצה: ${f(x.mr,3)} עונה / ${f(x.l5mr,3)} ב-5 אחרונים</span></td><td class="num">${f(r.minf,4)}</td></tr>
    <tr><td>פקטור ${p.venue==='Home'?'בית':'חוץ'}</td><td class="num">${f(r.home,4)}</td></tr>
@@ -545,41 +714,43 @@ function actualBanner(p){
   const n = a.status==='live' ? LIVE.nPlayed : LIVE.nFinal;
   const rk = a.rank!=null ? ` · דירוג ${a.rank} מתוך ${n} ${LIVE.roundDone?'ששיחקו במחזור':'ששיחקו עד כה במחזור'}` : '';
   if(a.status==='live') return `<div class="actual live"><span class="badge live"><i></i>LIVE</span>
-     <span>משחק עכשיו נגד <b>${esc(a.opp)}</b> · PIR <b>${f(a.pir,0)}</b> · ${f(a.min,1)} דק'${rk}</span>
+     <span>משחק עכשיו נגד <b>${esc(a.opp)}</b> · פנטזי <b>${f(a.pir,0)}</b> · ${f(a.min,1)} דק'${rk}</span>
      <small>נתונים חיים מתוך המשחק (עודכן ${a.asof?timeFmt.format(new Date(a.asof)):''}) – לא חיזוי</small></div>`;
   return `<div class="actual final"><span class="badge final">✓ שוחק</span>
-     <span>שיחק נגד <b>${esc(a.opp)}</b> · PIR בפועל <b>${f(a.pir,0)}</b> · ${f(a.min,1)} דק'${rk}</span>
+     <span>שיחק נגד <b>${esc(a.opp)}</b> · פנטזי בפועל <b>${f(a.pir,0)}</b> · ${f(a.min,1)} דק'${rk}</span>
      <small>תוצאת אמת של המשחק במחזור ${LIVE.round} – לא חיזוי</small></div>`;
 }
 function playerCard(p){
   const head = `<div class="phead"><div>
       <h2>${esc(p.name)}</h2>
-      <div class="note">${esc(p.raw)} · ${esc(p.team)} · ${p.pos_he}</div></div>
+      <div class="note">${esc(p.he?p.he+' · ':'')}${esc(p.raw)} · ${esc(p.team)} · ${p.pos_he}</div></div>
       <button class="btn" id="goCompare">⇄ השוואה</button></div>
     <div class="opp" style="margin-top:8px">יריבה במחזור: <b>${esc(oppText(p))}</b>${p.date?` · ${fmtShortDate(p.date)}`:''}${nextAfter(p)}</div>
     ${actualBanner(p)}
     <div class="chips">
+      ${p.price!=null?`<span class="chip">מחיר פנטזי<b>${f(p.price,1)}M</b></span>`:''}${p.injured?'<span class="chip warnchip">פצוע/חסר באתר הפנטזי</span>':''}
       <span class="chip">משחקים<b>${p.games}</b></span>
-      <span class="chip">PIR עונה<b>${f(p.avg,2)}</b></span>
-      <span class="chip">PIR ${p.l5n} אחרונים<b>${f(p.l5,2)}</b></span>
+      <span class="chip">פנטזי עונה<b>${f(p.avg,2)}</b></span>
+      <span class="chip">פנטזי ${p.l5n} אחרונים<b>${f(p.l5,2)}</b></span>
       <span class="chip">דקות עונה<b>${f(p.min,1)}</b></span>
       <span class="chip">דקות ${p.l5n} אחרונים<b>${f(p.l5min,1)}</b></span></div>`;
-  if(!p.ranked) return `<div class="card player">${head}<div class="warn">השחקן לא מדורג במחזור זה: ${esc(p.reason)}. לכן אין לו סקור ותחזית PIR.</div></div>`;
+  if(!p.ranked) return `<div class="card player">${head}<div class="warn">השחקן לא מדורג במחזור זה: ${esc(p.reason)}. לכן אין לו סקור ותחזית פנטזי.</div></div>`;
   return `<div class="card player">${head}
     <div class="models">${MODELS.map(m=>{const r=p.m[m.k]; return `<div class="model ${m.cls}">
       <h2><span class="dot ${m.cls}"></span>${m.long}</h2>
       <div class="kpis">
         <div class="kpi"><span>Score</span><b class="${m.cls}c">${f(r.score,2)}</b></div>
         <div class="kpi"><span>דירוג</span><b>#${r.rank}</b><small>מתוך ${nRanked}</small></div>
-        <div class="kpi"><span>PIR צפוי</span><b>${f(r.pir,1)}</b><small>${r.lo!=null?`${f(r.lo,1)} – ${f(r.hi,1)}`:''}</small></div>
+        <div class="kpi"><span>פנטזי צפוי</span><b>${f(r.pir,1)}</b><small>${r.lo!=null?`${f(r.lo,1)} – ${f(r.hi,1)}`:''}</small></div>
       </div>
       ${componentsTable(p,m)}</div>`;}).join('')}</div>
-    <p class="note">PIR צפוי = כיול של הסקור לפי תוצאות אמת של עונת 2026/27 (בהנחה שהשחקן משחק). הטווח = 80% מהמקרים.</p>
+    <p class="note">פנטזי צפוי = כיול של הסקור לפי תוצאות אמת של עונת 2026/27 (בהנחה שהשחקן משחק). הטווח = 80% מהמקרים.</p>
   </div>`;
 }
 function renderPlayer(){
   const pv = $('#playerView'), ca = $('#cmpArea');
-  if(!current){ pv.innerHTML = '<div class="empty">התחל להקליד שם שחקן (באנגלית) או קבוצה</div>'; ca.innerHTML=''; return; }
+  if(!current){ pv.innerHTML = '<div class="empty">התחל להקליד שם שחקן (באנגלית או בעברית) או קבוצה</div>'; ca.innerHTML=''; return; }
+  $('#mainSearch').style.display = mode==='compare' ? 'none' : '';
   if(mode==='compare'){ pv.innerHTML=''; renderCompare(); return; }
   ca.innerHTML = '';
   pv.innerHTML = playerCard(byId.get(current));
@@ -660,7 +831,7 @@ function compareTable(ps){
     h += sec(`משחק המחזור – נתוני אמת${anyLive?' / LIVE':''} (לא חיזוי)`,'real');
     h += row('סטטוס', (p,i)=>{const a=getActual(p); return !a?'טרם שיחק':a.status==='live'
         ?'<span class="badge live"><i></i>LIVE</span>':'<span class="badge final">✓ שוחק</span>';}, {cls:'real'});
-    h += row('PIR בפועל', p=>{const a=getActual(p); return a?a.pir:null;}, {best:'max',d:0,cls:'real'});
+    h += row('פנטזי בפועל', p=>{const a=getActual(p); return a?a.pir:null;}, {best:'max',d:0,cls:'real'});
     h += row('דקות', p=>{const a=getActual(p); return a?a.min:null;}, {best:'max',d:1,cls:'real'});
     h += row(`דירוג אמיתי במחזור`, p=>{const a=getActual(p); return a?a.rank:null;}, {best:'min',d:0,cls:'real'});
     h += row('מתוך', p=>{const a=getActual(p); return a?(a.status==='live'?LIVE.nPlayed:LIVE.nFinal):null;}, {d:0,cls:'real'});
@@ -669,8 +840,8 @@ function compareTable(ps){
   h += row('יריבה במחזור', p=>p.opp?`<span dir="rtl">${esc(oppText(p))}</span>`:'אין משחק');
   h += row('תאריך', p=>fmtShortDate(p.date)||'–');
   h += row('משחקים', p=>p.games, {d:0});
-  h += row('PIR ממוצע עונה', p=>p.avg, {best:'max'});
-  h += row('PIR ממוצע 5 אחרונים', p=>p.l5, {best:'max'});
+  h += row('פנטזי ממוצע עונה', p=>p.avg, {best:'max'});
+  h += row('פנטזי ממוצע 5 אחרונים', p=>p.l5, {best:'max'});
   h += row('דקות ממוצע עונה', p=>p.min, {best:'max',d:1});
   h += row('דקות ממוצע 5 אחרונים', p=>p.l5min, {best:'max',d:1});
   h += sec('קלטים משותפים לשני המודלים');
@@ -682,9 +853,9 @@ function compareTable(ps){
     h += sec(`<span class="dot ${m.cls}"></span> ${m.long} – חיזוי`);
     h += row('<b>Score</b>', p=>mm(p,m.k,'score'), {best:'max',d:2});
     h += row('דירוג', p=>mm(p,m.k,'rank'), {best:'min',d:0});
-    h += row('<b>PIR צפוי</b>', p=>mm(p,m.k,'pir'), {best:'max',d:1});
-    h += row('טווח PIR (80%)', p=>p.ranked&&p.m[m.k].lo!=null?`${f(p.m[m.k].lo,1)} – ${f(p.m[m.k].hi,1)}`:'–');
-    h += row('בסיס PIR', p=>mm(p,m.k,'base'), {best:'max',d:2});
+    h += row('<b>פנטזי צפוי</b>', p=>mm(p,m.k,'pir'), {best:'max',d:1});
+    h += row('טווח פנטזי (80%)', p=>p.ranked&&p.m[m.k].lo!=null?`${f(p.m[m.k].lo,1)} – ${f(p.m[m.k].hi,1)}`:'–');
+    h += row('בסיס פנטזי', p=>mm(p,m.k,'base'), {best:'max',d:2});
     h += row('פקטור יריבה', p=>mm(p,m.k,'matchup'), {best:'max',d:4});
     h += row('פקטור דקות', p=>mm(p,m.k,'minf'), {best:'max',d:4});
     h += row('פקטור בית/חוץ', p=>mm(p,m.k,'home'), {best:'max',d:4});
@@ -706,22 +877,22 @@ function readHash(){
     const ids = (h.split('/')[1]||'').split(',').map(Number).filter(id=>byId.has(id)).slice(0,4);
     if(ids.length){ current=ids[0]; compare=ids; mode = h.startsWith('compare')?'compare':'card'; showCmpSearch = mode==='compare'&&ids.length<2; }
     showTab('search');
-  } else if(['top','fixtures','opp'].includes(h)) showTab(h);
+  } else if(['top','fixtures','opp','build'].includes(h)) showTab(h);
 }
 
 // ---------- footer ----------
 const bt = M.backtest||{};
-$('#foot').innerHTML = `מודלים שאומנו על 2024/25–2025/26 (משקלים קפואים) · ` +
-  MODELS.map(m=>{const b=bt['m'+(m.k+1)]; return b?`${m.name}: NDCG@10 ${b.ndcg}, Spearman ${b.spearman}, טופ 10 ${b.top10}/10, טופ 30 ${b.top30}/30`:''}).filter(Boolean).join(' · ') +
+$('#foot').innerHTML = `יעד: נקודות פנטזי לפי חוקי ערוץ הספורט · מודלים שאומנו על 2024/25–2025/26 (משקלים קפואים) · ` +
+  MODELS.map(m=>{const b=bt['m'+(m.k+1)]; return b?`${m.name}: NDCG@10 ${b.ndcg}, Spearman ${b.spearman}`:''}).filter(Boolean).join(' · ') +
   ` · בקטסט על מחזורי 2026/27 (מחוץ למדגם)`;
 
-makeSearch($('#mainSearch'),'חפש שחקן… (שם או קבוצה)', p=>openPlayer(p.id), ()=>new Set());
+makeSearch($('#mainSearch'),'חפש שחקן… (שם באנגלית/עברית או קבוצה)', p=>openPlayer(p.id), ()=>new Set());
 function renderAll(){
-  updateSubline(); renderTops(); renderFixtures(); renderOpp();
+  updateSubline(); renderTops(); renderFixtures(); renderOpp(); renderBuilder();
   const ae = document.activeElement;   // do not rebuild the search area while the user is typing
   if(!(ae && ae.tagName==='INPUT' && $('#tab-search').contains(ae))) renderPlayer();
 }
-updateSubline(); renderTops(); renderFixtures(); renderOpp(); readHash(); renderPlayer();
+updateSubline(); renderTops(); renderFixtures(); renderOpp(); renderBuilder(); readHash(); renderPlayer();
 loadLive().then(pollDirect);
 window.addEventListener('hashchange', ()=>{ readHash(); renderPlayer(); });
 })();

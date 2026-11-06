@@ -1,8 +1,8 @@
-# EuroLeague v11 - WEB EXPORT
+# EuroLeague v12 (FANTASY POINTS) - WEB EXPORT
 # Reads the files produced by run_euroleague_next_round() (NO training, NO API calls)
 # and writes the interactive page: <site_dir>/index.html (self-contained) + data.json.
 #
-#   source('EuroLeague_web_export_v11.R')
+#   source('EuroLeague_web_export_v12.R')
 #   export_euroleague_web(output_dir, site_dir, template_file)
 #
 # Sheets are read by POSITION (not by Hebrew name) so this works in any R locale.
@@ -49,14 +49,73 @@ el_web_calibration <- function(hist, score_col) {
        n=nrow(h), r2=summary(m)$r.squared)
 }
 
+# ---- sport5 fantasy prices --------------------------------------------------
+# Players are matched to EuroLeague by club + shirt number (validated: ~95% matched;
+# the rest are fringe players missing from the EuroLeague roster).
+EL_S5_TEAMS <- c('אנדולו אפס'='IST','באסקוניה'='BAS','הכוכב האדום'='RED','דובאי'='DUB','מילאנו'='MIL',
+  'ברצלונה'='BAR','באיירן מינכן'='MUN',"פנרבחצ'ה"='ULK','הפועל ת"א'='HTA','וילרבאן'='ASV',
+  'מכבי ת"א'='TEL','אולימפיאקוס'='OLY','פנאתינייקוס'='PAN','פריז באסקט'='PRS','פרטיזן בלגרד'='PAR',
+  'ריאל מדריד'='MAD','ולנסיה'='PAM','וירטוס בולוניה'='VIR',"ז'לגיריס קובנה"='ZAL','בשיקטש'='BES')
+el_web_prices <- function(season='E2026') {
+  get <- function(u) { r <- tryCatch(httr::GET(u, httr::timeout(40), httr::user_agent('EuroLeague-R/2.0')), error=identity)
+    if (inherits(r,'error') || httr::status_code(r) != 200) return(NULL)
+    tryCatch(jsonlite::fromJSON(httr::content(r,'text',encoding='UTF-8'), simplifyVector=FALSE), error=function(e) NULL) }
+  lg <- get('https://dreamteam.sport5.co.il/api/Leagues/GetLeagues')
+  sid <- NULL
+  for (l in lg$data) if (identical(l$urlName, 'fantasyeuroleague')) sid <- l$currentSeasonId
+  if (is.null(sid)) { message('Prices: fantasy league not found'); return(NULL) }
+  tp <- get(paste0('https://dreamteam.sport5.co.il/api/Players/GetTeamsAndPlayers?seasonId=', sid))
+  pe <- get(paste0('https://api-live.euroleague.net/v2/competitions/E/seasons/', season, '/people?limit=2000&offset=0'))
+  if (is.null(tp) || is.null(pe)) { message('Prices: download failed'); return(NULL) }
+  pe <- if (!is.null(pe$data)) pe$data else pe
+  key <- function(code, dorsal) paste(code, trimws(as.character(dorsal)), sep='#')
+  pl <- Filter(function(p) identical(p$type, 'J'), pe)
+  name_by <- setNames(vapply(pl, function(p) p$person$name, ''), vapply(pl, function(p) key(p$club$code, p$dorsal), ''))
+  club_by <- setNames(vapply(pe, function(p) p$club$name, ''), vapply(pe, function(p) p$club$code, ''))
+  coach_by <- unlist(lapply(Filter(function(p) identical(p$type, 'E'), pe), function(p) setNames(p$person$name, p$club$code)))
+  out <- list()
+  for (t in tp$data) {
+    code <- unname(EL_S5_TEAMS[enc2utf8(t$name)]); if (!length(code) || is.na(code)) { message('Prices: unknown team ', t$name); next }
+    for (p in t$players) {
+      coach <- identical(as.integer(p$position), 4L)
+      raw <- if (coach) unname(coach_by[code]) else unname(name_by[key(code, p$shirtNumber)])
+      out[[length(out)+1L]] <- data.frame(raw=if (length(raw) && !is.na(raw)) raw else NA_character_,
+        team=unname(club_by[code]), he=p$name, price=p$price/1e6,
+        s5pos=c('Guard','Forward','Center','Coach')[as.integer(p$position)],
+        injured=isTRUE(p$injuredStatus > 0) || isTRUE(p$missingStatus > 0), stringsAsFactors=FALSE)
+    }
+  }
+  res <- do.call(rbind, out)
+  message('Prices: ', nrow(res), ' entries, ', sum(!is.na(res$raw)), ' matched to EuroLeague')
+  res
+}
+
+# Hits per round: predicted top K (model) vs actual top K among ALL players who played that round.
+el_web_round_hits <- function(hist, raw) {
+  if (!nrow(hist) || !nrow(raw)) return(list())
+  game_round <- unique(hist[,c('Game','Round')])
+  raw$Round <- game_round$Round[match(as.character(raw$Game), as.character(game_round$Game))]
+  lapply(sort(unique(hist$Round)), function(r) {
+    h <- hist[hist$Round == r,,drop=FALSE]; a <- raw[raw$Round %in% r,,drop=FALSE]
+    a <- a[order(-a$PIR),,drop=FALSE]
+    act_key <- paste(a$Player, a$Team)
+    hits <- function(score_col) setNames(lapply(c(10,30,50), function(k) {
+      th <- a$PIR[min(k, nrow(a))]
+      top_act <- act_key[a$PIR >= th]
+      top_pred <- head(paste(h$Player, h$Team)[order(-h[[score_col]], -h$AvgMinutes)], k)
+      sum(top_pred %in% top_act) }), c('t10','t30','t50'))
+    list(round=r, n_played=nrow(a), m1=hits('FixedScore'), m2=hits('WalkForwardScore'))
+  })
+}
+
 export_euroleague_web <- function(output_dir, site_dir, template_file,
                                   schedule=NULL, extra_meta=list(),
                                   trained_model_file=NULL) {
   for (pkg in c('jsonlite','openxlsx'))
     if (!requireNamespace(pkg, quietly=TRUE)) install.packages(pkg, repos='https://cloud.r-project.org')
   if (is.null(trained_model_file))
-    trained_model_file <- file.path(output_dir, 'EuroLeague_historical_models_2024_2026_v11.rds')
-  xlsx <- file.path(output_dir, 'EuroLeague_2026-27_PIR_real_data.xlsx')
+    trained_model_file <- file.path(output_dir, 'EuroLeague_historical_models_2024_2026_v12_fantasy.rds')
+  xlsx <- file.path(output_dir, 'EuroLeague_2026-27_FP_real_data.xlsx')
   if (!file.exists(xlsx)) stop('Missing ', xlsx, ' - run run_euroleague_next_round() first')
   dir.create(site_dir, recursive=TRUE, showWarnings=FALSE)
 
@@ -101,6 +160,7 @@ export_euroleague_web <- function(output_dir, site_dir, template_file,
   pos_he <- c(Guard='גארד', Forward='פורוורד', Center='סנטר')
   num <- function(x, d=3) if (is.null(x) || !length(x) || !is.finite(x)) NULL else round(x, d)
 
+  prices <- tryCatch(el_web_prices(), error=function(e) { message('Prices failed: ', conditionMessage(e)); NULL })
   players <- vector('list', nrow(avgs))
   for (i in seq_len(nrow(avgs))) {
     a <- avgs[i,]
@@ -115,6 +175,12 @@ export_euroleague_web <- function(output_dir, site_dir, template_file,
               venue=if (!is.null(fx)) fx$Venue[1] else NULL,
               date=if (!is.null(fx)) as.character(fx$Date[1]) else NULL,
               ranked=!is.na(j))
+    if (!is.null(prices)) {
+      q <- which(prices$raw == a$Player & prices$team == a$Team)[1]
+      if (is.na(q)) q <- which(prices$raw == a$Player)[1]
+      if (!is.na(q)) { p$price <- prices$price[q]; p$he <- prices$he[q]; p$s5pos <- prices$s5pos[q]
+                       p$injured <- prices$injured[q] }
+    }
     if (!is.na(j)) {
       c1 <- cand[j,]
       p$inputs <- list(msf=num(c1$MatchupSeasonFactor,4), ml5f=num(c1$MatchupLast5Factor,4),
@@ -206,7 +272,12 @@ export_euroleague_web <- function(output_dir, site_dir, template_file,
     calib=lapply(calib, function(c) lapply(c, function(v) if (is.finite(v)) round(v,4) else NULL)),
     backtest=backtest), extra_meta)
 
-  data <- list(meta=meta, fixtures=fixtures, players=players,
+  raw_csv2 <- file.path(output_dir, 'EuroLeague_2026-27_players.csv')
+  round_hits <- if (file.exists(raw_csv2)) el_web_round_hits(hist,
+    utils::read.csv(raw_csv2, fileEncoding='UTF-8', stringsAsFactors=FALSE)) else list()
+  coaches <- if (!is.null(prices)) { cp <- prices[prices$s5pos == 'Coach',,drop=FALSE]
+    lapply(seq_len(nrow(cp)), function(i) list(raw=cp$raw[i], team=cp$team[i], he=cp$he[i], price=cp$price[i])) } else list()
+  data <- list(meta=meta, fixtures=fixtures, players=players, round_hits=round_hits, coaches=coaches,
                opponents=opponents, league=league)
   json <- jsonlite::toJSON(data, auto_unbox=TRUE, null='null', na='null', digits=NA, pretty=FALSE)
   writeLines(json, file.path(site_dir, 'data.json'), useBytes=TRUE)
