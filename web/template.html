@@ -603,7 +603,7 @@ function courtCard(x, isCap){
       <span class="cfp">${f(x.fp,1)}</span>${isCap?'<span class="ccap" title="קפטן – ניקוד כפול">C</span>':''}
       ${ph}
       <div class="cname">${esc(nm)}</div>
-      <div class="cmeta">${esc(oppShort(p))} · ${f(x.price,1)}M</div>
+      <div class="cmeta">${esc(oppShort(p))} · ${f(x.price,0)}M</div>
     </div>`;
 }
 const oppShort = p => p.opp ? `${p.venue==='Home'?'נגד':'@'} ${p.opp.split(' ').slice(0,2).join(' ')}` : '';
@@ -627,9 +627,9 @@ function courtView(r){
     <div class="csum">
       <div><span>צפי לחמישייה (כולל קפטן ×2)</span><b>${f(r.total,1)}</b></div>
       <div><span>קפטן מומלץ</span><b>${esc(cap.p.he||cap.p.name)}</b><small>${f(cap.fp,1)} ×2 = ${f(2*cap.fp,1)}</small></div>
-      <div><span>עלות החמישייה</span><b>${f(spent,1)}M</b><small>מתוך ${f(BUILD.budget,1)}M שהוגדרו</small></div>
-      <div><span>נשאר מתקציב החמישייה</span><b>${f(BUILD.budget-spent,1)}M</b></div>
-      <div><span>למאמן + ספסל</span><b>${f(100-BUILD.budget,1)}M</b><small>100M פחות תקציב החמישייה</small></div>
+      <div><span>עלות החמישייה</span><b>${f(spent,0)}M</b><small>מתוך ${f(BUILD.budget,0)}M שהוגדרו</small></div>
+      <div><span>נשאר מתקציב החמישייה</span><b>${f(BUILD.budget-spent,0)}M</b></div>
+      <div><span>למאמן + ספסל</span><b>${f(100-BUILD.budget,0)}M</b><small>100M פחות תקציב החמישייה</small></div>
     </div>`;
 }
 
@@ -678,7 +678,7 @@ function renderBuilder(){
   const minBy = q => Math.min(...prices.filter(p=>p.s5pos===q).map(p=>p.price));
   const coachMin = (D.coaches||[]).length ? Math.min(...D.coaches.map(c=>c.price)) : 5;
   const benchMin = minBy('Guard')+minBy('Forward')+minBy('Center');
-  const defBudget = Math.round((100 - benchMin - coachMin)*2)/2;
+  const defBudget = Math.round(100 - benchMin - coachMin);
   if(BUILD.budget==null) BUILD.budget = defBudget;
   const r = solveFive(BUILD.budget);
   const pos_he = {Guard:'גארד', Forward:'פורוורד', Center:'סנטר'};
@@ -688,9 +688,9 @@ function renderBuilder(){
     <h2>חמישייה אידיאלית למחזור ${M.next_round??''}</h2>
     <div class="hint">לפי חוקי הפנטזי של ערוץ הספורט: 5 שחקני חמישייה (1–3 גארדים, 1–3 פורוורדים, 1–2 סנטרים), עד 2 שחקנים מאותה קבוצה, הקפטן (הצפוי הגבוה) מקבל ניקוד כפול. מחירים ועמדות מאתר הפנטזי. בלי מאמן וספסל – אין מקור לסיכויי הניצחון.</div>
     <div class="bctl">
-      <label>תקציב לחמישייה: <b>${f(BUILD.budget,1)}M</b>
-        <input type="range" id="bBudget" min="25" max="85" step="0.5" value="${BUILD.budget}"></label>
-      <span class="note">ברירת מחדל ${f(defBudget,1)}M = 100M פחות הספסל הזול ביותר (${f(benchMin,1)}M) והמאמן הזול (${f(coachMin,1)}M)</span>
+      <label>תקציב לחמישייה: <b>${f(BUILD.budget,0)}M</b>
+        <input type="range" id="bBudget" min="25" max="85" step="1" value="${BUILD.budget}"></label>
+      <span class="note">ברירת מחדל ${f(defBudget,0)}M = 100M פחות הספסל הזול ביותר (${f(benchMin,0)}M) והמאמן הזול (${f(coachMin,0)}M)</span>
       <label class="chk"><input type="checkbox" id="bInj" ${BUILD.injured?'checked':''}> בלי פצועים/חסרים ומי שלא שיחק ב-3 האחרונים</label>
       ${BUILD.excluded.size?`<span class="exl">הוצאו: ${[...BUILD.excluded].map(id=>esc(byId.get(id).he||byId.get(id).name)).join(', ')}
         <button class="btn ghost sm" id="bReset">↺ אפס</button></span>`:''}
@@ -698,7 +698,7 @@ function renderBuilder(){
     <div class="card" style="margin-top:16px">${body}</div>`;
   const v = $('#builderView');
   const slider = $('#bBudget');
-  slider.oninput = ()=>{ v.querySelector('.bctl b').textContent = f(+slider.value,1)+'M'; };
+  slider.oninput = ()=>{ v.querySelector('.bctl b').textContent = f(+slider.value,0)+'M'; };
   slider.onchange = ()=>{ BUILD.budget = +slider.value; renderBuilder(); };
   $('#bInj').onchange = e=>{ BUILD.injured = e.target.checked; renderBuilder(); };
   v.querySelectorAll('[data-ex]').forEach(b=>b.onclick=e=>{ e.stopPropagation(); BUILD.excluded.add(+b.dataset.ex); renderBuilder(); });
@@ -768,8 +768,8 @@ function renderFilter(){
                 .sort((a,b)=>b.m[1].pir-a.m[1].pir);
   const head = `<div class="fctl">
       <div class="seg" id="fPos">${Object.entries(posHe).map(([k,h])=>`<button data-p="${k}" class="${FILT.pos.has(k)?'on':''}">${h}</button>`).join('')}</div>
-      <label>עד מחיר: <b id="fMaxLbl">${f(FILT.max,1)}M</b>
-        <input type="range" id="fMax" min="5" max="17" step="0.5" value="${FILT.max}"></label>
+      <label>עד מחיר: <b id="fMaxLbl">${f(FILT.max,0)}M</b>
+        <input type="range" id="fMax" min="5" max="17" step="1" value="${FILT.max}"></label>
       <label class="chk"><input type="checkbox" id="fInj" ${FILT.injured?'checked':''}> בלי פצועים / מי שלא שיחק ב-3 האחרונים</label>
       <span class="note">${list.length} שחקנים</span></div>`;
   const rows = list.slice(0,60).map((p,i)=>`<tr>
@@ -777,7 +777,7 @@ function renderFilter(){
       <td class="pl" data-id="${p.id}"><b>${esc(p.he||p.name)}</b><small>${esc(p.name)} · ${esc(p.team)}</small></td>
       <td><span class="tag">${posHe[p.s5pos||p.pos]}</span></td>
       <td>${esc(oppText(p))}</td>
-      <td class="num">${f(p.price,1)}M</td>
+      <td class="num">${f(p.price,0)}M</td>
       <td class="num"><b class="m2c">${f(p.m[1].pir,1)}</b></td></tr>`).join('');
   box.innerHTML = `<details class="card filt" ${box.dataset.open==='1'?'open':''}><summary><h2>חיפוש לפי עמדה ומחיר</h2></summary>
     ${head}
@@ -788,7 +788,7 @@ function renderFilter(){
   box.querySelectorAll('#fPos button').forEach(b=>b.onclick=()=>{
     const k=b.dataset.p; if(FILT.pos.has(k)){ if(FILT.pos.size>1) FILT.pos.delete(k); } else FILT.pos.add(k); renderFilter(); });
   const sl = $('#fMax', box);
-  sl.oninput = ()=>{ $('#fMaxLbl').textContent = f(+sl.value,1)+'M'; };
+  sl.oninput = ()=>{ $('#fMaxLbl').textContent = f(+sl.value,0)+'M'; };
   sl.onchange = ()=>{ FILT.max = +sl.value; renderFilter(); };
   $('#fInj', box).onchange = e=>{ FILT.injured = e.target.checked; renderFilter(); };
   box.querySelectorAll('.pl').forEach(el=>el.onclick=()=>openPlayer(+el.dataset.id));
@@ -826,7 +826,7 @@ function playerCard(p){
     <div class="opp" style="margin-top:8px">יריבה במחזור: <b>${esc(oppText(p))}</b>${p.date?` · ${fmtShortDate(p.date)}`:''}${nextAfter(p)}</div>
     ${actualBanner(p)}
     <div class="chips">
-      ${p.price!=null?`<span class="chip">מחיר פנטזי<b>${f(p.price,1)}M</b></span>`:''}${p.injured?'<span class="chip warnchip">פצוע/חסר באתר הפנטזי</span>':''}
+      ${p.price!=null?`<span class="chip">מחיר פנטזי<b>${f(p.price,0)}M</b></span>`:''}${p.injured?'<span class="chip warnchip">פצוע/חסר באתר הפנטזי</span>':''}
       <span class="chip">משחקים<b>${p.games}</b></span>
       <span class="chip">פנטזי עונה<b>${f(p.avg,2)}</b></span>
       <span class="chip">פנטזי ${p.l5n} אחרונים<b>${f(p.l5,2)}</b></span>
