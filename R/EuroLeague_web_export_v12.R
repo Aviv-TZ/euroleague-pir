@@ -87,6 +87,10 @@ el_web_prices <- function(season='E2026') {
   }
   res <- do.call(rbind, out)
   message('Prices: ', nrow(res), ' entries, ', sum(!is.na(res$raw)), ' matched to EuroLeague')
+  # EuroLeague headshots for every rostered player (used by the court view and the comparison)
+  img <- function(p) { u <- p$images$headshot; if (is.null(u)) u <- p$person$images$headshot; if (is.null(u)) NA_character_ else u }
+  attr(res, 'images') <- data.frame(raw=vapply(pl, function(p) p$person$name, ''),
+    team=vapply(pl, function(p) unname(club_by[p$club$code]), ''), img=vapply(pl, img, ''), stringsAsFactors=FALSE)
   res
 }
 
@@ -180,6 +184,9 @@ export_euroleague_web <- function(output_dir, site_dir, template_file,
       if (is.na(q)) q <- which(prices$raw == a$Player)[1]
       if (!is.na(q)) { p$price <- prices$price[q]; p$he <- prices$he[q]; p$s5pos <- prices$s5pos[q]
                        p$injured <- prices$injured[q] }
+      im <- attr(prices, 'images')
+      q2 <- which(im$raw == a$Player & im$team == a$Team)[1]; if (is.na(q2)) q2 <- which(im$raw == a$Player)[1]
+      if (!is.na(q2) && !is.na(im$img[q2])) p$img <- im$img[q2]
     }
     if (!is.na(j)) {
       c1 <- cand[j,]
