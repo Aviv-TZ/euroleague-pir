@@ -772,7 +772,7 @@ function solveSquad(pool, opts){
 }
 
 // ---------- G. Full squad: five + bench (no coach) ----------
-const SQUAD = {mode:'cheap', noStart:new Set(), noSquad:new Set()};
+const SQUAD = {budget:null, noStart:new Set(), noSquad:new Set()};
 function squadPool(){
   return P.filter(p=>p.ranked && p.price!=null && POS3.includes(p.s5pos) && !(BUILD.injured && (p.injured || p.out3)))
           .map(p=>({p, fp:p.m[BUILD.model].pir, price:p.price, pos:p.s5pos, team:p.team})).filter(x=>x.fp!=null);
@@ -791,7 +791,9 @@ function renderSquad(){
   const cp = (D.coaches||[]).map(c=>c.price);
   if(!cp.length){ box.innerHTML=''; return; }
   const cMin = Math.min(...cp), cMax = Math.max(...cp);
-  const budget = 100 - (SQUAD.mode==='cheap' ? cMin : cMax);
+  const bMin = 100 - cMax, bMax = 100 - cMin;
+  if(SQUAD.budget==null || SQUAD.budget<bMin || SQUAD.budget>bMax) SQUAD.budget = bMax;
+  const budget = SQUAD.budget;
   const r = solveSquad(squadPool(), {budget, noStart:SQUAD.noStart, noSquad:SQUAD.noSquad});
   const posHe = {Guard:'גארד', Forward:'פורוורד', Center:'סנטר'};
   const nameOf = id => esc(byId.get(id).he || byId.get(id).name);
@@ -822,15 +824,15 @@ function renderSquad(){
       <h2>סגל מלא – חמישייה + ספסל (בלי מאמן)</h2>
       <div class="hint">5 שחקני חמישייה + ספסל של גארד, פורוורד וסנטר (50% מהנקודות), עד 2 שחקנים מאותה קבוצה, הקפטן ×2. הניקוד המוצג על כל שחקן ספסל הוא מלא; בסך הכול נספר חצי. ✕ על שחקן חמישייה = לא בחמישייה (יכול לרדת לספסל); ✕ על שחקן ספסל = לא בסגל בכלל.</div>
       <div class="bctl">
-        <span>תקציב לשחקנים:</span>
-        <div class="seg" id="sqMode">
-          <button data-m="cheap" class="${SQUAD.mode==='cheap'?'on':''}">100 − המאמן הזול (${f(cMin,0)}M) = ${f(100-cMin,0)}M</button>
-          <button data-m="exp" class="${SQUAD.mode==='exp'?'on':''}">100 − המאמן היקר (${f(cMax,0)}M) = ${f(100-cMax,0)}M</button>
-        </div>
+        <label>תקציב לשחקנים (בלי מאמן): <b id="sqLbl">${f(budget,0)}M</b>
+          <input type="range" id="sqBudget" min="${bMin}" max="${bMax}" step="1" value="${budget}"></label>
+        <span class="note">מ-${f(bMin,0)}M (100 − המאמן היקר, ${f(cMax,0)}M) עד ${f(bMax,0)}M (100 − המאמן הזול, ${f(cMin,0)}M) · למאמן נשאר ${f(100-budget,0)}M</span>
         ${excl.length?`<span class="exl">הוצאו: ${excl.join(', ')} <button class="btn ghost sm" id="sqReset">↺ אפס</button></span>`:''}
       </div></div>
     <div class="card" style="margin-top:16px">${body}</div>`;
-  box.querySelectorAll('#sqMode button').forEach(b=>b.onclick=()=>{ SQUAD.mode=b.dataset.m; renderSquad(); });
+  const sq = $('#sqBudget', box);
+  sq.oninput = ()=>{ $('#sqLbl').textContent = f(+sq.value,0)+'M'; };
+  sq.onchange = ()=>{ SQUAD.budget = +sq.value; renderSquad(); };
   box.querySelectorAll('[data-xs]').forEach(b=>b.onclick=e=>{ e.stopPropagation(); SQUAD.noStart.add(+b.dataset.xs); renderSquad(); });
   box.querySelectorAll('[data-xb]').forEach(b=>b.onclick=e=>{ e.stopPropagation(); SQUAD.noSquad.add(+b.dataset.xb); SQUAD.noStart.delete(+b.dataset.xb); renderSquad(); });
   const rs = $('#sqReset', box); if(rs) rs.onclick = ()=>{ SQUAD.noStart.clear(); SQUAD.noSquad.clear(); renderSquad(); };
