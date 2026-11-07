@@ -208,6 +208,13 @@ td.act .up{color:var(--good)} td.act .down{color:var(--bad)}
 .chalf{direction:ltr;position:absolute;top:-10px;right:-6px;background:#5b6b86;color:#fff;font-size:11px;font-weight:700;border-radius:999px;padding:2px 7px}
 .ccard{padding-bottom:28px}
 .cx{bottom:4px}
+/* coaches */
+.coaches{margin-top:16px;text-align:center}
+.coaches h3{font-size:14px;color:var(--muted);margin:0 0 8px}
+.clist{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.coach{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:6px 10px;font-size:13px}
+.coach small{color:var(--muted)}
+.coach.blocked{opacity:.45;text-decoration:line-through}
 footer{color:var(--muted);font-size:12px;padding:10px 20px 30px;text-align:center}
 .empty{color:var(--muted);padding:30px;text-align:center}
 </style>
@@ -786,6 +793,16 @@ function benchCard(x, posHe){
       ${ph}<div class="cname">${esc(nm)}</div>
       <div class="cmeta">${posHe} · ${esc(oppShort(p))} · ${f(x.price,0)}M</div></div>`;
 }
+// Coaches affordable with what is left (100 - squad cost); a coach counts toward the 2-per-club limit.
+function coachList(r, left){
+  const used = {}; [...r.starters, ...POS3.map(q=>r.bench[q])].forEach(x=>used[x.team]=(used[x.team]||0)+1);
+  const cs = (D.coaches||[]).filter(c=>c.price<=left).sort((a,b)=>b.price-a.price || (a.he||'').localeCompare(b.he||''));
+  if(!cs.length) return `<div class="coaches"><h3>מאמנים זמינים</h3><div class="note">אין מאמן במחיר עד ${f(left,0)}M</div></div>`;
+  return `<div class="coaches"><h3>מאמנים זמינים עם מה שנשאר (עד ${f(left,0)}M)</h3>
+    <div class="clist">${cs.map(c=>{ const blocked = (used[c.team]||0)>=2;
+      return `<span class="coach ${blocked?'blocked':''}" title="${blocked?'כבר יש 2 שחקנים מהקבוצה בסגל':''}">
+        <b>${esc(c.he||c.raw||'')}</b> <small>${esc(c.team)} · ${f(c.price,0)}M${blocked?' · חסום (2 שחקנים מהקבוצה)':''}</small></span>`; }).join('')}</div></div>`;
+}
 function renderSquad(){
   const box = $('#squadView'); if(!box) return;
   const cp = (D.coaches||[]).map(c=>c.price);
@@ -818,7 +835,8 @@ function renderSquad(){
         <div><span>קפטן מומלץ</span><b>${esc(cap.p.he||cap.p.name)}</b><small>${f(cap.fp,1)} ×2 = ${f(2*cap.fp,1)}</small></div>
         <div><span>ספסל (ניקוד מלא)</span><b>${f(bFp,1)}</b><small>נספר חצי: ${f(bFp/2,1)}</small></div>
         <div><span>עלות הסגל</span><b>${f(r.cost,0)}M</b><small>מתוך ${f(budget,0)}M · נשאר ${f(budget-r.cost,0)}M</small></div>
-      </div>`;
+      </div>
+      ${coachList(r, 100 - r.cost)}`;
   }
   box.innerHTML = `<div class="card" style="margin-top:22px">
       <h2>סגל מלא – חמישייה + ספסל (בלי מאמן)</h2>
