@@ -165,6 +165,17 @@ export_euroleague_web <- function(output_dir, site_dir, template_file,
   num <- function(x, d=3) if (is.null(x) || !length(x) || !is.finite(x)) NULL else round(x, d)
 
   prices <- tryCatch(el_web_prices(), error=function(e) { message('Prices failed: ', conditionMessage(e)); NULL })
+  # Did the player appear (>0 minutes) in any of his team's last 3 games?
+  raw_all <- tryCatch(utils::read.csv(file.path(output_dir, 'EuroLeague_2026-27_players.csv'),
+                                      fileEncoding='UTF-8', stringsAsFactors=FALSE), error=function(e) NULL)
+  last3_played <- function(player, team) {
+    if (is.null(raw_all)) return(NA)
+    g <- unique(raw_all$Game[raw_all$Team == team])
+    ord <- if (!is.null(schedule)) order(schedule$Utc[match(as.character(g), schedule$Game)], decreasing=TRUE)
+           else order(suppressWarnings(as.numeric(g)), decreasing=TRUE)
+    last3 <- head(g[ord], 3)
+    any(raw_all$Player == player & raw_all$Team == team & raw_all$Game %in% last3)
+  }
   players <- vector('list', nrow(avgs))
   for (i in seq_len(nrow(avgs))) {
     a <- avgs[i,]
@@ -179,6 +190,7 @@ export_euroleague_web <- function(output_dir, site_dir, template_file,
               venue=if (!is.null(fx)) fx$Venue[1] else NULL,
               date=if (!is.null(fx)) as.character(fx$Date[1]) else NULL,
               ranked=!is.na(j))
+    if (isFALSE(last3_played(a$Player, a$Team))) p$out3 <- TRUE
     if (!is.null(prices)) {
       q <- which(prices$raw == a$Player & prices$team == a$Team)[1]
       if (is.na(q)) q <- which(prices$raw == a$Player)[1]

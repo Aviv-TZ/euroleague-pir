@@ -147,7 +147,12 @@ el_opponent_tables <- function(raw, meta) {
     recent <- raw[raw$Opponent == t & raw$Game %in% head(g, 5),,drop=FALSE]
     list(team=t,
          season=setNames(lapply(pos3, function(p) wavg(raw[raw$Opponent == t & raw$Position == p,,drop=FALSE])), pos3),
-         last5=setNames(lapply(pos3, function(p) wavg(recent[recent$Position == p,,drop=FALSE])), pos3))
+         last5=setNames(lapply(pos3, function(p) wavg(recent[recent$Position == p,,drop=FALSE])), pos3),
+         # whole season, split by where the DEFENDING team (t) played
+         home=setNames(lapply(pos3, function(p) wavg(raw[raw$Opponent == t & raw$Position == p &
+                raw$Game %in% meta$Game[meta$Home == t],,drop=FALSE])), pos3),
+         away=setNames(lapply(pos3, function(p) wavg(raw[raw$Opponent == t & raw$Position == p &
+                raw$Game %in% meta$Game[meta$Away == t],,drop=FALSE])), pos3))
   })
   league <- setNames(lapply(pos3, function(p) wavg(raw[raw$Position == p,,drop=FALSE])), pos3)
   list(opponents=opponents, league=league)

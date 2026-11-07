@@ -189,6 +189,18 @@ td.act .up{color:var(--good)} td.act .down{color:var(--bad)}
 .csum b{font-size:20px}
 .csum small{display:block;color:var(--muted);font-size:11.5px}
 @media(max-width:520px){ .crow{gap:6px} .cph{width:48px;height:48px} .cname{font-size:12px} .bctl input[type=range]{width:100%} }
+/* filter search */
+.filt{margin-top:14px}
+.filt summary{cursor:pointer;list-style:none} .filt summary::-webkit-details-marker{display:none}
+.filt summary h2:before{content:"▸ ";color:var(--accent)} .filt[open] summary h2:before{content:"▾ "}
+.fctl{display:flex;flex-wrap:wrap;gap:12px 18px;align-items:center;margin:10px 0}
+.fctl input[type=range]{width:200px;vertical-align:middle;margin-inline-start:8px;accent-color:var(--accent)}
+.fctl .chk{font-size:13px;color:var(--muted)}
+/* builder exclude */
+.cx{position:absolute;bottom:4px;left:4px;width:22px;height:22px;border-radius:50%;border:1px solid #ddd;background:#fff;color:#c0262d;font-weight:800;cursor:pointer;font-size:11px;line-height:1}
+.cx:hover{background:#c0262d;color:#fff}
+.exl{font-size:13px;color:var(--muted);display:inline-flex;gap:8px;align-items:center}
+.btn.sm{padding:4px 10px;font-size:12.5px}
 footer{color:var(--muted);font-size:12px;padding:10px 20px 30px;text-align:center}
 .empty{color:var(--muted);padding:30px;text-align:center}
 </style>
@@ -225,6 +237,7 @@ footer{color:var(--muted);font-size:12px;padding:10px 20px 30px;text-align:cente
 
   <section class="tab" id="tab-search">
     <div class="sbox" id="mainSearch"></div>
+    <div id="filterView" data-open="1"></div>
     <div id="playerView"></div>
     <div id="cmpArea"></div>
   </section>
@@ -374,11 +387,12 @@ function actualCell(p, k){
 }
 function renderTops(){
   $('#tops').innerHTML = MODELS.map(m=>{
-    const rows = P.filter(p=>p.ranked).sort((a,b)=>a.m[m.k].rank-b.m[m.k].rank).slice(0,15);
+    const rows = P.filter(p=>p.ranked && !p.out3).sort((a,b)=>a.m[m.k].rank-b.m[m.k].rank).slice(0,15);
+    const hidden = P.filter(p=>p.ranked && p.out3 && p.m[m.k].rank<=rows[rows.length-1].m[m.k].rank);
     const RH = (D.round_hits||[]), avg10 = RH.length ? RH.reduce((s,h)=>s+h['m'+(m.k+1)].t10,0)/RH.length : null;
     return `<div class="card">
       <h2><span class="dot ${m.cls}"></span>${m.long}</h2>
-      <div class="hint">15 המובילים בסקור למחזור ${M.next_round??'הקרוב'}${avg10!=null?` · העונה (מחזורים ${RH[0].round}–${RH[RH.length-1].round}): ממוצע ${f(avg10,1)} פגיעות בטופ 10`:''}</div>
+      <div class="hint">15 המובילים בסקור למחזור ${M.next_round??'הקרוב'}${hidden.length?` · הוסתרו ${hidden.length} שלא שיחקו ב-3 המשחקים האחרונים (${hidden.map(p=>esc(p.name)).join(', ')})`:''}${avg10!=null?` · העונה (מחזורים ${RH[0].round}–${RH[RH.length-1].round}): ממוצע ${f(avg10,1)} פגיעות בטופ 10`:''}</div>
       <div class="scroll"><table>
         <thead><tr><th>#</th><th>שחקן</th><th>יריבה</th><th class="num">Score</th><th class="num">פנטזי צפוי</th><th class="num" title="ניקוד בפועל · מקום אמיתי במחזור (פספוס מול החיזוי) · הפרש נקודות">בפועל</th></tr></thead>
         <tbody>${rows.map(p=>`<tr>
@@ -531,7 +545,7 @@ function matchupPanel(){
   }
   return `<div class="card matchup"><button class="x" id="mxClose" title="סגור">×</button>
     <h2>${o.next_vs?`ה${posPl} של ${esc(o.next_vs)} מול ${esc(o.team)}`:esc(o.team)}</h2>
-    <div class="hint">${esc(o.team)} מאפשרת ל${posPl} ${f(val,2)} פנטזי בממוצע (${oppView==='season'?'עונה':'5 משחקים אחרונים'}; ממוצע ליגה ${f((D.league||{})[pos],2)})${o.next_vs?` · ${o.next_venue==='Home'?'משחק בית':'משחק חוץ'} של ${esc(o.team)} במחזור ${nx.round}`:''} · ממוין לפי דקות</div>
+    <div class="hint">${esc(o.team)} מאפשרת ל${posPl} ${f(val,2)} פנטזי בממוצע (${OPP_VIEW_LBL[oppView]}; ממוצע ליגה ${f((D.league||{})[pos],2)})${o.next_vs?` · ${o.next_venue==='Home'?'משחק בית':'משחק חוץ'} של ${esc(o.team)} במחזור ${nx.round}`:''} · ממוין לפי דקות</div>
     ${body}</div>`;
 }
 function nextCell(o){
@@ -539,6 +553,7 @@ function nextCell(o){
   const nx = n ? `${n.venue==='Home'?'נגד':'@'} ${esc(n.vs)}${pl||n.round!==M.next_round?` <small>(מחזור ${n.round})</small>`:''}` : '–';
   return pl ? `<span class="badge final sm">✓ שיחקה במחזור ${LIVE.round}</span> ${nx}` : nx;
 }
+const OPP_VIEW_LBL = {season:'כל העונה', last5:'5 משחקים אחרונים', home:'כל העונה, במשחקי הבית שלה', away:'כל העונה, במשחקי החוץ שלה'};
 function renderOpp(){
   const O = OPP(), L = LEAGUE();
   if(!O.length){ $('#oppView').innerHTML='<div class="empty">אין נתונים</div>'; return; }
@@ -554,7 +569,7 @@ function renderOpp(){
       <h2>נקודות פנטזי שהיריבה מאפשרת לפי עמדה</h2>
       <div class="hint">ממוצע פנטזי (משוקלל לפי דקות) של שחקני היריבות בכל עמדה מול כל קבוצה. ערך גבוה = הגנה חלשה מול העמדה. לחיצה על כותרת ממיינת · <b>לחיצה על ערך מציגה את השחקנים מהיריבה הבאה בעמדה הזו</b></div>
       ${prog}</div>
-      <div class="seg"><button data-v="season" class="${oppView==='season'?'on':''}">עונה</button><button data-v="last5" class="${oppView==='last5'?'on':''}">5 אחרונים</button></div></div>
+      <div class="seg"><button data-v="season" class="${oppView==='season'?'on':''}">עונה</button><button data-v="last5" class="${oppView==='last5'?'on':''}">5 אחרונים</button><button data-v="home" class="${oppView==='home'?'on':''}" title="כל העונה, במשחקי הבית של הקבוצה">בבית</button><button data-v="away" class="${oppView==='away'?'on':''}" title="כל העונה, במשחקי החוץ של הקבוצה">בחוץ</button></div></div>
     <div class="legend">ממוצע ליגה: ${POS.map(([p,h])=>`${h} <b>${f(L[p],2)}</b>`).join(' · ')}
       <span>קשה<span class="sw"></span>נוח (ביחס לממוצע הליגה בעמדה)</span></div>
     <div class="scroll" style="margin-top:12px"><table class="opp-t">
@@ -584,6 +599,7 @@ function courtCard(x, isCap){
   const ph = p.img ? `<div class="cph" style="background-image:url('${esc(p.img)}')"></div>`
                    : `<div class="cph ini">${esc(initials(p))}</div>`;
   return `<div class="ccard pl" data-id="${p.id}">
+      <button class="cx" data-ex="${p.id}" title="בלי השחקן הזה – מה מומלץ במקומו">✕</button>
       <span class="cfp">${f(x.fp,1)}</span>${isCap?'<span class="ccap" title="קפטן – ניקוד כפול">C</span>':''}
       ${ph}
       <div class="cname">${esc(nm)}</div>
@@ -611,16 +627,18 @@ function courtView(r){
     <div class="csum">
       <div><span>צפי לחמישייה (כולל קפטן ×2)</span><b>${f(r.total,1)}</b></div>
       <div><span>קפטן מומלץ</span><b>${esc(cap.p.he||cap.p.name)}</b><small>${f(cap.fp,1)} ×2 = ${f(2*cap.fp,1)}</small></div>
-      <div><span>עלות</span><b>${f(spent,1)}M</b><small>נשאר ${f(BUILD.budget-spent,1)}M</small></div>
+      <div><span>עלות החמישייה</span><b>${f(spent,1)}M</b><small>מתוך ${f(BUILD.budget,1)}M שהוגדרו</small></div>
+      <div><span>נשאר מתקציב החמישייה</span><b>${f(BUILD.budget-spent,1)}M</b></div>
+      <div><span>למאמן + ספסל</span><b>${f(100-BUILD.budget,1)}M</b><small>100M פחות תקציב החמישייה</small></div>
     </div>`;
 }
 
 // ---------- F. Ideal five (sport5 rules: 5 starters, 1-3 G / 1-3 F / 1-2 C, max 2 per club, captain x2) ----------
-const BUILD = {budget:null, model:1, injured:true};   // model index 1 = Model 2
+const BUILD = {budget:null, model:1, injured:true, excluded:new Set()};   // model index 1 = Model 2
 const POS3 = ['Guard','Forward','Center'];
 const LIM = {Guard:[1,3], Forward:[1,3], Center:[1,2]};
 function buildPool(){
-  return P.filter(p=>p.ranked && p.price!=null && p.s5pos && POS3.includes(p.s5pos) && !(BUILD.injured && p.injured))
+  return P.filter(p=>p.ranked && p.price!=null && p.s5pos && POS3.includes(p.s5pos) && !(BUILD.injured && (p.injured || p.out3)) && !BUILD.excluded.has(p.id))
           .map(p=>({p, fp:p.m[BUILD.model].pir, price:p.price, pos:p.s5pos, team:p.team}))
           .filter(x=>x.fp!=null);
 }
@@ -673,7 +691,9 @@ function renderBuilder(){
       <label>תקציב לחמישייה: <b>${f(BUILD.budget,1)}M</b>
         <input type="range" id="bBudget" min="25" max="85" step="0.5" value="${BUILD.budget}"></label>
       <span class="note">ברירת מחדל ${f(defBudget,1)}M = 100M פחות הספסל הזול ביותר (${f(benchMin,1)}M) והמאמן הזול (${f(coachMin,1)}M)</span>
-      <label class="chk"><input type="checkbox" id="bInj" ${BUILD.injured?'checked':''}> בלי פצועים/חסרים</label>
+      <label class="chk"><input type="checkbox" id="bInj" ${BUILD.injured?'checked':''}> בלי פצועים/חסרים ומי שלא שיחק ב-3 האחרונים</label>
+      ${BUILD.excluded.size?`<span class="exl">הוצאו: ${[...BUILD.excluded].map(id=>esc(byId.get(id).he||byId.get(id).name)).join(', ')}
+        <button class="btn ghost sm" id="bReset">↺ אפס</button></span>`:''}
     </div></div>
     <div class="card" style="margin-top:16px">${body}</div>`;
   const v = $('#builderView');
@@ -681,6 +701,8 @@ function renderBuilder(){
   slider.oninput = ()=>{ v.querySelector('.bctl b').textContent = f(+slider.value,1)+'M'; };
   slider.onchange = ()=>{ BUILD.budget = +slider.value; renderBuilder(); };
   $('#bInj').onchange = e=>{ BUILD.injured = e.target.checked; renderBuilder(); };
+  v.querySelectorAll('[data-ex]').forEach(b=>b.onclick=e=>{ e.stopPropagation(); BUILD.excluded.add(+b.dataset.ex); renderBuilder(); });
+  const rs = $('#bReset'); if(rs) rs.onclick = ()=>{ BUILD.excluded.clear(); renderBuilder(); };
   v.querySelectorAll('.pl').forEach(el=>el.onclick=()=>openPlayer(+el.dataset.id));
 }
 
@@ -736,6 +758,42 @@ function makeSearch(container, placeholder, onPick, getExclude){
   return inp;
 }
 
+// ---------- Search by position(s) and max price ----------
+const FILT = {pos:new Set(['Guard','Forward','Center']), max:17, injured:true};
+function renderFilter(){
+  const box = $('#filterView'); if(!box) return;
+  const posHe = {Guard:'גארד', Forward:'פורוורד', Center:'סנטר'};
+  const list = P.filter(p=>p.ranked && p.price!=null && FILT.pos.has(p.s5pos||p.pos) && p.price<=FILT.max &&
+                           !(FILT.injured && (p.injured || p.out3)))
+                .sort((a,b)=>b.m[1].pir-a.m[1].pir);
+  const head = `<div class="fctl">
+      <div class="seg" id="fPos">${Object.entries(posHe).map(([k,h])=>`<button data-p="${k}" class="${FILT.pos.has(k)?'on':''}">${h}</button>`).join('')}</div>
+      <label>עד מחיר: <b id="fMaxLbl">${f(FILT.max,1)}M</b>
+        <input type="range" id="fMax" min="5" max="17" step="0.5" value="${FILT.max}"></label>
+      <label class="chk"><input type="checkbox" id="fInj" ${FILT.injured?'checked':''}> בלי פצועים / מי שלא שיחק ב-3 האחרונים</label>
+      <span class="note">${list.length} שחקנים</span></div>`;
+  const rows = list.slice(0,60).map((p,i)=>`<tr>
+      <td class="rk">${i+1}</td>
+      <td class="pl" data-id="${p.id}"><b>${esc(p.he||p.name)}</b><small>${esc(p.name)} · ${esc(p.team)}</small></td>
+      <td><span class="tag">${posHe[p.s5pos||p.pos]}</span></td>
+      <td>${esc(oppText(p))}</td>
+      <td class="num">${f(p.price,1)}M</td>
+      <td class="num"><b class="m2c">${f(p.m[1].pir,1)}</b></td></tr>`).join('');
+  box.innerHTML = `<details class="card filt" ${box.dataset.open==='1'?'open':''}><summary><h2>חיפוש לפי עמדה ומחיר</h2></summary>
+    ${head}
+    ${list.length?`<div class="scroll"><table><thead><tr><th>#</th><th>שחקן</th><th>עמדה</th><th>יריבה</th><th class="num">מחיר</th><th class="num">פנטזי צפוי</th></tr></thead><tbody>${rows}</tbody></table></div>
+    ${list.length>60?'<p class="note">מוצגים 60 הראשונים</p>':''}`:'<div class="empty">אין שחקנים שעומדים בסינון</div>'}
+  </details>`;
+  const d = $('details.filt', box); d.ontoggle = ()=>{ box.dataset.open = d.open?'1':'0'; };
+  box.querySelectorAll('#fPos button').forEach(b=>b.onclick=()=>{
+    const k=b.dataset.p; if(FILT.pos.has(k)){ if(FILT.pos.size>1) FILT.pos.delete(k); } else FILT.pos.add(k); renderFilter(); });
+  const sl = $('#fMax', box);
+  sl.oninput = ()=>{ $('#fMaxLbl').textContent = f(+sl.value,1)+'M'; };
+  sl.onchange = ()=>{ FILT.max = +sl.value; renderFilter(); };
+  $('#fInj', box).onchange = e=>{ FILT.injured = e.target.checked; renderFilter(); };
+  box.querySelectorAll('.pl').forEach(el=>el.onclick=()=>openPlayer(+el.dataset.id));
+}
+
 // ---------- C. Player card ----------
 let current = null, compare = [], mode = 'card';   // mode: 'card' | 'compare'
 function componentsTable(p, m){
@@ -789,8 +847,10 @@ function playerCard(p){
 }
 function renderPlayer(){
   const pv = $('#playerView'), ca = $('#cmpArea');
-  if(!current){ pv.innerHTML = '<div class="empty">התחל להקליד שם שחקן (באנגלית או בעברית) או קבוצה</div>'; ca.innerHTML=''; return; }
+  $('#filterView').style.display = mode==='compare' ? 'none' : '';
+  if(!current){ pv.innerHTML = ''; ca.innerHTML=''; $('#filterView').dataset.open='1'; renderFilter(); return; }
   $('#mainSearch').style.display = mode==='compare' ? 'none' : '';
+  if(mode!=='compare'){ $('#filterView').dataset.open='0'; renderFilter(); }
   if(mode==='compare'){ pv.innerHTML=''; renderCompare(); return; }
   ca.innerHTML = '';
   pv.innerHTML = playerCard(byId.get(current));
