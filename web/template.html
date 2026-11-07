@@ -201,6 +201,13 @@ td.act .up{color:var(--good)} td.act .down{color:var(--bad)}
 .cx:hover{background:#c0262d;color:#fff}
 .exl{font-size:13px;color:var(--muted);display:inline-flex;gap:8px;align-items:center}
 .btn.sm{padding:4px 10px;font-size:12.5px}
+/* bench */
+.bench{margin-top:14px;padding:14px 8px;border-radius:14px;background:repeating-linear-gradient(90deg,#3b2f25 0 10px,#33281f 10px 20px);max-width:560px;margin-inline:auto}
+.btitle{color:#f0d9bd;text-align:center;font-weight:700;font-size:13px;margin-bottom:12px}
+.bcard{opacity:.95}
+.chalf{direction:ltr;position:absolute;top:-10px;right:-6px;background:#5b6b86;color:#fff;font-size:11px;font-weight:700;border-radius:999px;padding:2px 7px}
+.ccard{padding-bottom:28px}
+.cx{bottom:4px}
 footer{color:var(--muted);font-size:12px;padding:10px 20px 30px;text-align:center}
 .empty{color:var(--muted);padding:30px;text-align:center}
 </style>
@@ -233,6 +240,7 @@ footer{color:var(--muted);font-size:12px;padding:10px 20px 30px;text-align:cente
 
   <section class="tab" id="tab-build">
     <div id="builderView"></div>
+    <div id="squadView"></div>
   </section>
 
   <section class="tab" id="tab-search">
@@ -700,10 +708,133 @@ function renderBuilder(){
   const slider = $('#bBudget');
   slider.oninput = ()=>{ v.querySelector('.bctl b').textContent = f(+slider.value,0)+'M'; };
   slider.onchange = ()=>{ BUILD.budget = +slider.value; renderBuilder(); };
-  $('#bInj').onchange = e=>{ BUILD.injured = e.target.checked; renderBuilder(); };
+  $('#bInj').onchange = e=>{ BUILD.injured = e.target.checked; renderBuilder(); renderSquad(); };
   v.querySelectorAll('[data-ex]').forEach(b=>b.onclick=e=>{ e.stopPropagation(); BUILD.excluded.add(+b.dataset.ex); renderBuilder(); });
   const rs = $('#bReset'); if(rs) rs.onclick = ()=>{ BUILD.excluded.clear(); renderBuilder(); };
   v.querySelectorAll('.pl').forEach(el=>el.onclick=()=>openPlayer(+el.dataset.id));
+}
+
+// Full squad (sport5 rules, no coach): 5 starters (1-3 G, 1-3 F, 1-2 C) + bench 1 G + 1 F + 1 C,
+// max 2 per club, captain (best starter) x2, bench scores 50%.
+// Objective = starters + captain bonus + bench/2. Exact branch & bound.
+// opts: {budget, noStart:Set(ids), noSquad:Set(ids)}; pool items: {p, fp, price, pos, team}
+function solveSquad(pool, opts){
+  const POSL = ['Guard','Forward','Center'], LIMS = {Guard:[1,3], Forward:[1,3], Center:[1,2]};
+  pool = pool.filter(x=>!opts.noSquad.has(x.p.id) && x.price<=opts.budget);
+  // a player is useful only if fewer than 4 same-position players (a position can fill 4 slots) are cheaper-or-equal AND better
+  const dom = x => pool.filter(y=>y!==x && y.pos===x.pos && y.price<=x.price && y.fp>=x.fp && (y.price<x.price||y.fp>x.fp)).length;
+  const c = pool.filter(x=>dom(x)<4).sort((a,b)=>b.fp-a.fp);
+  const n = c.length;
+  // suffix best fp per position (for the bench bound)
+  const suf = {}; for(const q of POSL){ suf[q]=new Array(n+1).fill(0); for(let i=n-1;i>=0;i--) suf[q][i]=Math.max(suf[q][i+1], c[i].pos===q?c[i].fp:0); }
+  const minP = {}; for(const q of POSL) minP[q] = Math.min(...c.filter(x=>x.pos===q).map(x=>x.price));
+  const minAny = Math.min(...c.map(x=>x.price));
+  const st = {Guard:0,Forward:0,Center:0}, bench = {Guard:null,Forward:null,Center:null}, team = {}, starters = [];
+  let best = null, bestVal = -Infinity, nodes = 0;
+  function rec(i, cost, valS, cap, valB){
+    nodes++;
+    const nS = starters.length, benchLeft = POSL.filter(q=>!bench[q]);
+    if(nS===5 && !benchLeft.length){
+      const v = valS + cap + valB/2;
+      if(v>bestVal){ bestVal=v; best={starters:[...starters], bench:{...bench}, total:v, cost}; }
+      return;
+    }
+    if(i>=n) return;
+    // cost lower bound for the slots still open
+    let need = 0; for(const q of POSL) need += Math.max(0, LIMS[q][0]-st[q]);
+    if(need > 5-nS) return;
+    const lb = benchLeft.reduce((s,q)=>s+minP[q],0) + POSL.reduce((s,q)=>s+Math.max(0,LIMS[q][0]-st[q])*minP[q],0) + (5-nS-need)*minAny;
+    if(cost+lb > opts.budget) return;
+    // value upper bound
+    let ub = valS + valB/2, mx = cap;
+    for(let j=i,t=0; j<n && t<5-nS; j++,t++){ ub += c[j].fp; if(t===0) mx = Math.max(mx, c[j].fp); }
+    for(const q of benchLeft) ub += suf[q][i]/2;
+    if(ub + mx <= bestVal + 1e-9) return;
+    for(let j=i; j<n; j++){
+      const x = c[j];
+      if(cost+x.price>opts.budget || (team[x.team]||0)>=2) continue;
+      team[x.team]=(team[x.team]||0)+1;
+      if(nS<5 && st[x.pos]<LIMS[x.pos][1] && !opts.noStart.has(x.p.id)){
+        st[x.pos]++; starters.push(x);
+        rec(j+1, cost+x.price, valS+x.fp, Math.max(cap,x.fp), valB);
+        starters.pop(); st[x.pos]--;
+      }
+      if(!bench[x.pos]){
+        bench[x.pos]=x;
+        rec(j+1, cost+x.price, valS, cap, valB+x.fp);
+        bench[x.pos]=null;
+      }
+      team[x.team]--;
+    }
+  }
+  rec(0,0,0,0,0);
+  return best ? {...best, nodes, cands:n} : null;
+}
+
+// ---------- G. Full squad: five + bench (no coach) ----------
+const SQUAD = {mode:'cheap', noStart:new Set(), noSquad:new Set()};
+function squadPool(){
+  return P.filter(p=>p.ranked && p.price!=null && POS3.includes(p.s5pos) && !(BUILD.injured && (p.injured || p.out3)))
+          .map(p=>({p, fp:p.m[BUILD.model].pir, price:p.price, pos:p.s5pos, team:p.team})).filter(x=>x.fp!=null);
+}
+function benchCard(x, posHe){
+  const p = x.p, nm = p.he || p.name;
+  const ph = p.img ? `<div class="cph" style="background-image:url('${esc(p.img)}')"></div>` : `<div class="cph ini">${esc(initials(p))}</div>`;
+  return `<div class="ccard bcard pl" data-id="${p.id}">
+      <button class="cx" data-xb="${p.id}" title="להוציא מהסגל לגמרי">✕</button>
+      <span class="cfp">${f(x.fp,1)}</span><span class="chalf" title="שחקן ספסל מקבל 50%">½ = ${f(x.fp/2,1)}</span>
+      ${ph}<div class="cname">${esc(nm)}</div>
+      <div class="cmeta">${posHe} · ${esc(oppShort(p))} · ${f(x.price,0)}M</div></div>`;
+}
+function renderSquad(){
+  const box = $('#squadView'); if(!box) return;
+  const cp = (D.coaches||[]).map(c=>c.price);
+  if(!cp.length){ box.innerHTML=''; return; }
+  const cMin = Math.min(...cp), cMax = Math.max(...cp);
+  const budget = 100 - (SQUAD.mode==='cheap' ? cMin : cMax);
+  const r = solveSquad(squadPool(), {budget, noStart:SQUAD.noStart, noSquad:SQUAD.noSquad});
+  const posHe = {Guard:'גארד', Forward:'פורוורד', Center:'סנטר'};
+  const nameOf = id => esc(byId.get(id).he || byId.get(id).name);
+  const excl = [...[...SQUAD.noStart].map(id=>`${nameOf(id)} (לא בחמישייה)`), ...[...SQUAD.noSquad].map(id=>`${nameOf(id)} (לא בסגל)`)];
+  let body = '<div class="empty">אין סגל חוקי בתקציב הזה</div>';
+  if(r){
+    const cap = r.starters.reduce((a,b)=>b.fp>a.fp?b:a);
+    const row = pos => r.starters.filter(x=>x.pos===pos).sort((a,b)=>b.fp-a.fp)
+      .map(x=>courtCard(x, x===cap).replace('data-ex=', 'data-xs=').replace('בלי השחקן הזה – מה מומלץ במקומו','לא בחמישייה (עדיין יכול להיות בספסל)')).join('');
+    const sFp = r.starters.reduce((s,x)=>s+x.fp,0), bFp = POS3.reduce((s,q)=>s+r.bench[q].fp,0);
+    body = `<div class="court">
+        <svg class="lines" viewBox="0 0 100 140" preserveAspectRatio="none" aria-hidden="true">
+          <rect x="3" y="2" width="94" height="136" fill="none"/><rect x="34" y="2" width="32" height="30" fill="none"/>
+          <path d="M34 32 A16 10 0 0 0 66 32" fill="none"/><line x1="3" y1="70" x2="97" y2="70"/>
+          <circle cx="50" cy="70" r="11" fill="none"/><path d="M10 138 L10 120 A40 32 0 0 1 90 120 L90 138" fill="none"/></svg>
+        <div class="crow">${row('Center')}</div><div class="crow">${row('Forward')}</div><div class="crow">${row('Guard')}</div>
+      </div>
+      <div class="bench"><div class="btitle">ספסל · מקבל 50% מהנקודות</div>
+        <div class="crow">${POS3.map(q=>benchCard(r.bench[q], posHe[q])).join('')}</div></div>
+      <div class="csum">
+        <div><span>צפי לסגל (מה שנספר)</span><b>${f(r.total,1)}</b><small>חמישייה ${f(sFp,1)} + קפטן ${f(cap.fp,1)} + ½ ספסל ${f(bFp/2,1)}</small></div>
+        <div><span>קפטן מומלץ</span><b>${esc(cap.p.he||cap.p.name)}</b><small>${f(cap.fp,1)} ×2 = ${f(2*cap.fp,1)}</small></div>
+        <div><span>ספסל (ניקוד מלא)</span><b>${f(bFp,1)}</b><small>נספר חצי: ${f(bFp/2,1)}</small></div>
+        <div><span>עלות הסגל</span><b>${f(r.cost,0)}M</b><small>מתוך ${f(budget,0)}M · נשאר ${f(budget-r.cost,0)}M</small></div>
+      </div>`;
+  }
+  box.innerHTML = `<div class="card" style="margin-top:22px">
+      <h2>סגל מלא – חמישייה + ספסל (בלי מאמן)</h2>
+      <div class="hint">5 שחקני חמישייה + ספסל של גארד, פורוורד וסנטר (50% מהנקודות), עד 2 שחקנים מאותה קבוצה, הקפטן ×2. הניקוד המוצג על כל שחקן ספסל הוא מלא; בסך הכול נספר חצי. ✕ על שחקן חמישייה = לא בחמישייה (יכול לרדת לספסל); ✕ על שחקן ספסל = לא בסגל בכלל.</div>
+      <div class="bctl">
+        <span>תקציב לשחקנים:</span>
+        <div class="seg" id="sqMode">
+          <button data-m="cheap" class="${SQUAD.mode==='cheap'?'on':''}">100 − המאמן הזול (${f(cMin,0)}M) = ${f(100-cMin,0)}M</button>
+          <button data-m="exp" class="${SQUAD.mode==='exp'?'on':''}">100 − המאמן היקר (${f(cMax,0)}M) = ${f(100-cMax,0)}M</button>
+        </div>
+        ${excl.length?`<span class="exl">הוצאו: ${excl.join(', ')} <button class="btn ghost sm" id="sqReset">↺ אפס</button></span>`:''}
+      </div></div>
+    <div class="card" style="margin-top:16px">${body}</div>`;
+  box.querySelectorAll('#sqMode button').forEach(b=>b.onclick=()=>{ SQUAD.mode=b.dataset.m; renderSquad(); });
+  box.querySelectorAll('[data-xs]').forEach(b=>b.onclick=e=>{ e.stopPropagation(); SQUAD.noStart.add(+b.dataset.xs); renderSquad(); });
+  box.querySelectorAll('[data-xb]').forEach(b=>b.onclick=e=>{ e.stopPropagation(); SQUAD.noSquad.add(+b.dataset.xb); SQUAD.noStart.delete(+b.dataset.xb); renderSquad(); });
+  const rs = $('#sqReset', box); if(rs) rs.onclick = ()=>{ SQUAD.noStart.clear(); SQUAD.noSquad.clear(); renderSquad(); };
+  box.querySelectorAll('.pl').forEach(el=>el.onclick=()=>openPlayer(+el.dataset.id));
 }
 
 // ---------- Autocomplete ----------
@@ -989,11 +1120,11 @@ $('#foot').innerHTML = `יעד: נקודות פנטזי לפי חוקי ערוץ
 
 makeSearch($('#mainSearch'),'חפש שחקן… (שם באנגלית/עברית או קבוצה)', p=>openPlayer(p.id), ()=>new Set());
 function renderAll(){
-  updateSubline(); renderTops(); renderFixtures(); renderOpp(); renderBuilder();
+  updateSubline(); renderTops(); renderFixtures(); renderOpp(); renderBuilder(); renderSquad();
   const ae = document.activeElement;   // do not rebuild the search area while the user is typing
   if(!(ae && ae.tagName==='INPUT' && $('#tab-search').contains(ae))) renderPlayer();
 }
-updateSubline(); renderTops(); renderFixtures(); renderOpp(); renderBuilder(); readHash(); renderPlayer();
+updateSubline(); renderTops(); renderFixtures(); renderOpp(); renderBuilder(); renderSquad(); readHash(); renderPlayer();
 loadLive().then(pollDirect);
 window.addEventListener('hashchange', ()=>{ readHash(); renderPlayer(); });
 })();
