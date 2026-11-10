@@ -230,6 +230,8 @@ td.act .up{color:var(--good)} td.act .down{color:var(--bad)}
 .trow .rank{display:inline-flex;width:22px;height:22px;border-radius:50%;background:var(--accent);color:#1a0f00;align-items:center;justify-content:center;font-size:12px;margin-inline-end:4px}
 .hzl{font-size:13px;color:var(--muted)} .hzl select{margin-inline-start:6px;padding:6px 8px;border-radius:8px;background:var(--panel2);color:var(--text);border:1px solid var(--line);font:inherit}
 .mtform.sbox{max-width:none} .mtform.sbox:before{display:none} .mtform .ac{top:calc(100% + 2px)}
+.trow.pick{cursor:pointer;border-radius:10px} .trow.pick:hover{background:#ffffff0a}
+.trow.pick.best:after{content:"מוצג ✓";grid-column:1/-1;font-size:11.5px;color:var(--good);text-align:center}
 footer{color:var(--muted);font-size:12px;padding:10px 20px 30px;text-align:center}
 .empty{color:var(--muted);padding:30px;text-align:center}
 </style>
@@ -882,7 +884,7 @@ const WORKER = 'https://el-fantasy.aviv-tzafrir.workers.dev';
 const S5POS = {1:'Guard', 2:'Forward', 3:'Center', 4:'Coach'};
 const byS5 = new Map(P.filter(p=>p.s5id!=null).map(p=>[p.s5id,p]));
 const FUT = (M.fut_rounds||[]);
-const MT = {data:null, loading:false, err:null, rec:null, H:1, q:''};
+const MT = {data:null, loading:false, err:null, rec:null, H:1, q:'', sel:0, thrSort:'risk'};
 // ownership (own.json, refreshed every 6 hours)
 const OWN = {size:null, own:{}, updated:null};
 const ownPct = p => (p && p.s5id!=null && OWN.size && OWN.own[p.s5id]!=null) ? 100*OWN.own[p.s5id]/OWN.size : null;
@@ -975,7 +977,7 @@ async function mtLookup(name, userId){
 async function mtCompute(){
   MT.rec = null; renderMyTeam();
   await new Promise(r=>setTimeout(r,30));   // paint first; the search can take a second or two
-  MT.rec = recommend(MT.sq, MT.coach, MT.bank, MT.H);
+  MT.rec = recommend(MT.sq, MT.coach, MT.bank, MT.H); MT.sel = 0;
   renderMyTeam();
 }
 function mtCard(x, isCap, h, cls=''){
@@ -1001,7 +1003,7 @@ function threats(sq, H){
   const mine = new Set(sq.map(x=>x.s5id));
   return P.filter(p=>p.s5id!=null && !mine.has(p.s5id) && ownPct(p)!=null && p.fut)
     .map(p=>{ const fps=fpsOf(p,false,H), tot=fps.reduce((a,b)=>a+b,0); return {p, own:ownPct(p), tot, risk:ownPct(p)/100*tot}; })
-    .sort((a,b)=>b.risk-a.risk).slice(0,8);
+    .sort((a,b)=> MT.thrSort==='own' ? (b.own-a.own || b.tot-a.tot) : (b.risk-a.risk)).slice(0,8);
 }
 // The squad exactly as it is on the fantasy site now (starters / bench / captain / vice-captain)
 function roundState(){
@@ -1064,15 +1066,16 @@ function renderMyTeam(){
         <div class="hint">3 התוכניות עם הכי הרבה נקודות צפויות ב${rangeTxt} (סכום הסידור הטוב ביותר בכל מחזור: חמישייה, קפטן ×2, חצי ספסל). עד 3 חילופים עכשיו – אין יתרון לשמור חילופים, אז אם 2 עדיפים זו ההמלצה. תקציב 100M כולל מאמן, עמדות לפי הפורמט, עד 2 מכל קבוצה כולל מאמן. המאמן לא מוחלף. שחקן פצוע/שלא שיחק ב-3 האחרונים = 0. תחזית למחזורים רחוקים מבוססת על הנתונים של היום ומשתנה רק לפי היריבה ובית/חוץ.</div>
         ${!rec?'<div class="empty">מחשב חילופים…</div>':`<div class="note">הסגל הנוכחי בלי חילופים: <b>${f(rec.baseV,1)}</b> נקודות צפויות ב${rangeTxt}</div>
           ${plans.map((r,i)=>{ const gain = r.v-rec.baseV;
-            return `<div class="trow ${i===0?'best':''}">
+            return `<div class="trow pick ${i===MT.sel?'best':''}" data-plan="${i}" title="לחץ להצגת ההרכב של התוכנית">
               <div class="tk"><span class="rank">${i+1}</span> ${r.k===0?'בלי חילופים':`${r.k} ${r.k===1?'חילוף':'חילופים'}`}</div>
               <div class="tio">${r.k===0?'<div class="note">להשאיר את הסגל כמו שהוא</div>':r.outs.map((o,j)=>`<div><span class="out">⬅ ${esc(o.name)} (${f(o.tot,1)})</span> <span class="in">➜ ${esc(r.ins[j].name)} (${f(r.ins[j].tot,1)}, ${f(r.ins[j].price,0)}M${ownTxt(r.ins[j].p)?', '+ownTxt(r.ins[j].p)+' אחזקה':''})</span></div>`).join('')}</div>
               <div class="tg"><b class="${gain>0.05?'up':''}">${gain>0.05?'+':''}${f(gain,1)}</b><small>סה"כ ${f(r.v,1)} · נשאר ${f(r.left,0)}M</small></div></div>`; }).join('')}
-          ${plans[0]?`<h3 style="margin-top:16px">הסגל לפי תוכנית 1 – מחזור ${rr(0)} (קפטן מומלץ מסומן C)</h3>${mtCourt(plans[0].squad)}`:''}`}
+          ${plans[MT.sel]?`<h3 style="margin-top:16px">ההרכב לפי תוכנית ${MT.sel+1} למחזור הקרוב (${rr(0)}) – קפטן מומלץ מסומן C${H>1?` · התוכנית נבחרה לפי ${H} מחזורים`:''}</h3>${mtCourt(plans[MT.sel].squad)}`:''}`}
       </div>
       <div class="card" style="margin-top:16px">
-        <h2>השחקנים שהכי פוגעים בך</h2>
-        <div class="hint">שחקנים עם אחוז אחזקה גבוה שאין לך – אם הם עושים הרבה נקודות, רוב המתחרים מרוויחים ואתה לא. מדורג לפי אחוז אחזקה × צפי ב${rangeTxt}.${OWN.updated?` אחזקה עודכנה: ${timeFmt.format(new Date(OWN.updated))}`:''}</div>
+        <div class="phead"><h2>השחקנים שהכי פוגעים בך</h2>
+          <div class="seg" id="thrSort"><button data-s="risk" class="${MT.thrSort==='risk'?'on':''}">לפי אחזקה × צפי</button><button data-s="own" class="${MT.thrSort==='own'?'on':''}">לפי % אחזקה</button></div></div>
+        <div class="hint">שחקנים עם אחוז אחזקה גבוה שאין לך – אם הם עושים הרבה נקודות, רוב המתחרים מרוויחים ואתה לא. מדורג ${MT.thrSort==='own'?'לפי אחוז האחזקה':`לפי אחוז אחזקה × צפי ב${rangeTxt}`}.${OWN.updated?` אחזקה עודכנה: ${timeFmt.format(new Date(OWN.updated))}`:''}</div>
         ${!OWN.size?'<div class="note">נתוני אחזקה עוד לא זמינים</div>':`<div class="scroll"><table><thead><tr><th>שחקן</th><th class="num">% אחזקה</th><th class="num">צפי (${rangeTxt})</th><th class="num">"פגיעה"</th><th class="num">מחיר</th></tr></thead><tbody>
           ${thr.map(x=>`<tr><td class="pl" data-id="${x.p.id}"><b>${esc(x.p.he||x.p.name)}</b><small>${esc(x.p.team)} · ${x.p.pos_he}</small></td>
             <td class="num"><b>${f(x.own,0)}%</b></td><td class="num">${f(x.tot,1)}</td><td class="num">${f(x.risk,1)}</td><td class="num">${f(x.p.price,0)}M</td></tr>`).join('')}</tbody></table></div>`}
@@ -1098,6 +1101,8 @@ function renderMyTeam(){
       }catch(e){} }, 400); };
   inp.onblur = ()=>setTimeout(()=>ac.classList.remove('on'),150);
   const hs = $('#mtH'); if(hs) hs.onchange = ()=>{ MT.H = +hs.value; mtCompute(); };
+  box.querySelectorAll('.trow[data-plan]').forEach(el=>el.onclick=()=>{ MT.sel = +el.dataset.plan; renderMyTeam(); });
+  box.querySelectorAll('#thrSort button').forEach(b=>b.onclick=()=>{ MT.thrSort = b.dataset.s; renderMyTeam(); });
   box.querySelectorAll('[data-uid]').forEach(b=>b.onclick=()=>mtLookup(b.dataset.nm||$('#mtName').value.trim(), b.dataset.uid));
   box.querySelectorAll('.pl[data-id]').forEach(el=>el.onclick=()=>openPlayer(+el.dataset.id));
 }
