@@ -239,9 +239,9 @@ td.act .up{color:var(--good)} td.act .down{color:var(--bad)}
 .ts{display:none}
 @media(max-width:600px){
   .tl{display:none} .ts{display:inline}
-  nav{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;margin-inline:-20px;padding-inline:20px}
-  nav::-webkit-scrollbar{display:none}
-  nav button{white-space:nowrap;padding:10px 12px;flex:0 0 auto}
+  nav{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:12px;padding-bottom:10px}
+  nav button{white-space:nowrap;padding:9px 4px;border-radius:10px;background:var(--panel);border:1px solid var(--line);font-size:14px}
+  nav button.on{background:var(--accent);color:#1a0f00;box-shadow:none;border-color:var(--accent)}
   main{padding:14px 10px} .card{padding:12px}
   h1{font-size:19px}
   .col-score,.col-price{display:none}
@@ -273,10 +273,10 @@ footer{color:var(--muted);font-size:12px;padding:10px 20px 30px;text-align:cente
   <div class="sub" id="subline"></div>
   <nav>
     <button data-tab="top" class="on">טופ 15</button>
-    <button data-tab="fixtures">לוח המחזור הקרוב</button>
-    <button data-tab="search">חיפוש והשוואת שחקנים</button>
-    <button data-tab="opp">יריבות לפי עמדה</button>
-    <button data-tab="build">חמישייה אידיאלית</button>
+    <button data-tab="fixtures"><span class="tl">לוח המחזור הקרוב</span><span class="ts">לוח</span></button>
+    <button data-tab="search"><span class="tl">חיפוש והשוואת שחקנים</span><span class="ts">חיפוש</span></button>
+    <button data-tab="opp"><span class="tl">יריבות לפי עמדה</span><span class="ts">יריבות</span></button>
+    <button data-tab="build"><span class="tl">חמישייה אידיאלית</span><span class="ts">חמישייה</span></button>
     <button data-tab="myteam">הקבוצה שלי</button>
   </nav>
 </div></header>
