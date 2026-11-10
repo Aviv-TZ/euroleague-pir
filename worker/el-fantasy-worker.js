@@ -143,8 +143,15 @@ async function lookup(env, url) {
   const squadRaw = await api(env, `UserTeam/GetUserAndTeam?seasonId=${await season(env)}&userId=${t.userId}`);
   const size = await leagueSize(env);
   const info = teamInfo(t);
+  const ut = (squadRaw && squadRaw.data && squadRaw.data.userTeam) || {};
+  const players = (ut.userTeamPlayers || []).filter(x => x && x.player && x.isActive !== false && !x.isRemoved).map(x => ({
+    s5id: x.player.id, name: x.player.name, price: x.player.price / 1e6, pos: x.player.position,   // 1 G, 2 F, 3 C, 4 coach
+    teamId: x.player.teamId, reserve: !!x.isReserve,
+    injured: (x.player.injuredStatus || 0) > 0 || (x.player.missingStatus || 0) > 0,
+    lastRound: x.player.lastRoundPlayerStats ? x.player.lastRoundPlayerStats.points : null }));
   return json({ team: info, leagueSize: size, percentile: Math.round(1000 * info.position / size) / 10,
-                squad: squadFrom(squadRaw), flags: flagsOf(squadRaw) }, 200, { 'Cache-Control': 'public, max-age=3600' });
+                squad: players, captainId: ut.captainId ?? null, subCaptainId: ut.subCaptainId ?? null },
+              200, { 'Cache-Control': 'public, max-age=900' });
 }
 
 export default {

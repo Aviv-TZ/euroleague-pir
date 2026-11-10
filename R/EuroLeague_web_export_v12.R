@@ -80,7 +80,7 @@ el_web_prices <- function(season='E2026') {
       coach <- identical(as.integer(p$position), 4L)
       raw <- if (coach) unname(coach_by[code]) else unname(name_by[key(code, p$shirtNumber)])
       out[[length(out)+1L]] <- data.frame(raw=if (length(raw) && !is.na(raw)) raw else NA_character_,
-        team=unname(club_by[code]), he=p$name, price=p$price/1e6,
+        team=unname(club_by[code]), he=p$name, price=p$price/1e6, s5id=p$id, s5team=t$id,
         s5pos=c('Guard','Forward','Center','Coach')[as.integer(p$position)],
         injured=isTRUE(p$injuredStatus > 0) || isTRUE(p$missingStatus > 0), stringsAsFactors=FALSE)
     }
@@ -195,7 +195,7 @@ export_euroleague_web <- function(output_dir, site_dir, template_file,
       q <- which(prices$raw == a$Player & prices$team == a$Team)[1]
       if (is.na(q)) q <- which(prices$raw == a$Player)[1]
       if (!is.na(q)) { p$price <- prices$price[q]; p$he <- prices$he[q]; p$s5pos <- prices$s5pos[q]
-                       p$injured <- prices$injured[q] }
+                       p$injured <- prices$injured[q]; p$s5id <- prices$s5id[q] }
       im <- attr(prices, 'images')
       q2 <- which(im$raw == a$Player & im$team == a$Team)[1]; if (is.na(q2)) q2 <- which(im$raw == a$Player)[1]
       if (!is.na(q2) && !is.na(im$img[q2])) p$img <- im$img[q2]
@@ -295,8 +295,9 @@ export_euroleague_web <- function(output_dir, site_dir, template_file,
   round_hits <- if (file.exists(raw_csv2)) el_web_round_hits(hist,
     utils::read.csv(raw_csv2, fileEncoding='UTF-8', stringsAsFactors=FALSE)) else list()
   coaches <- if (!is.null(prices)) { cp <- prices[prices$s5pos == 'Coach',,drop=FALSE]
-    lapply(seq_len(nrow(cp)), function(i) list(raw=cp$raw[i], team=cp$team[i], he=cp$he[i], price=cp$price[i])) } else list()
-  data <- list(meta=meta, fixtures=fixtures, players=players, round_hits=round_hits, coaches=coaches,
+    lapply(seq_len(nrow(cp)), function(i) list(raw=cp$raw[i], team=cp$team[i], he=cp$he[i], price=cp$price[i], s5id=cp$s5id[i])) } else list()
+  s5teams <- if (!is.null(prices)) { u <- unique(prices[,c('s5team','team')]); setNames(as.list(u$team), u$s5team) } else list()
+  data <- list(meta=meta, fixtures=fixtures, players=players, round_hits=round_hits, coaches=coaches, s5teams=s5teams,
                opponents=opponents, league=league)
   json <- jsonlite::toJSON(data, auto_unbox=TRUE, null='null', na='null', digits=NA, pretty=FALSE)
   writeLines(json, file.path(site_dir, 'data.json'), useBytes=TRUE)
