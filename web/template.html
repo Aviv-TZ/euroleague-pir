@@ -225,6 +225,11 @@ td.act .up{color:var(--good)} td.act .down{color:var(--bad)}
 .trow .out{color:#ff8b8b} .trow .in{color:var(--good)}
 .trow .tg{text-align:center} .trow .tg b{font-size:20px;display:block} .trow .tg small{color:var(--muted);font-size:11.5px}
 @media(max-width:600px){ .trow{grid-template-columns:1fr} .mt-head .kpis{grid-template-columns:1fr 1fr 1fr} }
+/* ownership / my team extras */
+.ccap.vc{color:#5b6b86;border-color:#5b6b86;font-size:10px}
+.trow .rank{display:inline-flex;width:22px;height:22px;border-radius:50%;background:var(--accent);color:#1a0f00;align-items:center;justify-content:center;font-size:12px;margin-inline-end:4px}
+.hzl{font-size:13px;color:var(--muted)} .hzl select{margin-inline-start:6px;padding:6px 8px;border-radius:8px;background:var(--panel2);color:var(--text);border:1px solid var(--line);font:inherit}
+.mtform.sbox{max-width:none} .mtform.sbox:before{display:none} .mtform .ac{top:calc(100% + 2px)}
 footer{color:var(--muted);font-size:12px;padding:10px 20px 30px;text-align:center}
 .empty{color:var(--muted);padding:30px;text-align:center}
 </style>
@@ -427,7 +432,7 @@ function renderTops(){
         <thead><tr><th>#</th><th>שחקן</th><th>יריבה</th><th class="num">Score</th><th class="num">פנטזי צפוי</th><th class="num" title="ניקוד בפועל · מקום אמיתי במחזור (פספוס מול החיזוי) · הפרש נקודות">בפועל</th></tr></thead>
         <tbody>${rows.map(p=>`<tr>
           <td class="rk">${p.m[m.k].rank}</td>
-          <td class="pl" data-id="${p.id}"><b>${esc(p.name)}</b><small>${esc(p.team)} · ${p.pos_he}</small></td>
+          <td class="pl" data-id="${p.id}"><b>${esc(p.name)}</b><small>${esc(p.team)} · ${p.pos_he}${ownTxt(p)?` · ${ownTxt(p)} אחזקה`:''}</small></td>
           <td>${esc(oppText(p))}<br><small class="note">${fmtShortDate(p.date)}</small></td>
           <td class="num score ${m.cls}c">${f(p.m[m.k].score,2)}</td>
           <td class="num">${f(p.m[m.k].pir)}</td>
@@ -633,7 +638,7 @@ function courtCard(x, isCap){
       <span class="cfp">${f(x.fp,1)}</span>${isCap?'<span class="ccap" title="קפטן – ניקוד כפול">C</span>':''}
       ${ph}
       <div class="cname">${esc(nm)}</div>
-      <div class="cmeta">${esc(oppShort(p))} · ${f(x.price,0)}M</div>
+      <div class="cmeta">${esc(oppShort(p))} · ${f(x.price,0)}M${ownTxt(p)?` · ${ownTxt(p)}`:''}</div>
     </div>`;
 }
 const oppShort = p => p.opp ? `${p.venue==='Home'?'נגד':'@'} ${p.opp.split(' ').slice(0,2).join(' ')}` : '';
@@ -872,123 +877,177 @@ function renderSquad(){
   box.querySelectorAll('.pl').forEach(el=>el.onclick=()=>openPlayer(+el.dataset.id));
 }
 
-// ---------- H. My team: rank, percentile and recommended transfers (via the Cloudflare Worker) ----------
+// ---------- H. My team: rank, percentile, ownership and transfers over a horizon (via the Cloudflare Worker) ----------
 const WORKER = 'https://el-fantasy.aviv-tzafrir.workers.dev';
 const S5POS = {1:'Guard', 2:'Forward', 3:'Center', 4:'Coach'};
 const byS5 = new Map(P.filter(p=>p.s5id!=null).map(p=>[p.s5id,p]));
-const MT = {data:null, loading:false, err:null, rec:null};
-// expected fantasy points used for transfers: 0 if injured/out, season average if the model has no prediction
-function mtFp(p, injured){
-  if(!p || injured || p.injured || p.out3) return 0;
-  if(p.ranked) return p.m[1].pir;
-  return p.avg!=null ? p.avg : 0;
+const FUT = (M.fut_rounds||[]);
+const MT = {data:null, loading:false, err:null, rec:null, H:1, q:''};
+// ownership (own.json, refreshed every 6 hours)
+const OWN = {size:null, own:{}, updated:null};
+const ownPct = p => (p && p.s5id!=null && OWN.size && OWN.own[p.s5id]!=null) ? 100*OWN.own[p.s5id]/OWN.size : null;
+const ownTxt = p => { const v = ownPct(p); return v==null ? '' : `${v<1?f(v,1):f(v,0)}%`; };
+async function loadOwn(){
+  if(location.protocol==='file:') return;
+  try{ const r = await fetch('own.json?t='+Date.now(), {cache:'no-store'}); if(!r.ok) return;
+       const j = await r.json(); OWN.size=j.size; OWN.own=j.own||{}; OWN.updated=j.updated_utc; renderAll(); }catch(e){}
 }
-// best lineup of 8 players: bench = 1 G + 1 F + 1 C (50%), five = the rest (1-3 G, 1-3 F, 1-2 C), captain x2
-function lineupValue(sq){
-  const by = {Guard:[],Forward:[],Center:[]};
-  for(const x of sq){ if(!by[x.pos]) return null; by[x.pos].push(x); }
+// projected fantasy points per future round (index 0 = next round); 0 if injured / out
+function fpsOf(p, injured, H){
+  const z = Array(H).fill(0);
+  if(!p || injured || p.injured || p.out3 || !p.fut) return z;
+  return p.fut.slice(0,H).map(v=>v||0);
+}
+// best lineup for one round h: bench 1 G + 1 F + 1 C (50%), five = the rest (1-3 G, 1-3 F, 1-2 C), captain x2
+function lineupAt(sq, h){
   let best = null;
-  for(const g of by.Guard) for(const f of by.Forward) for(const c of by.Center){
-    const bench = [g,f,c], st = sq.filter(x=>!bench.includes(x));
-    const n = {Guard:0,Forward:0,Center:0}; st.forEach(x=>n[x.pos]++);
-    if(n.Guard>3||n.Forward>3||n.Center>2||n.Guard<1||n.Forward<1||n.Center<1) continue;
-    const cap = st.reduce((a,b)=>b.fp>a.fp?b:a);
-    const v = st.reduce((s,x)=>s+x.fp,0) + cap.fp + (g.fp+f.fp+c.fp)/2;
-    if(!best || v>best.v) best = {v, starters:st, bench, cap};
+  const G = sq.filter(x=>x.pos==='Guard'), F = sq.filter(x=>x.pos==='Forward'), C = sq.filter(x=>x.pos==='Center');
+  for(const g of G) for(const fw of F) for(const c of C){
+    let n={Guard:0,Forward:0,Center:0}, sum=0, cap=null;
+    for(const x of sq){ if(x===g||x===fw||x===c) continue; n[x.pos]++; sum+=x.fps[h]; if(!cap||x.fps[h]>cap.fps[h]) cap=x; }
+    if(n.Guard<1||n.Guard>3||n.Forward<1||n.Forward>3||n.Center<1||n.Center>2) continue;
+    const v = sum + cap.fps[h] + (g.fps[h]+fw.fps[h]+c.fps[h])/2;
+    if(!best || v>best.v) best = {v, bench:[g,fw,c], cap};
   }
+  if(!best) return null;
+  best.starters = sq.filter(x=>!best.bench.includes(x));
   return best;
 }
+function squadValue(sq, H){ let t=0; for(let h=0;h<H;h++){ const l=lineupAt(sq,h); if(!l) return null; t+=l.v; } return t; }
 function combos(arr, k, start=0, acc=[], out=[]){
   if(acc.length===k){ out.push([...acc]); return out; }
   for(let i=start;i<arr.length;i++){ acc.push(arr[i]); combos(arr,k,i+1,acc,out); acc.pop(); }
   return out;
 }
-function recommend(sq, coach, bank){
+// Top 3 transfer plans (0-3 transfers) by total projected points over the next H rounds.
+function recommend(sq, coach, bank, H){
   const inSquad = new Set(sq.map(x=>x.s5id));
   const pool = P.filter(p=>p.ranked && p.s5id!=null && p.price!=null && POS3.includes(p.s5pos) && !p.injured && !p.out3 && !inSquad.has(p.s5id))
-                .map(p=>({s5id:p.s5id, p, name:p.he||p.name, price:p.price, pos:p.s5pos, team:p.team, fp:mtFp(p)}));
-  const base = lineupValue(sq);
-  const res = [{k:0, v:base?base.v:null, lineup:base, outs:[], ins:[]}];
+                .map(p=>{ const fps=fpsOf(p,false,H); return {s5id:p.s5id, p, name:p.he||p.name, price:p.price, pos:p.s5pos, team:p.team, fps, tot:fps.reduce((a,b)=>a+b,0)}; });
+  sq.forEach(x=>{ x.fps = fpsOf(x.p, x.injured, H); x.tot = x.fps.reduce((a,b)=>a+b,0); });
+  const baseV = squadValue(sq, H);
+  const top = [];   // up to 3 best plans
+  const push = plan => { top.push(plan); top.sort((a,b)=>b.v-a.v); if(top.length>3) top.pop(); };
+  if(baseV!=null) push({k:0, v:baseV, outs:[], ins:[], left:bank, squad:sq});
+  const maxCap = arr => { let m=0; for(let h=0;h<H;h++){ let b=0; for(const x of arr) if(x.fps[h]>b) b=x.fps[h]; m+=b; } return m; };
   for(let k=1;k<=3;k++){
-    let best = null;
     for(const outs of combos(sq,k)){
       const keep = sq.filter(x=>!outs.includes(x));
       const money = bank + outs.reduce((s,x)=>s+x.price,0);
       const club = {}; [...keep, coach].filter(Boolean).forEach(x=>club[x.team]=(club[x.team]||0)+1);
-      // candidates: top 10 per position that are affordable and allowed by the club limit
       const cand = [];
-      for(const q of POS3) cand.push(...pool.filter(x=>x.pos===q && x.price<=money && (club[x.team]||0)<2).sort((a,b)=>b.fp-a.fp).slice(0,10));
-      const ub0 = keep.reduce((s,x)=>s+x.fp,0);
+      for(const q of POS3) cand.push(...pool.filter(x=>x.pos===q && x.price<=money && (club[x.team]||0)<2).sort((a,b)=>b.tot-a.tot).slice(0,8));
+      const keepTot = keep.reduce((s,x)=>s+x.tot,0);
       for(const ins of combos(cand,k)){
-        const cost = ins.reduce((s,x)=>s+x.price,0); if(cost>money) continue;
-        const cc = {...club}; let okc = true; for(const x of ins){ cc[x.team]=(cc[x.team]||0)+1; if(cc[x.team]>2){okc=false;break;} } if(!okc) continue;
-        const ub = ub0 + ins.reduce((s,x)=>s+x.fp,0) + Math.max(...keep.map(x=>x.fp), ...ins.map(x=>x.fp));
-        if(best && ub <= best.v) continue;
-        const lu = lineupValue([...keep, ...ins]); if(!lu) continue;
-        if(!best || lu.v>best.v) best = {k, v:lu.v, lineup:lu, outs, ins, left:money-cost};
+        let cost=0; for(const x of ins) cost+=x.price; if(cost>money) continue;
+        const cc = {...club}; let ok=true; for(const x of ins){ cc[x.team]=(cc[x.team]||0)+1; if(cc[x.team]>2){ok=false;break;} } if(!ok) continue;
+        const ub = keepTot + ins.reduce((s,x)=>s+x.tot,0) + maxCap([...keep,...ins]);
+        if(top.length===3 && ub <= top[2].v) continue;
+        const nsq = [...keep, ...ins], v = squadValue(nsq, H); if(v==null) continue;
+        if(top.length<3 || v>top[2].v) push({k, v, outs, ins, left:money-cost, squad:nsq});
       }
     }
-    res.push(best || {k, v:null});
   }
-  return res;
+  return {baseV, plans:top, H};
 }
 async function mtLookup(name, userId){
-  MT.loading = true; MT.err = null; MT.data = null; MT.rec = null; renderMyTeam();
+  MT.loading = true; MT.err = null; MT.data = null; MT.rec = null; MT.sq = null; renderMyTeam();
   try{
     const q = userId ? `userId=${encodeURIComponent(userId)}&name=${encodeURIComponent(name||'')}` : `name=${encodeURIComponent(name)}`;
-    const r = await fetch(`${WORKER}/lookup?${q}`);
-    const j = await r.json();
+    const j = await (await fetch(`${WORKER}/lookup?${q}`)).json();
     if(j.error) throw new Error(j.error==='busy, try again in a minute' ? 'יותר מדי חיפושים כרגע, נסה שוב בעוד דקה' : j.error);
     MT.data = j;
     if(j.team){
+      MT.q = j.team.name.trim(); MT.capId = j.captainId; MT.vcId = j.subCaptainId;
       try{ localStorage.setItem('el_my_team', j.team.name); }catch(e){}
-      const sq = [], coachRaw = j.squad.find(x=>x.pos===4);
-      for(const x of j.squad.filter(x=>x.pos!==4)){
-        const p = byS5.get(x.s5id);
-        sq.push({s5id:x.s5id, p, name:(p&&(p.he||p.name))||x.name, price:x.price, pos:S5POS[x.pos],
-                 team:(p&&p.team)||(D.s5teams||{})[x.teamId]||String(x.teamId), fp:mtFp(p, x.injured), injured:x.injured, reserve:x.reserve});
-      }
-      const coach = coachRaw ? {name:coachRaw.name, price:coachRaw.price, team:(D.s5teams||{})[coachRaw.teamId]||String(coachRaw.teamId)} : null;
-      const bank = 100 - sq.reduce((s,x)=>s+x.price,0) - (coach?coach.price:0);
-      MT.sq = sq; MT.coach = coach; MT.bank = bank;
-      renderMyTeam();
-      await new Promise(r=>setTimeout(r,30));   // let the page paint before the heavier search
-      MT.rec = recommend(sq, coach, bank);
+      const coachRaw = j.squad.find(x=>x.pos===4);
+      MT.sq = j.squad.filter(x=>x.pos!==4).map(x=>{ const p = byS5.get(x.s5id);
+        return {s5id:x.s5id, p, name:(p&&(p.he||p.name))||x.name, price:x.price, pos:S5POS[x.pos],
+                team:(p&&p.team)||(D.s5teams||{})[x.teamId]||String(x.teamId), injured:x.injured, reserve:x.reserve}; });
+      const cp = coachRaw ? (D.coaches||[]).find(c=>c.s5id===coachRaw.s5id) : null;
+      MT.coach = coachRaw ? {name:coachRaw.name, price:coachRaw.price, s5id:coachRaw.s5id, team:(cp&&cp.team)||(D.s5teams||{})[coachRaw.teamId]||String(coachRaw.teamId)} : null;
+      MT.bank = 100 - MT.sq.reduce((s,x)=>s+x.price,0) - (MT.coach?MT.coach.price:0);
+      await mtCompute();
     }
   }catch(e){ MT.err = String(e.message||e); }
   MT.loading = false; renderMyTeam();
 }
-function mtCard(x, isCap, cls=''){
-  const p = x.p, ph = p&&p.img ? `<div class="cph" style="background-image:url('${esc(p.img)}')"></div>` : `<div class="cph ini">${esc((x.name||'?').slice(0,2))}</div>`;
-  return `<div class="ccard ${cls} ${p?'pl':''}" ${p?`data-id="${p.id}"`:''}>
-    <span class="cfp">${f(x.fp,1)}</span>${isCap?'<span class="ccap">C</span>':''}${ph}
-    <div class="cname">${esc(x.name)}</div>
-    <div class="cmeta">${p?esc(oppShort(p))+' · ':''}${f(x.price,0)}M${x.injured||(p&&(p.injured||p.out3))?' · <b style="color:#c0262d">פצוע/לא משחק</b>':''}</div></div>`;
+async function mtCompute(){
+  MT.rec = null; renderMyTeam();
+  await new Promise(r=>setTimeout(r,30));   // paint first; the search can take a second or two
+  MT.rec = recommend(MT.sq, MT.coach, MT.bank, MT.H);
+  renderMyTeam();
 }
-function mtCourt(lu){
-  const row = pos => lu.starters.filter(x=>x.pos===pos).sort((a,b)=>b.fp-a.fp).map(x=>mtCard(x, x===lu.cap)).join('');
+function mtCard(x, isCap, h, cls=''){
+  const p = x.p, ph = p&&p.img ? `<div class="cph" style="background-image:url('${esc(p.img)}')"></div>` : `<div class="cph ini">${esc((x.name||'?').slice(0,2))}</div>`;
+  const out = x.injured||(p&&(p.injured||p.out3));
+  return `<div class="ccard ${cls} ${p?'pl':''}" ${p?`data-id="${p.id}"`:''}>
+    <span class="cfp">${f(x.fps?x.fps[h]:0,1)}</span>${isCap?'<span class="ccap">C</span>':''}${ph}
+    <div class="cname">${esc(x.name)}</div>
+    <div class="cmeta">${f(x.price,0)}M${p&&ownTxt(p)?' · '+ownTxt(p)+' אחזקה':''}${out?' · <b style="color:#c0262d">פצוע/לא משחק</b>':''}</div></div>`;
+}
+function mtCourt(sq){
+  const lu = lineupAt(sq, 0); if(!lu) return '';
+  const row = pos => lu.starters.filter(x=>x.pos===pos).sort((a,b)=>b.fps[0]-a.fps[0]).map(x=>mtCard(x, x===lu.cap, 0)).join('');
   return `<div class="court"><svg class="lines" viewBox="0 0 100 140" preserveAspectRatio="none" aria-hidden="true">
       <rect x="3" y="2" width="94" height="136" fill="none"/><rect x="34" y="2" width="32" height="30" fill="none"/>
       <path d="M34 32 A16 10 0 0 0 66 32" fill="none"/><line x1="3" y1="70" x2="97" y2="70"/>
       <circle cx="50" cy="70" r="11" fill="none"/><path d="M10 138 L10 120 A40 32 0 0 1 90 120 L90 138" fill="none"/></svg>
       <div class="crow">${row('Center')}</div><div class="crow">${row('Forward')}</div><div class="crow">${row('Guard')}</div></div>
-    <div class="bench"><div class="btitle">ספסל · 50%</div><div class="crow">${lu.bench.map(x=>mtCard(x,false,'bcard')).join('')}</div></div>`;
+    <div class="bench"><div class="btitle">ספסל · 50% · מחזור ${FUT[0]??''}</div><div class="crow">${lu.bench.map(x=>mtCard(x,false,0,'bcard')).join('')}</div></div>`;
+}
+// High-ownership players the team does not have, ranked by ownership x projected points (they hurt you if they score)
+function threats(sq, H){
+  const mine = new Set(sq.map(x=>x.s5id));
+  return P.filter(p=>p.s5id!=null && !mine.has(p.s5id) && ownPct(p)!=null && p.fut)
+    .map(p=>{ const fps=fpsOf(p,false,H), tot=fps.reduce((a,b)=>a+b,0); return {p, own:ownPct(p), tot, risk:ownPct(p)/100*tot}; })
+    .sort((a,b)=>b.risk-a.risk).slice(0,8);
+}
+// The squad exactly as it is on the fantasy site now (starters / bench / captain / vice-captain)
+function roundState(){
+  const L = LIVE.data, r = M.next_round;
+  const started = L && L.round===r && (L.games||[]).some(g=>g.status!=='scheduled');
+  const done = L && L.round===r && L.round_finished>=L.round_games;
+  return done ? `אחרי מחזור ${r} (המחזור הסתיים)` : started ? `מחזור ${r} – המחזור בעיצומו, הסגל נעול` : `לקראת מחזור ${r} – חלון החילופים פתוח`;
+}
+function siteSquad(){
+  if(!MT.sq) return '';
+  MT.sq.forEach(x=>{ if(!x.fps) x.fps = fpsOf(x.p, x.injured, Math.max(1,MT.H)); });
+  const st = MT.sq.filter(x=>!x.reserve), bn = MT.sq.filter(x=>x.reserve);
+  const tag = x => x.s5id===MT.capId ? '<span class="ccap">C</span>' : x.s5id===MT.vcId ? '<span class="ccap vc">VC</span>' : '';
+  const card = (x, cls='') => mtCard(x, false, 0, cls).replace('<span class="cfp">', tag(x)+'<span class="cfp">');
+  const row = pos => st.filter(x=>x.pos===pos).map(x=>card(x)).join('');
+  const tot = st.reduce((s,x)=>s+x.fps[0],0) + (st.find(x=>x.s5id===MT.capId)||{fps:[0]}).fps[0] + bn.reduce((s,x)=>s+x.fps[0],0)/2;
+  return `<div class="card" style="margin-top:16px">
+      <h2>הסגל כפי שהוא באתר הפנטזי</h2>
+      <div class="roundnote">מעודכן ל: ${roundState()} · הנתונים מאתר הפנטזי עד רבע שעה אחורה</div>
+      <div class="hint">החמישייה, הספסל, הקפטן (C) וסגן הקפטן (VC) כפי שבחרת באתר. המספר הירוק = צפי למחזור ${FUT[0]??''}. צפי לסידור הזה: <b>${f(tot,1)}</b></div>
+      <div class="court"><svg class="lines" viewBox="0 0 100 140" preserveAspectRatio="none" aria-hidden="true">
+        <rect x="3" y="2" width="94" height="136" fill="none"/><rect x="34" y="2" width="32" height="30" fill="none"/>
+        <path d="M34 32 A16 10 0 0 0 66 32" fill="none"/><line x1="3" y1="70" x2="97" y2="70"/>
+        <circle cx="50" cy="70" r="11" fill="none"/><path d="M10 138 L10 120 A40 32 0 0 1 90 120 L90 138" fill="none"/></svg>
+        <div class="crow">${row('Center')}</div><div class="crow">${row('Forward')}</div><div class="crow">${row('Guard')}</div></div>
+      <div class="bench"><div class="btitle">ספסל באתר · 50%</div><div class="crow">${bn.map(x=>card(x,'bcard')).join('')}</div></div>
+    </div>`;
 }
 function renderMyTeam(){
   const box = $('#myTeamView'); if(!box) return;
   let saved = ''; try{ saved = localStorage.getItem('el_my_team')||''; }catch(e){}
+  const rr = h => FUT[h]!=null ? FUT[h] : '';
   let body = '';
   if(MT.loading && !MT.sq) body = '<div class="empty">מחפש את הקבוצה…</div>';
   else if(MT.err) body = `<div class="warn">שגיאה: ${esc(MT.err)}</div>`;
   else if(MT.data && MT.data.choose) body = `<div class="card"><h2>נמצאו כמה קבוצות בשם הזה</h2><div class="clist">${MT.data.choose.map(t=>
-      `<button class="btn ghost" data-uid="${t.userId}">${esc(t.name)} · מקום ${t.position} · ${t.totalScore} נק'</button>`).join('')}</div></div>`;
+      `<button class="btn ghost" data-uid="${t.userId}" data-nm="${esc(t.name)}">${esc(t.name)} · מקום ${t.position} · ${t.totalScore} נק'</button>`).join('')}</div></div>`;
   else if(MT.data && MT.data.suggestions) body = `<div class="card"><h2>לא נמצאה קבוצה בשם המדויק</h2>${MT.data.suggestions.length?`<div class="hint">אולי התכוונת ל:</div><div class="clist">${MT.data.suggestions.map(t=>
       `<button class="btn ghost" data-uid="${t.userId}" data-nm="${esc(t.name)}">${esc(t.name)} · מקום ${t.position}</button>`).join('')}</div>`:'<div class="note">אין תוצאות דומות</div>'}</div>`;
   else if(MT.data && MT.data.team){
     const t = MT.data.team, top = Math.max(0.1, Math.round(1000*t.position/MT.data.leagueSize)/10);
-    const rec = MT.rec, base = rec && rec[0];
-    const opts = rec ? rec.slice(1).filter(r=>r.v!=null) : [];
-    const bestOpt = opts.length ? opts.reduce((a,b)=>b.v>a.v?b:a) : null;
+    const rec = MT.rec, H = MT.H;
+    const hz = Array.from({length:Math.min(5,FUT.length)},(_,i)=>i+1);
+    const rangeTxt = H===1 ? `מחזור ${rr(0)}` : `מחזורים ${rr(0)}–${rr(H-1)}`;
+    const plans = rec ? rec.plans : [];
+    const thr = MT.sq ? threats(MT.sq, H) : [];
     body = `<div class="card mt-head">
         <h2>${esc(t.name)}</h2>
         <div class="kpis">
@@ -996,30 +1055,49 @@ function renderMyTeam(){
           <div class="kpi"><span>אחוזון</span><b>${f(top,1)}%</b><small>העליונים</small></div>
           <div class="kpi"><span>ניקוד עונה / מחזור</span><b>${t.totalScore}</b><small>מחזור אחרון: ${t.roundScore}</small></div>
         </div>
-        <div class="note">מאמן: ${MT.coach?`${esc(MT.coach.name)} (${f(MT.coach.price,0)}M)`:'–'} · בקופה: ${f(MT.bank,0)}M · הנתונים מאתר הפנטזי מתעדכנים עד כל רבע שעה</div>
+        <div class="note">מאמן: ${MT.coach?`${esc(MT.coach.name)} (${f(MT.coach.price,0)}M${(()=>{const c=(D.coaches||[]).find(c=>c.s5id===MT.coach.s5id); return c&&OWN.size&&OWN.own[c.s5id]!=null?` · ${f(100*OWN.own[c.s5id]/OWN.size,0)}% אחזקה`:''})()})`:'–'} · בקופה: ${f(MT.bank,0)}M · הנתונים מאתר הפנטזי מתעדכנים עד כל רבע שעה</div>
+      </div>
+      ${siteSquad()}
+      <div class="card" style="margin-top:16px">
+        <div class="phead"><h2>חילופים מומלצים</h2>
+          <label class="hzl">להסתכל קדימה: <select id="mtH">${hz.map(h=>`<option value="${h}" ${h===H?'selected':''}>${h===1?`מחזור ${rr(0)} בלבד`:`${h} מחזורים (${rr(0)}–${rr(h-1)})`}</option>`).join('')}</select></label></div>
+        <div class="hint">3 התוכניות עם הכי הרבה נקודות צפויות ב${rangeTxt} (סכום הסידור הטוב ביותר בכל מחזור: חמישייה, קפטן ×2, חצי ספסל). עד 3 חילופים עכשיו – אין יתרון לשמור חילופים, אז אם 2 עדיפים זו ההמלצה. תקציב 100M כולל מאמן, עמדות לפי הפורמט, עד 2 מכל קבוצה כולל מאמן. המאמן לא מוחלף. שחקן פצוע/שלא שיחק ב-3 האחרונים = 0. תחזית למחזורים רחוקים מבוססת על הנתונים של היום ומשתנה רק לפי היריבה ובית/חוץ.</div>
+        ${!rec?'<div class="empty">מחשב חילופים…</div>':`<div class="note">הסגל הנוכחי בלי חילופים: <b>${f(rec.baseV,1)}</b> נקודות צפויות ב${rangeTxt}</div>
+          ${plans.map((r,i)=>{ const gain = r.v-rec.baseV;
+            return `<div class="trow ${i===0?'best':''}">
+              <div class="tk"><span class="rank">${i+1}</span> ${r.k===0?'בלי חילופים':`${r.k} ${r.k===1?'חילוף':'חילופים'}`}</div>
+              <div class="tio">${r.k===0?'<div class="note">להשאיר את הסגל כמו שהוא</div>':r.outs.map((o,j)=>`<div><span class="out">⬅ ${esc(o.name)} (${f(o.tot,1)})</span> <span class="in">➜ ${esc(r.ins[j].name)} (${f(r.ins[j].tot,1)}, ${f(r.ins[j].price,0)}M${ownTxt(r.ins[j].p)?', '+ownTxt(r.ins[j].p)+' אחזקה':''})</span></div>`).join('')}</div>
+              <div class="tg"><b class="${gain>0.05?'up':''}">${gain>0.05?'+':''}${f(gain,1)}</b><small>סה"כ ${f(r.v,1)} · נשאר ${f(r.left,0)}M</small></div></div>`; }).join('')}
+          ${plans[0]?`<h3 style="margin-top:16px">הסגל לפי תוכנית 1 – מחזור ${rr(0)} (קפטן מומלץ מסומן C)</h3>${mtCourt(plans[0].squad)}`:''}`}
       </div>
       <div class="card" style="margin-top:16px">
-        <h2>הסגל הנוכחי – צפי למחזור ${M.next_round??''}</h2>
-        ${base&&base.lineup?`<div class="hint">בסידור הטוב ביותר של הסגל (חמישייה, ספסל וקפטן): <b>${f(base.v,1)}</b> נקודות צפויות</div>${mtCourt(base.lineup)}`:'<div class="note">מחשב…</div>'}
-      </div>
-      <div class="card" style="margin-top:16px">
-        <h2>חילופים מומלצים</h2>
-        <div class="hint">עד 3 חילופים (כמו במשחק), תקציב 100M כולל המאמן, עמדות לפי הפורמט, עד 2 מכל קבוצה כולל המאמן. המאמן לא מוחלף (אין תחזית למאמנים). שחקן פצוע או שלא שיחק ב-3 האחרונים נחשב 0.</div>
-        ${!rec?'<div class="empty">מחשב חילופים…</div>':opts.map(r=>{ const gain = r.v-base.v;
-          return `<div class="trow ${r===bestOpt&&gain>0.05?'best':''}">
-            <div class="tk">${r.k} ${r.k===1?'חילוף':'חילופים'}</div>
-            <div class="tio">${r.outs.map((o,i)=>`<div><span class="out">⬅ ${esc(o.name)} (${f(o.fp,1)})</span> <span class="in">➜ ${esc(r.ins[i].name)} (${f(r.ins[i].fp,1)}, ${f(r.ins[i].price,0)}M)</span></div>`).join('')}</div>
-            <div class="tg"><b class="${gain>0.05?'up':''}">${gain>0.05?'+':''}${f(gain,1)}</b><small>סה"כ ${f(r.v,1)} · נשאר ${f(r.left,0)}M</small></div></div>`; }).join('')}
-        ${bestOpt&&bestOpt.v-base.v>0.05?`<h3 style="margin-top:16px">הסגל אחרי ${bestOpt.k} ${bestOpt.k===1?'חילוף':'החילופים'} – קפטן מומלץ: ${esc(bestOpt.lineup.cap.name)}</h3>${mtCourt(bestOpt.lineup)}`:
-          (rec?'<p class="note">אין חילוף שמשפר את הצפי – כדאי להשאיר את הסגל.</p>':'')}
+        <h2>השחקנים שהכי פוגעים בך</h2>
+        <div class="hint">שחקנים עם אחוז אחזקה גבוה שאין לך – אם הם עושים הרבה נקודות, רוב המתחרים מרוויחים ואתה לא. מדורג לפי אחוז אחזקה × צפי ב${rangeTxt}.${OWN.updated?` אחזקה עודכנה: ${timeFmt.format(new Date(OWN.updated))}`:''}</div>
+        ${!OWN.size?'<div class="note">נתוני אחזקה עוד לא זמינים</div>':`<div class="scroll"><table><thead><tr><th>שחקן</th><th class="num">% אחזקה</th><th class="num">צפי (${rangeTxt})</th><th class="num">"פגיעה"</th><th class="num">מחיר</th></tr></thead><tbody>
+          ${thr.map(x=>`<tr><td class="pl" data-id="${x.p.id}"><b>${esc(x.p.he||x.p.name)}</b><small>${esc(x.p.team)} · ${x.p.pos_he}</small></td>
+            <td class="num"><b>${f(x.own,0)}%</b></td><td class="num">${f(x.tot,1)}</td><td class="num">${f(x.risk,1)}</td><td class="num">${f(x.p.price,0)}M</td></tr>`).join('')}</tbody></table></div>`}
       </div>`;
   }
   box.innerHTML = `<div class="card"><h2>הקבוצה שלי</h2>
-      <div class="hint">הקלד את שם הקבוצה שלך בפנטזי יורוליג של ערוץ הספורט – תקבל מקום, אחוזון וחילופים מומלצים למחזור הבא</div>
-      <form id="mtForm" class="mtform"><input id="mtName" type="search" placeholder="שם הקבוצה בדיוק כמו באתר" value="${esc((MT.data&&MT.data.team&&MT.data.team.name)||saved)}">
+      <div class="hint">הקלד את שם הקבוצה שלך בפנטזי יורוליג של ערוץ הספורט – תקבל מקום, אחוזון, חילופים מומלצים ומי השחקנים שהכי פוגעים בך</div>
+      <form id="mtForm" class="mtform sbox"><input id="mtName" type="search" placeholder="שם הקבוצה בדיוק כמו באתר" value="${esc(MT.q||saved)}" autocomplete="off"><div class="ac" id="mtAc"></div>
         <button class="btn" type="submit" ${MT.loading?'disabled':''}>${MT.loading?'מחפש…':'חפש'}</button></form></div>
     <div style="margin-top:16px">${body}</div>`;
-  $('#mtForm').onsubmit = e=>{ e.preventDefault(); const v=$('#mtName').value.trim(); if(v) mtLookup(v); };
+  $('#mtForm').onsubmit = e=>{ e.preventDefault(); const v=$('#mtName').value.trim(); MT.q=v; if(v) mtLookup(v); };
+  // autocomplete (one Worker request per query, after 3 characters and a short pause)
+  const inp = $('#mtName'), ac = $('#mtAc'); let timer = null, seq = 0;
+  inp.oninput = ()=>{ MT.q = inp.value; clearTimeout(timer); const q = inp.value.trim();
+    if(q.length<3){ ac.classList.remove('on'); return; }
+    timer = setTimeout(async ()=>{ const my = ++seq;
+      try{ const j = await (await fetch(`${WORKER}/search?q=${encodeURIComponent(q)}`)).json(); if(my!==seq) return;
+        const ts = j.teams||[];
+        ac.innerHTML = ts.length ? ts.map(t=>`<div data-uid="${t.userId}" data-nm="${esc(t.name)}"><span><b>${esc(t.name)}</b></span><small>מקום ${t.position.toLocaleString('he-IL')} · ${t.totalScore} נק'</small></div>`).join('')
+                                 : '<div class="none">לא נמצאו קבוצות</div>';
+        ac.classList.add('on');
+        ac.querySelectorAll('[data-uid]').forEach(d=>d.onmousedown=e=>{ e.preventDefault(); ac.classList.remove('on'); inp.value=d.dataset.nm; MT.q=d.dataset.nm; mtLookup(d.dataset.nm, d.dataset.uid); });
+      }catch(e){} }, 400); };
+  inp.onblur = ()=>setTimeout(()=>ac.classList.remove('on'),150);
+  const hs = $('#mtH'); if(hs) hs.onchange = ()=>{ MT.H = +hs.value; mtCompute(); };
   box.querySelectorAll('[data-uid]').forEach(b=>b.onclick=()=>mtLookup(b.dataset.nm||$('#mtName').value.trim(), b.dataset.uid));
   box.querySelectorAll('.pl[data-id]').forEach(el=>el.onclick=()=>openPlayer(+el.dataset.id));
 }
@@ -1144,7 +1222,7 @@ function playerCard(p){
     <div class="opp" style="margin-top:8px">יריבה במחזור: <b>${esc(oppText(p))}</b>${p.date?` · ${fmtShortDate(p.date)}`:''}${nextAfter(p)}</div>
     ${actualBanner(p)}
     <div class="chips">
-      ${p.price!=null?`<span class="chip">מחיר פנטזי<b>${f(p.price,0)}M</b></span>`:''}${p.injured?'<span class="chip warnchip">פצוע/חסר באתר הפנטזי</span>':''}
+      ${p.price!=null?`<span class="chip">מחיר פנטזי<b>${f(p.price,0)}M</b></span>`:''}${ownTxt(p)?`<span class="chip">אחזקה<b>${ownTxt(p)}</b></span>`:''}${p.injured?'<span class="chip warnchip">פצוע/חסר באתר הפנטזי</span>':''}
       <span class="chip">משחקים<b>${p.games}</b></span>
       <span class="chip">פנטזי עונה<b>${f(p.avg,2)}</b></span>
       <span class="chip">פנטזי ${p.l5n} אחרונים<b>${f(p.l5,2)}</b></span>
@@ -1259,6 +1337,7 @@ function compareTable(ps){
   h += row('יריבה במחזור', p=>p.opp?`<span dir="rtl">${esc(oppText(p))}</span>`:'אין משחק');
   h += row('תאריך', p=>fmtShortDate(p.date)||'–');
   h += row('משחקים', p=>p.games, {d:0});
+  h += row('% אחזקה בפנטזי', p=>ownPct(p), {d:1});
   h += row('פנטזי ממוצע עונה', p=>p.avg, {best:'max'});
   h += row('פנטזי ממוצע 5 אחרונים', p=>p.l5, {best:'max'});
   h += row('דקות ממוצע עונה', p=>p.min, {best:'max',d:1});
@@ -1312,7 +1391,7 @@ function renderAll(){
   if(!(ae && ae.tagName==='INPUT' && $('#tab-search').contains(ae))) renderPlayer();
 }
 updateSubline(); renderTops(); renderFixtures(); renderOpp(); renderBuilder(); renderSquad(); renderMyTeam(); readHash(); renderPlayer();
-loadLive().then(pollDirect);
+loadLive().then(pollDirect); loadOwn();
 window.addEventListener('hashchange', ()=>{ readHash(); renderPlayer(); });
 })();
 </script>

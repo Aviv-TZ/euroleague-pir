@@ -175,6 +175,39 @@ el_past_games <- function(raw, s) {
     lead_home=lead(g$Game[i], g$Home[i]), lead_away=lead(g$Game[i], g$Away[i])))
 }
 
+# Ownership: how many fantasy teams hold each player (public player pages, no login).
+# Refreshed at most every 6 hours; league size comes from the Cloudflare Worker.
+EL_WORKER <- 'https://el-fantasy.aviv-tzafrir.workers.dev'
+el_ownership <- function(site_dir, max_age_h=6) {
+  f <- file.path(site_dir, 'own.json')
+  if (file.exists(f)) {
+    old <- tryCatch(jsonlite::fromJSON(f), error=function(e) NULL)
+    if (!is.null(old$updated_utc)) {
+      age <- difftime(Sys.time(), as.POSIXct(old$updated_utc, format='%Y-%m-%dT%H:%M:%SZ', tz='UTC'), units='hours')
+      if (age < max_age_h) return(invisible(FALSE))
+    }
+  }
+  get <- function(u, post=FALSE) { r <- tryCatch(if (post) httr::POST(u, httr::timeout(20)) else httr::GET(u, httr::timeout(60)), error=function(e) NULL)
+    if (is.null(r) || httr::status_code(r) != 200) return(NULL)
+    tryCatch(jsonlite::fromJSON(httr::content(r, 'text', encoding='UTF-8'), simplifyVector=FALSE), error=function(e) NULL) }
+  lg <- get('https://dreamteam.sport5.co.il/api/Leagues/GetLeagues'); sid <- NULL
+  for (l in lg$data) if (identical(l$urlName, 'fantasyeuroleague')) sid <- l$currentSeasonId
+  tp <- if (!is.null(sid)) get(paste0('https://dreamteam.sport5.co.il/api/Players/GetTeamsAndPlayers?seasonId=', sid))
+  size <- get(paste0(EL_WORKER, '/size'))$leagueSize
+  if (is.null(tp) || is.null(size)) { message('Ownership: skipped (no player list or league size)'); return(invisible(FALSE)) }
+  ids <- unlist(lapply(tp$data, function(t) vapply(t$players, function(p) p$id, 0)))
+  own <- list()
+  for (id in ids) {
+    d <- get(paste0('https://dreamteam.sport5.co.il/api/Players/GetPlayerData?seasonId=', sid, '&playerId=', id), post=TRUE)
+    if (!is.null(d$data$timesSelected)) own[[as.character(id)]] <- d$data$timesSelected
+    Sys.sleep(0.15)
+  }
+  jsonlite::write_json(list(updated_utc=format(Sys.time(), '%Y-%m-%dT%H:%M:%SZ', tz='UTC'), size=size, own=own),
+                       f, auto_unbox=TRUE)
+  message('Ownership: ', length(own), ' players, league size ', size)
+  invisible(TRUE)
+}
+
 el_live_update <- function(schedule, site_dir, code_dir, now=Sys.time()) {
   data_file <- file.path(site_dir, 'data.json')
   if (!file.exists(data_file)) return(invisible(FALSE))
