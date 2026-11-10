@@ -235,6 +235,32 @@ td.act .up{color:var(--good)} td.act .down{color:var(--bad)}
 .cfp.neg{background:#c0392b}
 .coachcard .cph.ini{font-size:30px}
 .coachrow{margin-top:10px}
+/* ---------- mobile ---------- */
+.ts{display:none}
+@media(max-width:600px){
+  .tl{display:none} .ts{display:inline}
+  nav{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;margin-inline:-20px;padding-inline:20px}
+  nav::-webkit-scrollbar{display:none}
+  nav button{white-space:nowrap;padding:10px 12px;flex:0 0 auto}
+  main{padding:14px 10px} .card{padding:12px}
+  h1{font-size:19px}
+  .col-score,.col-price{display:none}
+  #tops th,#tops td{padding:6px 3px;font-size:13px} #tops td.pl{min-width:0} #tops td:nth-child(3){min-width:0}
+  .opp-t th,.opp-t td{padding:6px 3px;font-size:12.5px}
+  .cmp th,.cmp td{padding:6px 3px;font-size:12px}
+  .cmp td:first-child{white-space:normal;min-width:84px;max-width:110px}
+  .cmp th.pc{min-width:0}
+  .cmp .ph{width:42px;height:42px;font-size:14px;border-width:2px}
+  .cmp .pcw b{font-size:12px}
+  .cmp .scroll{max-height:none;overflow-x:auto}
+  .cmp td.num{white-space:normal}
+  .cmp table{table-layout:fixed;width:100%}
+  .cmp th,.cmp td{white-space:normal;overflow-wrap:anywhere}
+  .cmp thead th:first-child,.cmp td:first-child{width:27%}
+  .cmp .pcw small{font-size:10.5px}
+  .opp-t td.note{white-space:normal;font-size:11.5px}
+  .trow{padding:8px}
+}
 footer{color:var(--muted);font-size:12px;padding:10px 20px 30px;text-align:center}
 .empty{color:var(--muted);padding:30px;text-align:center}
 </style>
@@ -321,12 +347,20 @@ function updateSubline(){
 function showTab(t){
   document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.tab===t));
   document.querySelectorAll('section.tab').forEach(s=>s.classList.toggle('on',s.id==='tab-'+t));
+  const ab = document.querySelector('nav button.on'); if(ab && ab.scrollIntoView) ab.scrollIntoView({block:'nearest', inline:'nearest'});
 }
 document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{showTab(b.dataset.tab); syncHash();});
 
 function actualTag(p){ const a=getActual(p); if(!a) return '';
   return a.status==='live' ? ` <span class="badge live sm" title="LIVE – פנטזי בפועל עד עכשיו"><i></i>${f(a.pir,0)}</span>`
                            : ` <span class="badge final sm" title="שוחק – פנטזי בפועל">✓ ${f(a.pir,0)}</span>`; }
+const TSHORT = {'Anadolu Efes Istanbul':'Efes','Armani Olimpia Milan':'Milan','Besiktas Istanbul':'Besiktas','Crvena Zvezda Meridianbet Belgrade':'Zvezda',
+  'Dubai Basketball':'Dubai','FC Barcelona':'Barcelona','FC Bayern Munich':'Bayern','Fenerbahce Tarfin Istanbul':'Fenerbahce','Hapoel IBI Tel Aviv':'Hapoel TA',
+  'Kosner Baskonia Vitoria-Gasteiz':'Baskonia','LDLC ASVEL Villeurbanne':'ASVEL','Maccabi Rapyd Tel Aviv':'Maccabi TA','Olympiacos Piraeus':'Olympiacos',
+  'Panathinaikos AKTOR Athens':'Panathinaikos','Paris Basketball':'Paris','Partizan Mozzart Bet Belgrade':'Partizan','Real Madrid':'Real Madrid',
+  'Valencia Basket':'Valencia','Virtus Bologna':'Virtus','Zalgiris Kaunas':'Zalgiris'};
+const tShort = t => TSHORT[t] || String(t||'').split(' ')[0];
+const tName = t => `<span class="tl">${esc(t)}</span><span class="ts">${esc(tShort(t))}</span>`;   // long on desktop, short on mobile
 const oppText = p => p.opp ? `${p.venue==='Home'?'נגד':'@'} ${p.opp}` : 'אין משחק במחזור';
 
 // ---------- Live / in-round results (live.json, refreshed by the server every 10-60 min) ----------
@@ -434,12 +468,12 @@ function renderTops(){
       <h2><span class="dot ${m.cls}"></span>${m.long}</h2>
       <div class="hint">15 המובילים בסקור למחזור ${M.next_round??'הקרוב'}${hidden.length?` · הוסתרו ${hidden.length} שלא שיחקו ב-3 המשחקים האחרונים (${hidden.map(p=>esc(p.name)).join(', ')})`:''}${avg10!=null?` · העונה (מחזורים ${RH[0].round}–${RH[RH.length-1].round}): ממוצע ${f(avg10,1)} פגיעות בטופ 10`:''}</div>
       <div class="scroll"><table>
-        <thead><tr><th>#</th><th>שחקן</th><th>יריבה</th><th class="num">Score</th><th class="num">פנטזי צפוי</th><th class="num" title="ניקוד בפועל · מקום אמיתי במחזור (פספוס מול החיזוי) · הפרש נקודות">בפועל</th></tr></thead>
+        <thead><tr><th>#</th><th>שחקן</th><th>יריבה</th><th class="num col-score">Score</th><th class="num">פנטזי צפוי</th><th class="num" title="ניקוד בפועל · מקום אמיתי במחזור (פספוס מול החיזוי) · הפרש נקודות">בפועל</th></tr></thead>
         <tbody>${rows.map(p=>`<tr>
           <td class="rk">${p.m[m.k].rank}</td>
-          <td class="pl" data-id="${p.id}"><b>${esc(p.name)}</b><small>${esc(p.team)} · ${p.pos_he}${ownTxt(p)?` · ${ownTxt(p)} אחזקה`:''}</small></td>
-          <td>${esc(oppText(p))}<br><small class="note">${fmtShortDate(p.date)}</small></td>
-          <td class="num score ${m.cls}c">${f(p.m[m.k].score,2)}</td>
+          <td class="pl" data-id="${p.id}"><b>${esc(p.name)}</b><small>${tName(p.team)} · ${p.pos_he}${ownTxt(p)?` · ${ownTxt(p)} אחזקה`:''}</small></td>
+          <td>${p.opp?`${p.venue==='Home'?'נגד':'@'} ${tName(p.opp)}`:'אין משחק'}<br><small class="note">${fmtShortDate(p.date)}</small></td>
+          <td class="num score ${m.cls}c col-score">${f(p.m[m.k].score,2)}</td>
           <td class="num">${f(p.m[m.k].pir)}</td>
           ${actualCell(p,m.k)}</tr>`).join('')}</tbody>
       </table></div></div>`;
@@ -590,8 +624,8 @@ function matchupPanel(){
 }
 function nextCell(o){
   const n = oppNext(o), pl = playedThisRound(o.team);
-  const nx = n ? `${n.venue==='Home'?'נגד':'@'} ${esc(n.vs)}${pl||n.round!==M.next_round?` <small>(מחזור ${n.round})</small>`:''}` : '–';
-  return pl ? `<span class="badge final sm">✓ שיחקה במחזור ${LIVE.round}</span> ${nx}` : nx;
+  const nx = n ? `${n.venue==='Home'?'נגד':'@'} ${tName(n.vs)}${pl||n.round!==M.next_round?` <small>(מחזור ${n.round})</small>`:''}` : '–';
+  return pl ? `<span class="badge final sm">✓ <span class="tl">שיחקה במחזור ${LIVE.round}</span></span> ${nx}` : nx;
 }
 const OPP_VIEW_LBL = {season:'כל העונה', last5:'5 משחקים אחרונים', home:'כל העונה, במשחקי הבית שלה', away:'כל העונה, במשחקי החוץ שלה'};
 function renderOpp(){
@@ -616,7 +650,7 @@ function renderOpp(){
       <thead><tr><th data-k="team" class="${oppSort.key==='team'?'sorted':''}" data-dir="${dir}">קבוצה</th>
         ${POS.map(([p,h])=>`<th class="num ${oppSort.key===p?'sorted':''}" data-k="${p}" data-dir="${dir}">${h}</th>`).join('')}
         <th style="cursor:default">המשחק הבא</th></tr></thead>
-      <tbody>${rows.map(o=>`<tr><td><b>${esc(o.team)}</b></td>${POS.map(([p])=>{const v=o[oppView][p];
+      <tbody>${rows.map(o=>`<tr><td><b>${tName(o.team)}</b></td>${POS.map(([p])=>{const v=o[oppView][p];
           const on = oppSel&&oppSel.team===o.team&&oppSel.pos===p;
           return `<td class="num cell ${on?'on':''}" data-t="${esc(o.team)}" data-p="${p}" style="${heat(v,L[p])}">${f(v,2)}</td>`;}).join('')}
         <td class="note">${nextCell(o)}</td></tr>`).join('')}</tbody>
@@ -1144,11 +1178,11 @@ function renderMyTeam(){
         <div class="phead"><h2>השחקנים שהכי פוגעים בך</h2>
           <div class="seg" id="thrSort"><button data-s="risk" class="${MT.thrSort==='risk'?'on':''}">לפי אחזקה × צפי</button><button data-s="own" class="${MT.thrSort==='own'?'on':''}">לפי % אחזקה</button></div></div>
         <div class="hint">שחקנים ומאמנים עם אחוז אחזקה גבוה שאין לך – אם הם עושים הרבה נקודות, רוב המתחרים מרוויחים ואתה לא. מדורג ${MT.thrSort==='own'?'לפי אחוז האחזקה':`לפי אחוז אחזקה × צפי ב${rangeTxt}`}.${OWN.updated?` אחזקה עודכנה: ${timeFmt.format(new Date(OWN.updated))}`:''}</div>
-        ${!OWN.size?'<div class="note">נתוני אחזקה עוד לא זמינים</div>':`<div class="scroll"><table><thead><tr><th>שחקן</th><th class="num">% אחזקה</th><th class="num">צפי (${rangeTxt})</th><th class="num">"פגיעה"</th><th class="num">מחיר</th></tr></thead><tbody>
-          ${thr.map(x=>x.coach ? `<tr><td><b>${esc(x.coach.he||x.coach.raw)}</b><small>${esc(x.coach.team)} · מאמן</small></td>
-            <td class="num"><b>${f(x.own,0)}%</b></td><td class="num">${f(x.tot,1)}</td><td class="num">${f(x.risk,1)}</td><td class="num">${f(x.coach.price,0)}M</td></tr>`
-            : `<tr><td class="pl" data-id="${x.p.id}"><b>${esc(x.p.he||x.p.name)}</b><small>${esc(x.p.team)} · ${x.p.pos_he}</small></td>
-            <td class="num"><b>${f(x.own,0)}%</b></td><td class="num">${f(x.tot,1)}</td><td class="num">${f(x.risk,1)}</td><td class="num">${f(x.p.price,0)}M</td></tr>`).join('')}</tbody></table></div>`}
+        ${!OWN.size?'<div class="note">נתוני אחזקה עוד לא זמינים</div>':`<div class="scroll"><table><thead><tr><th>שחקן</th><th class="num">% אחזקה</th><th class="num">צפי (${rangeTxt})</th><th class="num">"פגיעה"</th><th class="num col-price">מחיר</th></tr></thead><tbody>
+          ${thr.map(x=>x.coach ? `<tr><td><b>${esc(x.coach.he||x.coach.raw)}</b><small>${tName(x.coach.team)} · מאמן</small></td>
+            <td class="num"><b>${f(x.own,0)}%</b></td><td class="num">${f(x.tot,1)}</td><td class="num">${f(x.risk,1)}</td><td class="num col-price">${f(x.coach.price,0)}M</td></tr>`
+            : `<tr><td class="pl" data-id="${x.p.id}"><b>${esc(x.p.he||x.p.name)}</b><small>${tName(x.p.team)} · ${x.p.pos_he}</small></td>
+            <td class="num"><b>${f(x.own,0)}%</b></td><td class="num">${f(x.tot,1)}</td><td class="num">${f(x.risk,1)}</td><td class="num col-price">${f(x.p.price,0)}M</td></tr>`).join('')}</tbody></table></div>`}
       </div>`;
   }
   box.innerHTML = `<div class="card"><h2>הקבוצה שלי</h2>
@@ -1398,7 +1432,7 @@ function compareTable(ps){
     <thead><tr><th class="corner"></th>${ps.map((p,i)=>`<th class="pc"><div class="pcw">
       <div class="ph" data-img="${p.id}" style="border-color:${CMP_COLORS[i]}">${esc(initials(p))}</div>
       <div><span class="pl" data-id="${p.id}" style="cursor:pointer"><b>${esc(p.name)}</b></span>
-      <small class="note">${esc(p.team)} · ${p.pos_he}</small></div></div></th>`).join('')}</tr></thead><tbody>`;
+      <small class="note">${tName(p.team)} · ${p.pos_he}</small></div></div></th>`).join('')}</tr></thead><tbody>`;
   if(acts.some(Boolean)){
     const anyLive = acts.some(a=>a&&a.status==='live');
     h += sec(`משחק המחזור – נתוני אמת${anyLive?' / LIVE':''} (לא חיזוי)`,'real');
@@ -1410,7 +1444,7 @@ function compareTable(ps){
     h += row('מתוך', p=>{const a=getActual(p); return a?(a.status==='live'?LIVE.nPlayed:LIVE.nFinal):null;}, {d:0,cls:'real'});
   }
   h += sec('כללי');
-  h += row('יריבה במחזור', p=>p.opp?`<span dir="rtl">${esc(oppText(p))}</span>`:'אין משחק');
+  h += row('יריבה במחזור', p=>p.opp?`<span dir="rtl">${p.venue==='Home'?'נגד':'@'} ${tName(p.opp)}</span>`:'אין משחק');
   h += row('תאריך', p=>fmtShortDate(p.date)||'–');
   h += row('משחקים', p=>p.games, {d:0});
   h += row('% אחזקה בפנטזי', p=>ownPct(p), {d:1});
