@@ -272,6 +272,8 @@ td.act .up{color:var(--good)} td.act .down{color:var(--bad)}
 .cact{margin-top:4px;display:flex;flex-direction:column;align-items:center;gap:1px}
 .cact small{font-size:10.5px;color:#666;direction:ltr}
 .game .t small.coach-final{color:#e6c38f}
+.coachcard .cph.logo{background-size:70%;background-position:center;background-color:#fff}
+.cfp{direction:ltr;unicode-bidi:isolate}
 footer{color:var(--muted);font-size:12px;padding:10px 20px 30px;text-align:center}
 .empty{color:var(--muted);padding:30px;text-align:center}
 </style>
@@ -468,7 +470,7 @@ function actualCell(p, k){
   const dTxt = d===0 ? 'בדיוק' : (d>0 ? `▼${d}` : `▲${-d}`);
   return `<td class="num act ${a.status}">
     <span class="badge ${a.status} sm">${a.status==='live'?'<i></i>':'✓ '}${f(a.pir,0)}</span>
-    <small>מקום ${a.rank} <span class="${d>0?'down':d<0?'up':''}" title="הפרש מקומות מול הדירוג החזוי">(${dTxt})</span> · ${dv>=0?'+':''}${f(dv,0)}</small></td>`;
+    <small>מקום ${a.rank} <span class="${d>0?'down':d<0?'up':''}" title="הפרש מקומות מול הדירוג החזוי">(${dTxt})</span> · <bdi dir="ltr">${dv>=0?'+':''}${f(dv,0)}</bdi></small></td>`;
 }
 function renderTops(){
   $('#tops').innerHTML = MODELS.map(m=>{
@@ -875,7 +877,9 @@ function coachActualTag(c){
 }
 function coachCard(c, fp, extra=''){
   return `<div class="ccard coachcard">${extra}<span class="cfp ${fp<0?'neg':''}">${f(fp,1)}</span>
-      <div class="cph ini" data-coachimg="${esc(c.raw||'')}">🧑‍💼</div><div class="cname">${esc(c.he||c.name||c.raw||'')}</div>
+      ${(()=>{ const cc=(D.coaches||[]).find(x=>x.s5id===c.s5id)||c; return cc.logo
+          ? `<div class="cph logo" data-coachimg="${esc(cc.raw||'')}" style="background-image:url('${esc(cc.logo)}')"></div>`
+          : `<div class="cph ini" data-coachimg="${esc(cc.raw||'')}">🧑‍💼</div>`; })()}<div class="cname">${esc(c.he||c.name||c.raw||'')}</div>
       <div class="cmeta">מאמן · ${esc(coachOpp(c))} · ${f(c.price,0)}M${ownTxt(c)?` · ${ownTxt(c)} אחזקה`:''}</div>${coachActualTag(c)}</div>`;
 }
 
@@ -884,7 +888,7 @@ function loadCoachPhotos(root=document){
   root.querySelectorAll('[data-coachimg]').forEach(async el=>{
     const raw = el.dataset.coachimg; if(!raw || el.dataset.done) return; el.dataset.done = '1';
     const url = await wikiImage({raw, name: fmtRaw(raw)}, ['en','es','it','fr','tr','lt','de','ca','pt'], 'coach2:');
-    if(url && el.isConnected){ el.style.backgroundImage = `url("${url}")`; el.textContent = ''; el.classList.remove('ini'); }
+    if(url && el.isConnected){ el.style.backgroundImage = `url("${url}")`; el.textContent = ''; el.classList.remove('ini','logo'); }
   });
 }
 // one row: bench (3 cards) | coach
@@ -1215,7 +1219,7 @@ function renderMyTeam(){
               <div class="tk"><span class="rank">${i+1}</span> ${r.k===0?'בלי חילופים':`${r.k} ${r.k===1?'חילוף':'חילופים'}`}</div>
               <div class="tio">${r.k===0?'<div class="note">להשאיר את הסגל כמו שהוא</div>':(()=>{ const ins = pairByPos(r.outs, r.ins); const ph = {Guard:'ג',Forward:'פ',Center:'ס',Coach:'מאמן'};
                 return r.outs.map((o,j)=>`<div><span class="out">⬅ ${esc(o.name)} <small>(${ph[o.pos]}, ${f(o.tot,1)})</small></span> <span class="in">➜ ${esc(ins[j].name)} <small>(${ph[ins[j].pos]}, ${f(ins[j].tot,1)}, ${f(ins[j].price,0)}M${ownTxt(ins[j].p||ins[j].c)?', '+ownTxt(ins[j].p||ins[j].c)+' אחזקה':''})</small></span></div>`).join(''); })()}</div>
-              <div class="tg"><b class="${gain>0.05?'up':''}">${gain>0.05?'+':''}${f(gain,1)}</b><small>סה"כ ${f(r.v,1)} · נשאר ${f(r.left,0)}M</small></div></div>`; }).join('')}
+              <div class="tg"><b class="${gain>0.05?'up':''}"><bdi dir="ltr">${gain>0.05?'+':''}${f(gain,1)}</bdi></b><small>סה"כ ${f(r.v,1)} · נשאר ${f(r.left,0)}M</small></div></div>`; }).join('')}
           ${plans[MT.sel]?`<h3 style="margin-top:16px">ההרכב לפי תוכנית ${MT.sel+1} למחזור הקרוב (${rr(0)}) – קפטן מומלץ מסומן C${H>1?` · התוכנית נבחרה לפי ${H} מחזורים`:''}</h3>${mtCourt(plans[MT.sel].squad, plans[MT.sel].coach)}`:''}`}
       </div>
       <div class="card" style="margin-top:16px">

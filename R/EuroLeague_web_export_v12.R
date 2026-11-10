@@ -81,6 +81,7 @@ el_web_prices <- function(season='E2026') {
       raw <- if (coach) unname(coach_by[code]) else unname(name_by[key(code, p$shirtNumber)])
       out[[length(out)+1L]] <- data.frame(raw=if (length(raw) && !is.na(raw)) raw else NA_character_,
         team=unname(club_by[code]), he=p$name, price=p$price/1e6, s5id=p$id, s5team=t$id,
+        logo=if (!is.null(t$teamLogoPath)) t$teamLogoPath else NA_character_,
         lastRound=if (!is.null(p$lastRoundPlayerStats$roundId)) p$lastRoundPlayerStats$roundId else NA_integer_,
         s5pos=c('Guard','Forward','Center','Coach')[as.integer(p$position)],
         injured=isTRUE(p$injuredStatus > 0) || isTRUE(p$missingStatus > 0), stringsAsFactors=FALSE)
@@ -368,7 +369,7 @@ export_euroleague_web <- function(output_dir, site_dir, template_file,
     dropped <- cp$he[duplicated(cp$team)]
     if (length(dropped)) message('Coaches: replaced coach(es) dropped: ', paste(dropped, collapse=', '))
     cp <- cp[!duplicated(cp$team),,drop=FALSE]
-    lapply(seq_len(nrow(cp)), function(i) c(list(raw=cp$raw[i], team=cp$team[i], he=cp$he[i], price=cp$price[i], s5id=cp$s5id[i],
+    lapply(seq_len(nrow(cp)), function(i) c(list(raw=cp$raw[i], team=cp$team[i], he=cp$he[i], price=cp$price[i], s5id=cp$s5id[i], logo=cp$logo[i],
       injured=cp$injured[i], fut=coach_fut(cp$team[i])), coach_next(cp$team[i]))) } else list()
   s5teams <- if (!is.null(prices)) { u <- unique(prices[,c('s5team','team')]); setNames(as.list(u$team), u$s5team) } else list()
   data <- list(meta=meta, fixtures=fixtures, players=players, round_hits=round_hits, coaches=coaches, s5teams=s5teams,
