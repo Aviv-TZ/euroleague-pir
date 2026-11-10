@@ -14,6 +14,15 @@ const ALLOWED_ORIGIN = 'https://aviv-tz.github.io';
 const MAX_LOOKUPS_PER_MIN = 20;
 
 let COOKIE = null, SEASON = null, SIZE = null, SIZE_AT = 0;
+const FALLBACK_SEASON = 11;   // sport5 EuroLeague fantasy season 2026/27
+// Same headers a browser on the fantasy site sends
+const BH = {
+  'Accept': 'application/json, text/plain, */*',
+  'Accept-Language': 'he-IL,he;q=0.9,en;q=0.8',
+  'Origin': 'https://fantasyeuroleague.sport5.co.il',
+  'Referer': 'https://fantasyeuroleague.sport5.co.il/',
+  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36'
+};
 let windowStart = 0, windowCount = 0;
 
 function cors(extra = {}) {
@@ -32,8 +41,7 @@ function cookiesFrom(res) {
 async function login(env) {
   const res = await fetch(API + 'Account/Login', {
     method: 'POST', redirect: 'manual',
-    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json',
-               'Origin': 'https://fantasyeuroleague.sport5.co.il', 'Referer': 'https://fantasyeuroleague.sport5.co.il/' },
+    headers: { ...BH, 'Content-Type': 'application/json' },
     body: JSON.stringify({ email: env.S5_EMAIL, password: env.S5_PASSWORD, googleToken: null, facebookToken: null, adminKey: null })
   });
   const c = cookiesFrom(res);
@@ -45,8 +53,7 @@ async function login(env) {
 // GET with the session cookie; logs in again once if the session expired.
 async function api(env, path, retry = true) {
   if (!COOKIE) await login(env);
-  const res = await fetch(API + path, { redirect: 'manual', headers: { Cookie: COOKIE, Accept: 'application/json',
-    'Origin': 'https://fantasyeuroleague.sport5.co.il', 'Referer': 'https://fantasyeuroleague.sport5.co.il/' } });
+  const res = await fetch(API + path, { redirect: 'manual', headers: { ...BH, Cookie: COOKIE } });
   const text = await res.text();
   if (res.status >= 300 || text.trimStart().startsWith('<')) {
     if (!retry) throw new Error('not authorised (status ' + res.status + ')');
@@ -57,10 +64,12 @@ async function api(env, path, retry = true) {
 
 async function season(env) {
   if (SEASON) return SEASON;
-  const r = await fetch(API + 'Leagues/GetLeagues').then(r => r.json());
-  const l = (r.data || []).find(x => (x.urlName || '').toLowerCase() === 'fantasyeuroleague');
-  if (!l) throw new Error('EuroLeague fantasy season not found');
-  return (SEASON = l.currentSeasonId);
+  try {
+    const r = await fetch(API + 'Leagues/GetLeagues', { headers: BH }).then(r => r.json());
+    const l = (r.data || []).find(x => (x.urlName || '').toLowerCase() === 'fantasyeuroleague');
+    if (l) return (SEASON = l.currentSeasonId);
+  } catch (e) {}
+  return (SEASON = FALLBACK_SEASON);
 }
 
 const leaguePage = async (env, page, search = '') =>
@@ -152,20 +161,37 @@ export default {
       if (url.pathname === '/debug') {
         if (!env.DEBUG_KEY || url.searchParams.get('key') !== env.DEBUG_KEY) return json({ error: 'forbidden' }, 403);
         const name = url.searchParams.get('name') || '';
-        const out = { season: await season(env) };
-        const page = await leaguePage(env, 0, name);
-        const t = teamsOf(page);
-        out.searchCount = t.length;
-        out.firstTeamKeys = t[0] ? Object.keys(t[0]) : null;
-        out.firstTeam = t[0] ? teamInfo(t[0]) : null;
-        if (t[0]) {
-          const raw = await api(env, `UserTeam/GetUserAndTeam?seasonId=${out.season}&userId=${t[0].userId}`);
-          out.squadKeys = raw && raw.data ? Object.keys(raw.data) : null;
-          out.squad = squadFrom(raw); out.flags = flagsOf(raw);
-          // structure only (strings shortened) to finish the parser; no emails/phones
-          out.rawSample = JSON.stringify(raw, (k, v) => /mail|phone|password|token|username|firstname|lastname|fullname|birth/i.test(k) ? '[hidden]' : v).slice(0, 3000);
-        }
-        out.leagueSize = await leagueSize(env);
+        const out = { secrets: { S5_EMAIL: !!env.S5_EMAIL, S5_PASSWORD: !!env.S5_PASSWORD } };
+        const peek = async (label, res) => { const t = await res.text();
+          out[label] = { status: res.status, type: res.headers.get('content-type'), location: res.headers.get('location'),
+                         isJson: !t.trimStart().startsWith('<'), head: t.slice(0, 160).replace(/"(email|password)":"[^"]*"/gi, '"$1":"[hidden]"') };
+          return t; };
+        // 1. public endpoint
+        await peek('step1_getLeagues', await fetch(API + 'Leagues/GetLeagues', { headers: BH }));
+        // 2. login
+        const lr = await fetch(API + 'Account/Login', { method: 'POST', redirect: 'manual', headers: { ...BH, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: env.S5_EMAIL, password: env.S5_PASSWORD, googleToken: null, facebookToken: null, adminKey: null }) });
+        const ck = cookiesFrom(lr);
+        await peek('step2_login', lr);
+        out.step2_login.cookieNames = ck ? ck.split('; ').map(c => c.split('=')[0]) : [];
+        if (!ck) return json(out);
+        COOKIE = ck;
+        // 3. search the general league
+        const sr = await fetch(API + `CustomLeagues/GetLeagueData?seasonId=${await season(env)}&isPerRound=false&page=0&searchText=${encodeURIComponent(name)}`,
+                               { redirect: 'manual', headers: { ...BH, Cookie: COOKIE } });
+        const st = await peek('step3_search', sr);
+        let teams = []; try { teams = teamsOf(JSON.parse(st)); } catch (e) {}
+        out.step3_search.count = teams.length; out.step3_search.first = teams[0] ? teamInfo(teams[0]) : null;
+        if (!teams[0]) return json(out);
+        // 4. squad of the first match
+        const qr = await fetch(API + `UserTeam/GetUserAndTeam?seasonId=${await season(env)}&userId=${teams[0].userId}`,
+                               { redirect: 'manual', headers: { ...BH, Cookie: COOKIE } });
+        const qt = await peek('step4_squad', qr);
+        try { const raw = JSON.parse(qt);
+          out.step4_squad.squad = squadFrom(raw); out.step4_squad.flags = flagsOf(raw);
+          out.step4_squad.rawSample = JSON.stringify(raw, (k, v) => /mail|phone|password|token|username|firstname|lastname|fullname|birth/i.test(k) ? '[hidden]' : v).slice(0, 3000);
+        } catch (e) {}
+        delete out.step4_squad.head;
         return json(out);
       }
       return json({ ok: true, endpoints: ['/lookup?name=', '/debug?key=&name='] });
