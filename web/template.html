@@ -858,7 +858,7 @@ function coachCard(c, fp, extra=''){
 function loadCoachPhotos(root=document){
   root.querySelectorAll('[data-coachimg]').forEach(async el=>{
     const raw = el.dataset.coachimg; if(!raw || el.dataset.done) return; el.dataset.done = '1';
-    const url = await wikiImage({raw, name: fmtRaw(raw)});
+    const url = await wikiImage({raw, name: fmtRaw(raw)}, ['en','es','it','fr','tr','lt','de','ca','pt'], 'coach2:');
     if(url && el.isConnected){ el.style.backgroundImage = `url("${url}")`; el.textContent = ''; el.classList.remove('ini'); }
   });
 }
@@ -1419,22 +1419,28 @@ const initials = p => (p.name||'').split(/\s+/).map(w=>w[0]).filter(Boolean).sli
 const IMG_KEY = 'el_wiki_img_v1';
 let imgCache = {}; try{ imgCache = JSON.parse(localStorage.getItem(IMG_KEY)||'{}'); }catch(e){}
 const imgPending = {};
-function wikiImage(p){
+// Look a person up on Wikipedia; `langs` = wikis to try in order (coaches: several languages,
+// e.g. Spanish coaches often have no English article). Same safety check in every language:
+// surname in the article title + "basketball" (in that language) in its description.
+const BASKET_RE = /basketball|baloncesto|bàsquet|pallacanestro|basket|basketbol|krepšin|basquete/i;
+function wikiImage(p, langs=['en'], keyPrefix=''){
   if(!p) return Promise.resolve(null);
-  if(p.raw in imgCache) return Promise.resolve(imgCache[p.raw]);
-  if(imgPending[p.raw]) return imgPending[p.raw];
+  const key = keyPrefix + p.raw;
+  if(key in imgCache) return Promise.resolve(imgCache[key]);
+  if(imgPending[key]) return imgPending[key];
   const last = norm((p.raw.split(',')[0]||'').trim().split(/[\s-]+/)[0]);
-  const api = 'https://en.wikipedia.org/w/api.php?action=query&format=json&origin=*&generator=search'+
-    '&gsrlimit=5&prop=pageimages|description&piprop=thumbnail&pithumbsize=240&gsrsearch='+
-    encodeURIComponent(p.name+' basketball');
-  return imgPending[p.raw] = fetch(api).then(r=>r.json()).then(j=>{
-    const pages = Object.values((j.query&&j.query.pages)||{}).sort((a,b)=>a.index-b.index);
-    const hit = pages.find(pg=>pg.thumbnail && norm(pg.title).includes(last) &&
-                  (/basketball/i.test(pg.description||'') || /basketball/i.test(pg.title)));
-    const url = hit ? hit.thumbnail.source : null;
-    imgCache[p.raw] = url; try{ localStorage.setItem(IMG_KEY, JSON.stringify(imgCache)); }catch(e){}
+  const one = lang => fetch(`https://${lang}.wikipedia.org/w/api.php?action=query&format=json&origin=*&generator=search`+
+      '&gsrlimit=5&prop=pageimages|description&piprop=thumbnail&pithumbsize=240&gsrsearch='+encodeURIComponent(p.name+(lang==='en'?' basketball':'')))
+    .then(r=>r.json()).then(j=>{
+      const pages = Object.values((j.query&&j.query.pages)||{}).sort((a,b)=>a.index-b.index);
+      const hit = pages.find(pg=>pg.thumbnail && norm(pg.title).includes(last) && (BASKET_RE.test(pg.description||'') || BASKET_RE.test(pg.title)));
+      return hit ? hit.thumbnail.source : null; });
+  return imgPending[key] = (async()=>{
+    let url = null;
+    for(const lang of langs){ url = await one(lang); if(url) break; }
+    imgCache[key] = url; try{ localStorage.setItem(IMG_KEY, JSON.stringify(imgCache)); }catch(e){}
     return url;
-  }).catch(()=>null);   // network error: not cached, retried next time
+  })().catch(()=>null);   // network error: not cached, retried next time
 }
 function compareTable(ps){
   const row = (label, get, opt={})=>{
