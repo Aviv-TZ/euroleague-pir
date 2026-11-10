@@ -576,7 +576,7 @@ function renderFixtures(){
     if((st==='final'||st==='live') && gi.hs!=null && gi.as!=null){
       const home = t===g.home, pts = coachPtsFromScore(home?gi.hs:gi.as, home?gi.as:gi.hs);
       const c = (D.coaches||[]).find(x=>x.team===t);
-      sub += `<small class="${st==='live'?'lead-live':'coach-final'}">מאמן${c?` ${esc((c.he||c.raw||'').split(' ').slice(-1)[0])}`:''}: ${pts>0?'+':''}${pts}${st==='live'?' (לייב)':''}</small>`;
+      sub += `<small class="${st==='live'?'lead-live':'coach-final'}">מאמן${c?` ${esc((c.he||c.raw||'').split(' ').slice(-1)[0])}`:''}: <bdi dir="ltr">${pts>0?'+':''}${pts}</bdi>${st==='live'?' (לייב)':''}</small>`;
     }
     return `<div class="t">${esc(t)}${sub}</div>`;
   };
@@ -869,8 +869,9 @@ function coachActual(team){
 }
 function coachActualTag(c){
   const a = c && coachActual(c.team); if(!a) return '';
-  return a.live ? `<div class="cact live"><span class="badge live sm"><i></i>LIVE ${a.pts>0?'+':''}${a.pts}</span><small>${a.score}</small></div>`
-                : `<div class="cact"><span class="badge final sm">✓ ${a.pts>0?'+':''}${a.pts}</span><small>${a.score}</small></div>`;
+  const v = `<bdi dir="ltr">${a.pts>0?'+':''}${a.pts}</bdi>`;
+  return a.live ? `<div class="cact live"><span class="badge live sm"><i></i>LIVE ${v}</span><small>${a.score}</small></div>`
+                : `<div class="cact"><span class="badge final sm">✓ ${v}</span><small>${a.score}</small></div>`;
 }
 function coachCard(c, fp, extra=''){
   return `<div class="ccard coachcard">${extra}<span class="cfp ${fp<0?'neg':''}">${f(fp,1)}</span>
