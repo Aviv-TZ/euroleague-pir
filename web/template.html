@@ -215,6 +215,16 @@ td.act .up{color:var(--good)} td.act .down{color:var(--bad)}
 .coach{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:6px 10px;font-size:13px}
 .coach small{color:var(--muted)}
 .coach.blocked{opacity:.45;text-decoration:line-through}
+/* my team */
+.mtform{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px}
+.mtform input{flex:1;min-width:200px;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:var(--panel2);color:var(--text);font:inherit;font-size:16px}
+.mt-head .kpis{grid-template-columns:repeat(3,1fr)}
+.trow{display:grid;grid-template-columns:90px 1fr 130px;gap:10px;align-items:center;padding:10px;border-bottom:1px solid var(--line)}
+.trow.best{background:#2ec47a14;border:1px solid #2ec47a55;border-radius:10px}
+.trow .tk{font-weight:700}
+.trow .out{color:#ff8b8b} .trow .in{color:var(--good)}
+.trow .tg{text-align:center} .trow .tg b{font-size:20px;display:block} .trow .tg small{color:var(--muted);font-size:11.5px}
+@media(max-width:600px){ .trow{grid-template-columns:1fr} .mt-head .kpis{grid-template-columns:1fr 1fr 1fr} }
 footer{color:var(--muted);font-size:12px;padding:10px 20px 30px;text-align:center}
 .empty{color:var(--muted);padding:30px;text-align:center}
 </style>
@@ -229,6 +239,7 @@ footer{color:var(--muted);font-size:12px;padding:10px 20px 30px;text-align:cente
     <button data-tab="search">חיפוש והשוואת שחקנים</button>
     <button data-tab="opp">יריבות לפי עמדה</button>
     <button data-tab="build">חמישייה אידיאלית</button>
+    <button data-tab="myteam">הקבוצה שלי</button>
   </nav>
 </div></header>
 
@@ -243,6 +254,10 @@ footer{color:var(--muted);font-size:12px;padding:10px 20px 30px;text-align:cente
 
   <section class="tab" id="tab-opp">
     <div id="oppView"></div>
+  </section>
+
+  <section class="tab" id="tab-myteam">
+    <div id="myTeamView"></div>
   </section>
 
   <section class="tab" id="tab-build">
@@ -857,6 +872,158 @@ function renderSquad(){
   box.querySelectorAll('.pl').forEach(el=>el.onclick=()=>openPlayer(+el.dataset.id));
 }
 
+// ---------- H. My team: rank, percentile and recommended transfers (via the Cloudflare Worker) ----------
+const WORKER = 'https://el-fantasy.aviv-tzafrir.workers.dev';
+const S5POS = {1:'Guard', 2:'Forward', 3:'Center', 4:'Coach'};
+const byS5 = new Map(P.filter(p=>p.s5id!=null).map(p=>[p.s5id,p]));
+const MT = {data:null, loading:false, err:null, rec:null};
+// expected fantasy points used for transfers: 0 if injured/out, season average if the model has no prediction
+function mtFp(p, injured){
+  if(!p || injured || p.injured || p.out3) return 0;
+  if(p.ranked) return p.m[1].pir;
+  return p.avg!=null ? p.avg : 0;
+}
+// best lineup of 8 players: bench = 1 G + 1 F + 1 C (50%), five = the rest (1-3 G, 1-3 F, 1-2 C), captain x2
+function lineupValue(sq){
+  const by = {Guard:[],Forward:[],Center:[]};
+  for(const x of sq){ if(!by[x.pos]) return null; by[x.pos].push(x); }
+  let best = null;
+  for(const g of by.Guard) for(const f of by.Forward) for(const c of by.Center){
+    const bench = [g,f,c], st = sq.filter(x=>!bench.includes(x));
+    const n = {Guard:0,Forward:0,Center:0}; st.forEach(x=>n[x.pos]++);
+    if(n.Guard>3||n.Forward>3||n.Center>2||n.Guard<1||n.Forward<1||n.Center<1) continue;
+    const cap = st.reduce((a,b)=>b.fp>a.fp?b:a);
+    const v = st.reduce((s,x)=>s+x.fp,0) + cap.fp + (g.fp+f.fp+c.fp)/2;
+    if(!best || v>best.v) best = {v, starters:st, bench, cap};
+  }
+  return best;
+}
+function combos(arr, k, start=0, acc=[], out=[]){
+  if(acc.length===k){ out.push([...acc]); return out; }
+  for(let i=start;i<arr.length;i++){ acc.push(arr[i]); combos(arr,k,i+1,acc,out); acc.pop(); }
+  return out;
+}
+function recommend(sq, coach, bank){
+  const inSquad = new Set(sq.map(x=>x.s5id));
+  const pool = P.filter(p=>p.ranked && p.s5id!=null && p.price!=null && POS3.includes(p.s5pos) && !p.injured && !p.out3 && !inSquad.has(p.s5id))
+                .map(p=>({s5id:p.s5id, p, name:p.he||p.name, price:p.price, pos:p.s5pos, team:p.team, fp:mtFp(p)}));
+  const base = lineupValue(sq);
+  const res = [{k:0, v:base?base.v:null, lineup:base, outs:[], ins:[]}];
+  for(let k=1;k<=3;k++){
+    let best = null;
+    for(const outs of combos(sq,k)){
+      const keep = sq.filter(x=>!outs.includes(x));
+      const money = bank + outs.reduce((s,x)=>s+x.price,0);
+      const club = {}; [...keep, coach].filter(Boolean).forEach(x=>club[x.team]=(club[x.team]||0)+1);
+      // candidates: top 10 per position that are affordable and allowed by the club limit
+      const cand = [];
+      for(const q of POS3) cand.push(...pool.filter(x=>x.pos===q && x.price<=money && (club[x.team]||0)<2).sort((a,b)=>b.fp-a.fp).slice(0,10));
+      const ub0 = keep.reduce((s,x)=>s+x.fp,0);
+      for(const ins of combos(cand,k)){
+        const cost = ins.reduce((s,x)=>s+x.price,0); if(cost>money) continue;
+        const cc = {...club}; let okc = true; for(const x of ins){ cc[x.team]=(cc[x.team]||0)+1; if(cc[x.team]>2){okc=false;break;} } if(!okc) continue;
+        const ub = ub0 + ins.reduce((s,x)=>s+x.fp,0) + Math.max(...keep.map(x=>x.fp), ...ins.map(x=>x.fp));
+        if(best && ub <= best.v) continue;
+        const lu = lineupValue([...keep, ...ins]); if(!lu) continue;
+        if(!best || lu.v>best.v) best = {k, v:lu.v, lineup:lu, outs, ins, left:money-cost};
+      }
+    }
+    res.push(best || {k, v:null});
+  }
+  return res;
+}
+async function mtLookup(name, userId){
+  MT.loading = true; MT.err = null; MT.data = null; MT.rec = null; renderMyTeam();
+  try{
+    const q = userId ? `userId=${encodeURIComponent(userId)}&name=${encodeURIComponent(name||'')}` : `name=${encodeURIComponent(name)}`;
+    const r = await fetch(`${WORKER}/lookup?${q}`);
+    const j = await r.json();
+    if(j.error) throw new Error(j.error==='busy, try again in a minute' ? 'יותר מדי חיפושים כרגע, נסה שוב בעוד דקה' : j.error);
+    MT.data = j;
+    if(j.team){
+      try{ localStorage.setItem('el_my_team', j.team.name); }catch(e){}
+      const sq = [], coachRaw = j.squad.find(x=>x.pos===4);
+      for(const x of j.squad.filter(x=>x.pos!==4)){
+        const p = byS5.get(x.s5id);
+        sq.push({s5id:x.s5id, p, name:(p&&(p.he||p.name))||x.name, price:x.price, pos:S5POS[x.pos],
+                 team:(p&&p.team)||(D.s5teams||{})[x.teamId]||String(x.teamId), fp:mtFp(p, x.injured), injured:x.injured, reserve:x.reserve});
+      }
+      const coach = coachRaw ? {name:coachRaw.name, price:coachRaw.price, team:(D.s5teams||{})[coachRaw.teamId]||String(coachRaw.teamId)} : null;
+      const bank = 100 - sq.reduce((s,x)=>s+x.price,0) - (coach?coach.price:0);
+      MT.sq = sq; MT.coach = coach; MT.bank = bank;
+      renderMyTeam();
+      await new Promise(r=>setTimeout(r,30));   // let the page paint before the heavier search
+      MT.rec = recommend(sq, coach, bank);
+    }
+  }catch(e){ MT.err = String(e.message||e); }
+  MT.loading = false; renderMyTeam();
+}
+function mtCard(x, isCap, cls=''){
+  const p = x.p, ph = p&&p.img ? `<div class="cph" style="background-image:url('${esc(p.img)}')"></div>` : `<div class="cph ini">${esc((x.name||'?').slice(0,2))}</div>`;
+  return `<div class="ccard ${cls} ${p?'pl':''}" ${p?`data-id="${p.id}"`:''}>
+    <span class="cfp">${f(x.fp,1)}</span>${isCap?'<span class="ccap">C</span>':''}${ph}
+    <div class="cname">${esc(x.name)}</div>
+    <div class="cmeta">${p?esc(oppShort(p))+' · ':''}${f(x.price,0)}M${x.injured||(p&&(p.injured||p.out3))?' · <b style="color:#c0262d">פצוע/לא משחק</b>':''}</div></div>`;
+}
+function mtCourt(lu){
+  const row = pos => lu.starters.filter(x=>x.pos===pos).sort((a,b)=>b.fp-a.fp).map(x=>mtCard(x, x===lu.cap)).join('');
+  return `<div class="court"><svg class="lines" viewBox="0 0 100 140" preserveAspectRatio="none" aria-hidden="true">
+      <rect x="3" y="2" width="94" height="136" fill="none"/><rect x="34" y="2" width="32" height="30" fill="none"/>
+      <path d="M34 32 A16 10 0 0 0 66 32" fill="none"/><line x1="3" y1="70" x2="97" y2="70"/>
+      <circle cx="50" cy="70" r="11" fill="none"/><path d="M10 138 L10 120 A40 32 0 0 1 90 120 L90 138" fill="none"/></svg>
+      <div class="crow">${row('Center')}</div><div class="crow">${row('Forward')}</div><div class="crow">${row('Guard')}</div></div>
+    <div class="bench"><div class="btitle">ספסל · 50%</div><div class="crow">${lu.bench.map(x=>mtCard(x,false,'bcard')).join('')}</div></div>`;
+}
+function renderMyTeam(){
+  const box = $('#myTeamView'); if(!box) return;
+  let saved = ''; try{ saved = localStorage.getItem('el_my_team')||''; }catch(e){}
+  let body = '';
+  if(MT.loading && !MT.sq) body = '<div class="empty">מחפש את הקבוצה…</div>';
+  else if(MT.err) body = `<div class="warn">שגיאה: ${esc(MT.err)}</div>`;
+  else if(MT.data && MT.data.choose) body = `<div class="card"><h2>נמצאו כמה קבוצות בשם הזה</h2><div class="clist">${MT.data.choose.map(t=>
+      `<button class="btn ghost" data-uid="${t.userId}">${esc(t.name)} · מקום ${t.position} · ${t.totalScore} נק'</button>`).join('')}</div></div>`;
+  else if(MT.data && MT.data.suggestions) body = `<div class="card"><h2>לא נמצאה קבוצה בשם המדויק</h2>${MT.data.suggestions.length?`<div class="hint">אולי התכוונת ל:</div><div class="clist">${MT.data.suggestions.map(t=>
+      `<button class="btn ghost" data-uid="${t.userId}" data-nm="${esc(t.name)}">${esc(t.name)} · מקום ${t.position}</button>`).join('')}</div>`:'<div class="note">אין תוצאות דומות</div>'}</div>`;
+  else if(MT.data && MT.data.team){
+    const t = MT.data.team, top = Math.max(0.1, Math.round(1000*t.position/MT.data.leagueSize)/10);
+    const rec = MT.rec, base = rec && rec[0];
+    const opts = rec ? rec.slice(1).filter(r=>r.v!=null) : [];
+    const bestOpt = opts.length ? opts.reduce((a,b)=>b.v>a.v?b:a) : null;
+    body = `<div class="card mt-head">
+        <h2>${esc(t.name)}</h2>
+        <div class="kpis">
+          <div class="kpi"><span>מקום בליגה הכללית</span><b>${t.position.toLocaleString('he-IL')}</b><small>מתוך ${MT.data.leagueSize.toLocaleString('he-IL')}</small></div>
+          <div class="kpi"><span>אחוזון</span><b>${f(top,1)}%</b><small>העליונים</small></div>
+          <div class="kpi"><span>ניקוד עונה / מחזור</span><b>${t.totalScore}</b><small>מחזור אחרון: ${t.roundScore}</small></div>
+        </div>
+        <div class="note">מאמן: ${MT.coach?`${esc(MT.coach.name)} (${f(MT.coach.price,0)}M)`:'–'} · בקופה: ${f(MT.bank,0)}M · הנתונים מאתר הפנטזי מתעדכנים עד כל רבע שעה</div>
+      </div>
+      <div class="card" style="margin-top:16px">
+        <h2>הסגל הנוכחי – צפי למחזור ${M.next_round??''}</h2>
+        ${base&&base.lineup?`<div class="hint">בסידור הטוב ביותר של הסגל (חמישייה, ספסל וקפטן): <b>${f(base.v,1)}</b> נקודות צפויות</div>${mtCourt(base.lineup)}`:'<div class="note">מחשב…</div>'}
+      </div>
+      <div class="card" style="margin-top:16px">
+        <h2>חילופים מומלצים</h2>
+        <div class="hint">עד 3 חילופים (כמו במשחק), תקציב 100M כולל המאמן, עמדות לפי הפורמט, עד 2 מכל קבוצה כולל המאמן. המאמן לא מוחלף (אין תחזית למאמנים). שחקן פצוע או שלא שיחק ב-3 האחרונים נחשב 0.</div>
+        ${!rec?'<div class="empty">מחשב חילופים…</div>':opts.map(r=>{ const gain = r.v-base.v;
+          return `<div class="trow ${r===bestOpt&&gain>0.05?'best':''}">
+            <div class="tk">${r.k} ${r.k===1?'חילוף':'חילופים'}</div>
+            <div class="tio">${r.outs.map((o,i)=>`<div><span class="out">⬅ ${esc(o.name)} (${f(o.fp,1)})</span> <span class="in">➜ ${esc(r.ins[i].name)} (${f(r.ins[i].fp,1)}, ${f(r.ins[i].price,0)}M)</span></div>`).join('')}</div>
+            <div class="tg"><b class="${gain>0.05?'up':''}">${gain>0.05?'+':''}${f(gain,1)}</b><small>סה"כ ${f(r.v,1)} · נשאר ${f(r.left,0)}M</small></div></div>`; }).join('')}
+        ${bestOpt&&bestOpt.v-base.v>0.05?`<h3 style="margin-top:16px">הסגל אחרי ${bestOpt.k} ${bestOpt.k===1?'חילוף':'החילופים'} – קפטן מומלץ: ${esc(bestOpt.lineup.cap.name)}</h3>${mtCourt(bestOpt.lineup)}`:
+          (rec?'<p class="note">אין חילוף שמשפר את הצפי – כדאי להשאיר את הסגל.</p>':'')}
+      </div>`;
+  }
+  box.innerHTML = `<div class="card"><h2>הקבוצה שלי</h2>
+      <div class="hint">הקלד את שם הקבוצה שלך בפנטזי יורוליג של ערוץ הספורט – תקבל מקום, אחוזון וחילופים מומלצים למחזור הבא</div>
+      <form id="mtForm" class="mtform"><input id="mtName" type="search" placeholder="שם הקבוצה בדיוק כמו באתר" value="${esc((MT.data&&MT.data.team&&MT.data.team.name)||saved)}">
+        <button class="btn" type="submit" ${MT.loading?'disabled':''}>${MT.loading?'מחפש…':'חפש'}</button></form></div>
+    <div style="margin-top:16px">${body}</div>`;
+  $('#mtForm').onsubmit = e=>{ e.preventDefault(); const v=$('#mtName').value.trim(); if(v) mtLookup(v); };
+  box.querySelectorAll('[data-uid]').forEach(b=>b.onclick=()=>mtLookup(b.dataset.nm||$('#mtName').value.trim(), b.dataset.uid));
+  box.querySelectorAll('.pl[data-id]').forEach(el=>el.onclick=()=>openPlayer(+el.dataset.id));
+}
+
 // ---------- Autocomplete ----------
 const INDEX = P.map(p=>({p, hay:norm(p.name+' '+p.raw+' '+p.team+' '+(p.he||'')), nm:norm(p.name+' '+p.raw+' '+(p.he||''))}));
 function searchPlayers(q, exclude){
@@ -1129,7 +1296,7 @@ function readHash(){
     const ids = (h.split('/')[1]||'').split(',').map(Number).filter(id=>byId.has(id)).slice(0,4);
     if(ids.length){ current=ids[0]; compare=ids; mode = h.startsWith('compare')?'compare':'card'; showCmpSearch = mode==='compare'&&ids.length<2; }
     showTab('search');
-  } else if(['top','fixtures','opp','build'].includes(h)) showTab(h);
+  } else if(['top','fixtures','opp','build','myteam'].includes(h)) showTab(h);
 }
 
 // ---------- footer ----------
@@ -1144,7 +1311,7 @@ function renderAll(){
   const ae = document.activeElement;   // do not rebuild the search area while the user is typing
   if(!(ae && ae.tagName==='INPUT' && $('#tab-search').contains(ae))) renderPlayer();
 }
-updateSubline(); renderTops(); renderFixtures(); renderOpp(); renderBuilder(); renderSquad(); readHash(); renderPlayer();
+updateSubline(); renderTops(); renderFixtures(); renderOpp(); renderBuilder(); renderSquad(); renderMyTeam(); readHash(); renderPlayer();
 loadLive().then(pollDirect);
 window.addEventListener('hashchange', ()=>{ readHash(); renderPlayer(); });
 })();
