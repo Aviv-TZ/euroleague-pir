@@ -338,8 +338,31 @@ export_euroleague_web <- function(output_dir, site_dir, template_file,
   raw_csv2 <- file.path(output_dir, 'EuroLeague_2026-27_players.csv')
   round_hits <- if (file.exists(raw_csv2)) el_web_round_hits(hist,
     utils::read.csv(raw_csv2, fileEncoding='UTF-8', stringsAsFactors=FALSE)) else list()
+  # Coach projection (tested on 2024/25-2026/27: winner right 63%, the top-ranked coach scored
+  # +8..+15 per round vs 0 for an average coach). No betting odds: expected margin from the
+  # season point differential (x0.6) + 2.5 home court; margin ~ Normal(mu, 12).
+  # Coach points: win +(5 + margin), loss -(5 + |margin|)  =>  E = mu + 5*(2*Phi(mu/12) - 1).
+  net <- list()
+  if (!is.null(schedule)) {
+    fin <- schedule[schedule$Played & is.finite(schedule$HomeScore) & is.finite(schedule$AwayScore),,drop=FALSE]
+    for (t in unique(c(fin$Home, fin$Away)))
+      net[[t]] <- mean(c(fin$HomeScore[fin$Home == t] - fin$AwayScore[fin$Home == t],
+                         fin$AwayScore[fin$Away == t] - fin$HomeScore[fin$Away == t]))
+  }
+  coach_fut <- function(team) {
+    if (!length(fut_rounds) || is.null(net[[team]])) return(NULL)
+    vapply(fut_rounds, function(r) {
+      fx <- fut_fx[[as.character(r)]]; k <- match(team, fx$Team)
+      if (is.na(k) || is.null(net[[fx$Opponent[k]]])) return(0)
+      mu <- 0.6*(net[[team]] - net[[fx$Opponent[k]]]) + 2.5*ifelse(fx$Venue[k] == 'Home', 1, -1)
+      round(mu + 5*(2*stats::pnorm(mu/12) - 1), 1)
+    }, numeric(1))
+  }
+  coach_next <- function(team) { if (!length(fut_rounds)) return(NULL); fx <- fut_fx[[as.character(fut_rounds[1])]]; k <- match(team, fx$Team)
+    if (is.na(k)) NULL else list(opp=fx$Opponent[k], venue=fx$Venue[k]) }
   coaches <- if (!is.null(prices)) { cp <- prices[prices$s5pos == 'Coach',,drop=FALSE]
-    lapply(seq_len(nrow(cp)), function(i) list(raw=cp$raw[i], team=cp$team[i], he=cp$he[i], price=cp$price[i], s5id=cp$s5id[i])) } else list()
+    lapply(seq_len(nrow(cp)), function(i) c(list(raw=cp$raw[i], team=cp$team[i], he=cp$he[i], price=cp$price[i], s5id=cp$s5id[i],
+      injured=cp$injured[i], fut=coach_fut(cp$team[i])), coach_next(cp$team[i]))) } else list()
   s5teams <- if (!is.null(prices)) { u <- unique(prices[,c('s5team','team')]); setNames(as.list(u$team), u$s5team) } else list()
   data <- list(meta=meta, fixtures=fixtures, players=players, round_hits=round_hits, coaches=coaches, s5teams=s5teams,
                opponents=opponents, league=league)
