@@ -916,6 +916,11 @@ function lineupAt(sq, h){
   return best;
 }
 function squadValue(sq, H){ let t=0; for(let h=0;h<H;h++){ const l=lineupAt(sq,h); if(!l) return null; t+=l.v; } return t; }
+// show each player leaving next to an incoming player of the same position where possible
+function pairByPos(outs, ins){
+  const left = [...ins], res = outs.map(o=>{ const i = left.findIndex(x=>x.pos===o.pos); return i>=0 ? left.splice(i,1)[0] : null; });
+  return res.map(x=>x || left.shift());
+}
 function combos(arr, k, start=0, acc=[], out=[]){
   if(acc.length===k){ out.push([...acc]); return out; }
   for(let i=start;i<arr.length;i++){ acc.push(arr[i]); combos(arr,k,i+1,acc,out); acc.pop(); }
@@ -1068,7 +1073,8 @@ function renderMyTeam(){
           ${plans.map((r,i)=>{ const gain = r.v-rec.baseV;
             return `<div class="trow pick ${i===MT.sel?'best':''}" data-plan="${i}" title="לחץ להצגת ההרכב של התוכנית">
               <div class="tk"><span class="rank">${i+1}</span> ${r.k===0?'בלי חילופים':`${r.k} ${r.k===1?'חילוף':'חילופים'}`}</div>
-              <div class="tio">${r.k===0?'<div class="note">להשאיר את הסגל כמו שהוא</div>':r.outs.map((o,j)=>`<div><span class="out">⬅ ${esc(o.name)} (${f(o.tot,1)})</span> <span class="in">➜ ${esc(r.ins[j].name)} (${f(r.ins[j].tot,1)}, ${f(r.ins[j].price,0)}M${ownTxt(r.ins[j].p)?', '+ownTxt(r.ins[j].p)+' אחזקה':''})</span></div>`).join('')}</div>
+              <div class="tio">${r.k===0?'<div class="note">להשאיר את הסגל כמו שהוא</div>':(()=>{ const ins = pairByPos(r.outs, r.ins); const ph = {Guard:'ג',Forward:'פ',Center:'ס'};
+                return r.outs.map((o,j)=>`<div><span class="out">⬅ ${esc(o.name)} <small>(${ph[o.pos]}, ${f(o.tot,1)})</small></span> <span class="in">➜ ${esc(ins[j].name)} <small>(${ph[ins[j].pos]}, ${f(ins[j].tot,1)}, ${f(ins[j].price,0)}M${ownTxt(ins[j].p)?', '+ownTxt(ins[j].p)+' אחזקה':''})</small></span></div>`).join(''); })()}</div>
               <div class="tg"><b class="${gain>0.05?'up':''}">${gain>0.05?'+':''}${f(gain,1)}</b><small>סה"כ ${f(r.v,1)} · נשאר ${f(r.left,0)}M</small></div></div>`; }).join('')}
           ${plans[MT.sel]?`<h3 style="margin-top:16px">ההרכב לפי תוכנית ${MT.sel+1} למחזור הקרוב (${rr(0)}) – קפטן מומלץ מסומן C${H>1?` · התוכנית נבחרה לפי ${H} מחזורים`:''}</h3>${mtCourt(plans[MT.sel].squad)}`:''}`}
       </div>
