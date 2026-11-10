@@ -136,8 +136,11 @@ el_auto_update <- function(force=FALSE) {
   st <- el_round_status(schedule, last, delay, game_hours)
   message(st$reason)
   source(file.path(code_dir, 'EuroLeague_live_v12.R'))
-  run_live <- function() tryCatch(el_live_update(schedule, site_dir, code_dir),
-                                  error=function(e) message('Live update failed: ', conditionMessage(e)))
+  run_live <- function() {
+    tryCatch(el_live_update(schedule, site_dir, code_dir),
+             error=function(e) message('Live update failed: ', conditionMessage(e)))
+    tryCatch(el_ownership(site_dir), error=function(e) message('Ownership failed: ', conditionMessage(e)))
+  }
   if (!st$due && !force) { run_live(); return(invisible(FALSE)) }
   if (force) message('--force: running now')
 

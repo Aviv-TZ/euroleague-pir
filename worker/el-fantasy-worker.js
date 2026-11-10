@@ -23,7 +23,8 @@ const BH = {
   'Referer': 'https://fantasyeuroleague.sport5.co.il/',
   'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36'
 };
-let windowStart = 0, windowCount = 0;
+let windowStart = 0, windowCount = 0, sWindowStart = 0, sWindowCount = 0;
+const MAX_SEARCHES_PER_MIN = 40;
 
 function cors(extra = {}) {
   return { 'Access-Control-Allow-Origin': ALLOWED_ORIGIN, 'Content-Type': 'application/json; charset=utf-8', ...extra };
@@ -165,6 +166,25 @@ export default {
         if (res.status === 200) ctx.waitUntil(cache.put(key, res.clone()));
         return res;
       }
+      if (url.pathname === '/search') {    // autocomplete: one request per query, cached 15 min
+        const q = (url.searchParams.get('q') || '').trim();
+        if (q.length < 3) return json({ teams: [] });
+        const key = new Request(url.origin + '/search?q=' + encodeURIComponent(q.toLowerCase()));
+        const hit = await caches.default.match(key); if (hit) return hit;
+        const now = Date.now(); if (now - sWindowStart > 60e3) { sWindowStart = now; sWindowCount = 0; }
+        if (++sWindowCount > MAX_SEARCHES_PER_MIN) return json({ error: 'busy' }, 429);
+        const teams = teamsOf(await leaguePage(env, 0, q)).slice(0, 12).map(teamInfo);
+        const res = json({ teams }, 200, { 'Cache-Control': 'public, max-age=900' });
+        ctx.waitUntil(caches.default.put(key, res.clone()));
+        return res;
+      }
+      if (url.pathname === '/size') {      // league size only (cached 6 h) - used for ownership %
+        const cache = caches.default, key = new Request(url.origin + '/size');
+        const hit = await cache.match(key); if (hit) return hit;
+        const res = json({ leagueSize: await leagueSize(env) }, 200, { 'Cache-Control': 'public, max-age=21600' });
+        ctx.waitUntil(cache.put(key, res.clone()));
+        return res;
+      }
       if (url.pathname === '/debug') {
         if (!env.DEBUG_KEY || url.searchParams.get('key') !== env.DEBUG_KEY) return json({ error: 'forbidden' }, 403);
         const name = url.searchParams.get('name') || '';
@@ -201,7 +221,7 @@ export default {
         delete out.step4_squad.head;
         return json(out);
       }
-      return json({ ok: true, endpoints: ['/lookup?name=', '/debug?key=&name='] });
+      return json({ ok: true, endpoints: ['/lookup?name=', '/search?q=', '/size', '/debug?key=&name='] });
     } catch (e) {
       return json({ error: String(e.message || e) }, 500);
     }

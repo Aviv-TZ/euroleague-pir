@@ -161,6 +161,48 @@ export_euroleague_web <- function(output_dir, site_dir, template_file,
   # ---- next fixtures per team (also for players who are not ranked) ---------
   fx_by_team <- if (nrow(fixt)) split(fixt, fixt$Team) else list()
 
+  # ---- projections for the next 5 rounds (Model 2) ------------------------
+  # Player features stay as today; the opponent factor and the venue are recomputed for each
+  # future fixture from the current opponent-by-position numbers (same formula as the model).
+  fut_rounds <- integer(); fut_fx <- list()
+  if (!is.null(schedule) && nrow(fixt)) {
+    R0 <- suppressWarnings(min(schedule$Round[schedule$Game %in% as.character(fixt$Game)]))
+    if (is.finite(R0)) {
+      fut_rounds <- R0:(R0 + 4)
+      for (r in fut_rounds) {
+        g <- schedule[schedule$Round == r,,drop=FALSE]
+        fut_fx[[as.character(r)]] <- rbind(
+          data.frame(Team=g$Home, Opponent=g$Away, Venue='Home', stringsAsFactors=FALSE),
+          data.frame(Team=g$Away, Opponent=g$Home, Venue='Away', stringsAsFactors=FALSE))
+      }
+    }
+  }
+  opp_season <- read_sheet(1); opp_recent <- read_sheet(2)
+  if (nrow(opp_season)) names(opp_season)[1] <- 'Team'
+  if (nrow(opp_recent)) names(opp_recent)[1] <- 'Team'
+  raw_base <- tryCatch(utils::read.csv(file.path(output_dir, 'EuroLeague_2026-27_players.csv'), fileEncoding='UTF-8'), error=function(e) NULL)
+  pos_base <- if (!is.null(raw_base)) sapply(c('Guard','Forward','Center'), function(q) {
+    d <- raw_base[raw_base$Position == q,,drop=FALSE]; sum(d$PIR_x_Minutes)/sum(d$Minutes) }) else NULL
+  w2 <- W[[2]]; cb2 <- calib$m2
+  future_fp <- function(j, team, pos, avg) {
+    if (!length(fut_rounds)) return(NULL)
+    vapply(fut_rounds, function(r) {
+      fx <- fut_fx[[as.character(r)]]; k <- match(team, fx$Team)
+      if (is.na(k)) return(0)                                   # no game for the team that round
+      if (is.na(j) || is.null(pos_base)) return(if (is.finite(avg)) round(avg, 1) else 0)
+      opp <- fx$Opponent[k]; so <- opp_season[[pos]][match(opp, opp_season$Team)]
+      re <- if (nrow(opp_recent)) opp_recent[[pos]][match(opp, opp_recent$Team)] else NA
+      if (!is.finite(so)) return(round(model_rows[[2]]$pir[j], 1))
+      if (!is.finite(re)) re <- so
+      msf <- max(.65, min(1.35, so/pos_base[[pos]])); ml5 <- max(.65, min(1.35, re/pos_base[[pos]]))
+      mraw <- (1-w2[['OpponentLast5Weight']])*msf + w2[['OpponentLast5Weight']]*ml5
+      matchup <- max(.10, 1 + w2[['OpponentStrength']]*(mraw-1))
+      home <- exp(w2[['HomeAdvantage']] * ifelse(fx$Venue[k] == 'Home', 1, -1))
+      score <- model_rows[[2]]$base[j] * matchup * model_rows[[2]]$minf[j] * home
+      round(cb2$a + cb2$b*score, 1)
+    }, numeric(1))
+  }
+
   pos_he <- c(Guard='גארד', Forward='פורוורד', Center='סנטר')
   num <- function(x, d=3) if (is.null(x) || !length(x) || !is.finite(x)) NULL else round(x, d)
 
@@ -191,6 +233,7 @@ export_euroleague_web <- function(output_dir, site_dir, template_file,
               date=if (!is.null(fx)) as.character(fx$Date[1]) else NULL,
               ranked=!is.na(j))
     if (isFALSE(last3_played(a$Player, a$Team))) p$out3 <- TRUE
+    p$fut <- future_fp(j, a$Team, a$Position, a$AvgPIR)
     if (!is.null(prices)) {
       q <- which(prices$raw == a$Player & prices$team == a$Team)[1]
       if (is.na(q)) q <- which(prices$raw == a$Player)[1]
@@ -288,6 +331,7 @@ export_euroleague_web <- function(output_dir, site_dir, template_file,
     generated_utc=format(now, '%Y-%m-%dT%H:%M:%SZ', tz='UTC'),
     season='2026/27', n_ranked=nrow(cand), n_players=nrow(avgs),
     weights=list(m1=as.list(W[[1]]), m2=as.list(W[[2]])),
+    fut_rounds=as.list(fut_rounds),
     calib=lapply(calib, function(c) lapply(c, function(v) if (is.finite(v)) round(v,4) else NULL)),
     backtest=backtest), extra_meta)
 
