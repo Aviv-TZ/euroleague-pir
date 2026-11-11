@@ -357,8 +357,17 @@ function updateSubline(){
   $('#subline').innerHTML =
     (M.next_round ? `תחזית למחזור ${M.next_round}` : 'תחזית') +
     ` (חושבה ${dayFmt.format(gen)} ${timeFmt.format(gen)}) · ${nRanked} שחקנים מדורגים` +
-    (lu ? ` · <b>תוצאות ולייב עודכנו: ${dayFmt.format(lu)} ${timeFmt.format(lu)}</b>` : '');
+    (lu ? ` · <b>תוצאות ולייב עודכנו: ${dayFmt.format(lu)} ${timeFmt.format(lu)}</b>` : '') +
+    ` · ${nextCheckTxt()}`;
 }
+// when the updater looks again (the GitHub workflow schedule): every 10 minutes 15:00-23:00 UTC, otherwise hourly at :17
+function nextCheckTxt(){
+  const now = new Date(), h = now.getUTCHours();
+  if(h >= 15 && h < 23) return 'בדיקה הבאה: בתוך כ-10 דקות';
+  const n = new Date(now); n.setUTCMinutes(17,0,0); if(n <= now) n.setUTCHours(n.getUTCHours()+1);
+  return `בדיקה הבאה: בערך ב-${timeFmt.format(n)}`;
+}
+setInterval(()=>{ try{ updateSubline(); }catch(e){} }, 60000);
 
 // ---------- tabs ----------
 function showTab(t){
