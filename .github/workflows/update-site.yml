@@ -31,12 +31,37 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # R is usually preinstalled on the runner; install it only if missing, and never wait more
+      # than 15 minutes (a network hiccup on the Ubuntu mirrors once hung this step for 1h45m)
+      - name: Check for R
+        id: r
+        run: if command -v Rscript >/dev/null; then echo "have=true" >> "$GITHUB_OUTPUT"; Rscript --version; fi
+
       - uses: r-lib/actions/setup-r@v2
+        if: steps.r.outputs.have != 'true'
+        timeout-minutes: 15
         with:
           use-public-rspm: true
 
+      - name: Cache R packages
+        uses: actions/cache@v4
+        with:
+          path: ~/R-lib
+          key: rlib-${{ runner.os }}-v1
+
       - name: Install R packages
-        run: Rscript -e 'install.packages(c("httr","jsonlite","openxlsx"))'
+        timeout-minutes: 10
+        run: |
+          mkdir -p ~/R-lib && echo "R_LIBS_USER=$HOME/R-lib" >> "$GITHUB_ENV"
+          R_LIBS_USER=$HOME/R-lib Rscript -e '
+            need <- setdiff(c("httr","jsonlite","openxlsx"), rownames(installed.packages()))
+            if (length(need)) {
+              options(HTTPUserAgent = sprintf("R/%s R (%s)", getRversion(), paste(getRversion(), R.version$platform, R.version$arch, R.version$os)))
+              rel <- tryCatch(system("lsb_release -cs", intern = TRUE), error = function(e) "noble")
+              install.packages(need, lib = Sys.getenv("R_LIBS_USER"),
+                               repos = c(sprintf("https://p3m.dev/cran/__linux__/%s/latest", rel), "https://cloud.r-project.org"))
+            }
+            stopifnot(all(sapply(c("httr","jsonlite","openxlsx"), requireNamespace, quietly = TRUE)))'
 
       - name: Update (prediction only, no training) - loops every 10 min during game hours
         env:
