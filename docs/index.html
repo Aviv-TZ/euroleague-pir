@@ -1052,7 +1052,11 @@ function coachItem(c, H){
 // A plan's cost follows the fantasy site: kept players added in this window + new players not taken out earlier.
 function recommend(sq, coach, bank, H, mode='auto', ctx={}){
   const limit = ctx.limit ?? 3, free = ctx.free || new Set(), bo = ctx.boost || null;
-  const costOf = (keep, keepCoach, ins) => keep.filter(x=>x.pend).length + (keepCoach&&keepCoach.pend?1:0) + ins.filter(x=>!free.has(x.s5id)).length;
+  // the removed list also holds players dropped in earlier rounds, so a return is treated as free
+  // only as an undo: at most as many as the transfers already made in this window
+  const pend0 = sq.filter(x=>x.pend).length + (coach&&coach.pend?1:0);
+  const costOf = (keep, keepCoach, ins) => { const back = Math.min(pend0, ins.filter(x=>free.has(x.s5id)).length);
+    return keep.filter(x=>x.pend).length + (keepCoach&&keepCoach.pend?1:0) + ins.length - back; };
   const inSquad = new Set(sq.map(x=>x.s5id));
   const pool = P.filter(p=>p.ranked && p.s5id!=null && p.price!=null && POS3.includes(p.s5pos) && !p.injured && !p.out3 && !inSquad.has(p.s5id))
                 .map(p=>{ const fps=fpsOf(p,false,H); return {s5id:p.s5id, p, name:p.he||p.name, price:p.price, pos:p.s5pos, team:p.team, fps, tot:fps.reduce((a,b)=>a+b,0)}; });
@@ -1102,7 +1106,7 @@ function recommend(sq, coach, bank, H, mode='auto', ctx={}){
         const m2 = money - (nc?nc.price:0); if(m2 < 0) continue;
         const coachV = (nc || keepCoach) ? (nc || keepCoach).tot : 0;
         for(const ins of combos(cand.filter(x=>x.price<=m2), nPl)){
-          const tk = costOf(keep, nc?null:keepCoach, nc?[...ins, nc]:ins) + (forced && !nc ? (free.has(forced.s5id)?0:1) : 0);
+          const tk = costOf(keep, nc?null:keepCoach, nc?[...ins, nc]:(forced?[...ins, forced]:ins));
           if(tk > limit) continue;
           let cost=0; for(const x of ins) cost+=x.price; if(cost>m2) continue;
           const cc = {...cc0}; let ok=true; for(const x of ins){ cc[x.team]=(cc[x.team]||0)+1; if(cc[x.team]>2){ok=false;break;} } if(!ok) continue;
@@ -1218,7 +1222,7 @@ function siteSquad(){
         <path d="M34 32 A16 10 0 0 0 66 32" fill="none"/><line x1="3" y1="70" x2="97" y2="70"/>
         <circle cx="50" cy="70" r="11" fill="none"/><path d="M10 138 L10 120 A40 32 0 0 1 90 120 L90 138" fill="none"/></svg>
         <div class="crow">${row('Center')}</div><div class="crow">${row('Forward')}</div><div class="crow">${row('Guard')}</div></div>
-      ${MT.win&&MT.win.made?`<div class="note">חדש = שחקן שהוכנס בחלון החילופים הנוכחי (${MT.win.made} מתוך ${MT.win.limit} חילופים נוצלו). אפשר להוציא אותו או להחזיר את מי שיצא בלי לבזבז חילוף.</div>`:''}
+      ${MT.win&&MT.win.open?`<div class="note">${MT.win.made?`חדש = שחקן שהוכנס בחלון החילופים הנוכחי (${MT.win.made} מתוך ${MT.win.limit} חילופים נוצלו). אפשר להוציא אותו או להחזיר את מי שיצא בלי לבזבז חילוף.`:`עוד לא בוצעו חילופים בחלון הנוכחי (0 מתוך ${MT.win.limit}).`}</div>`:''}
       ${benchRow(`ספסל באתר · ${bo.bench?'100% (בונוס)':'50%'}`, bn.map(x=>card(x,'bcard')).join(''), ci?coachCard(ci.c, ci.fps[0], MT.coach.pend?'<span class="cnew">חדש</span>':''):'')}
     </div>`;
 }
