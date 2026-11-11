@@ -145,7 +145,10 @@ async function lookup(env, url) {
   const size = await leagueSize(env);
   const info = teamInfo(t);
   const ut = (squadRaw && squadRaw.data && squadRaw.data.userTeam) || {};
-  const players = (ut.userTeamPlayers || []).filter(x => x && x.player && x.isActive !== false && !x.isRemoved).map(x => ({
+  // every non-removed entry with its flags: during a transfer window the site can list both the
+  // outgoing and the incoming players (isActive / addedRoundId tell them apart) - the page decides.
+  const players = (ut.userTeamPlayers || []).filter(x => x && x.player && !x.isRemoved).map(x => ({
+    active: x.isActive !== false, added: x.addedRoundId ?? null,
     s5id: x.player.id, name: x.player.name, price: x.player.price / 1e6, pos: x.player.position,   // 1 G, 2 F, 3 C, 4 coach
     teamId: x.player.teamId, reserve: !!x.isReserve,
     injured: (x.player.injuredStatus || 0) > 0 || (x.player.missingStatus || 0) > 0,
