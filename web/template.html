@@ -423,9 +423,14 @@ function liveGame(g){ return LIVE.data && (LIVE.data.games||[]).find(x=>String(x
 async function loadLive(){
   if(location.protocol==='file:') return;
   try{
-    const r = await fetch('live.json?t='+Date.now(), {cache:'no-store'});
-    if(!r.ok) return;
-    const j = await r.json();
+    // read both the published copy and the repository copy (updated on every commit, no Pages build queue)
+    const get = u => fetch(u, {cache:'no-store'}).then(r=>r.ok?r.json():null).catch(()=>null);
+    const own = location.hostname.endsWith('.github.io') ? location.hostname.split('.')[0] : null;
+    const repo = own ? location.pathname.split('/').filter(Boolean)[0] : null;
+    const [a, b] = await Promise.all([get('live.json?t='+Date.now()),
+      own && repo ? get(`https://raw.githubusercontent.com/${own}/${repo}/main/docs/live.json?t=${Date.now()}`) : null]);
+    const j = [a, b].filter(x=>x && x.updated_utc).sort((x,y)=>y.updated_utc.localeCompare(x.updated_utc))[0];
+    if(!j) return;
     if(LIVE.data && j.updated_utc===LIVE.data.updated_utc) return;
     LIVE.data = j; rebuildLive(); renderAll();
   }catch(e){}
