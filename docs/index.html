@@ -227,6 +227,10 @@ td.act .up{color:var(--good)} td.act .down{color:var(--bad)}
 @media(max-width:600px){ .trow{grid-template-columns:1fr} .mt-head .kpis{grid-template-columns:1fr 1fr 1fr} }
 /* ownership / my team extras */
 .ccap.vc{color:#5b6b86;border-color:#5b6b86;font-size:10px}
+.cnew{position:absolute;bottom:-8px;left:50%;transform:translateX(-50%);background:var(--good);color:#fff;font-size:10px;font-weight:700;border-radius:8px;padding:1px 6px}
+.bons{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:8px 0 2px;font-size:13px;color:var(--muted)}
+.bon{border:1px solid var(--line);border-radius:12px;padding:2px 9px;font-size:12px}
+.bon.av{color:var(--text)} .bon.on{border-color:var(--good);color:var(--good);font-weight:700} .bon.used{opacity:.6;text-decoration:line-through}
 .trow .rank{display:inline-flex;width:22px;height:22px;border-radius:50%;background:var(--accent);color:#1a0f00;align-items:center;justify-content:center;font-size:12px;margin-inline-end:4px}
 .hzl{font-size:13px;color:var(--muted)} .hzl select{margin-inline-start:6px;padding:6px 8px;border-radius:8px;background:var(--panel2);color:var(--text);border:1px solid var(--line);font:inherit}
 .mtform.sbox{max-width:none} .mtform.sbox:before{display:none} .mtform .ac{top:calc(100% + 2px)}
@@ -1006,21 +1010,24 @@ function fpsOf(p, injured, H){
   return p.fut.slice(0,H).map(v=>v||0);
 }
 // best lineup for one round h: bench 1 G + 1 F + 1 C (50%), five = the rest (1-3 G, 1-3 F, 1-2 C), captain x2
-function lineupAt(sq, h){
-  let best = null;
+function lineupAt(sq, h, b){
+  let best = null; const tc = b&&b.tc, dc = b&&b.dc, bf = b&&b.bench ? 1 : 0.5;
   const G = sq.filter(x=>x.pos==='Guard'), F = sq.filter(x=>x.pos==='Forward'), C = sq.filter(x=>x.pos==='Center');
   for(const g of G) for(const fw of F) for(const c of C){
     let n={Guard:0,Forward:0,Center:0}, sum=0, cap=null;
-    for(const x of sq){ if(x===g||x===fw||x===c) continue; n[x.pos]++; sum+=x.fps[h]; if(!cap||x.fps[h]>cap.fps[h]) cap=x; }
+    let vc=null;
+    for(const x of sq){ if(x===g||x===fw||x===c) continue; n[x.pos]++; sum+=x.fps[h];
+      if(!cap||x.fps[h]>cap.fps[h]){ vc=cap; cap=x; } else if(!vc||x.fps[h]>vc.fps[h]) vc=x; }
     if(n.Guard<1||n.Guard>3||n.Forward<1||n.Forward>3||n.Center<1||n.Center>2) continue;
-    const v = sum + cap.fps[h] + (g.fps[h]+fw.fps[h]+c.fps[h])/2;
-    if(!best || v>best.v) best = {v, bench:[g,fw,c], cap};
+    const v = sum + cap.fps[h]*(tc?2:1) + (dc&&vc?vc.fps[h]:0) + (g.fps[h]+fw.fps[h]+c.fps[h])*bf;
+    if(!best || v>best.v) best = {v, bench:[g,fw,c], cap, vc:dc?vc:null};
   }
   if(!best) return null;
   best.starters = sq.filter(x=>!best.bench.includes(x));
   return best;
 }
-function squadValue(sq, H){ let t=0; for(let h=0;h<H;h++){ const l=lineupAt(sq,h); if(!l) return null; t+=l.v; } return t; }
+// b = bonuses switched on for the coming round (they only affect round index 0)
+function squadValue(sq, H, b){ let t=0; for(let h=0;h<H;h++){ const l=lineupAt(sq,h,h===0?b:null); if(!l) return null; t+=l.v; } return t; }
 // show each player leaving next to an incoming player of the same position where possible
 function pairByPos(outs, ins){
   const left = [...ins], res = outs.map(o=>{ const i = left.findIndex(x=>x.pos===o.pos); return i>=0 ? left.splice(i,1)[0] : null; });
@@ -1040,12 +1047,17 @@ function coachItem(c, H){
 }
 // Top 3 transfer plans (0-3 transfers incl. the coach) by total projected points over the next H rounds.
 // mode: 'auto' (the coach may be swapped), 'keep' (coach fixed), or a coach s5id (forced; counts as a transfer)
-function recommend(sq, coach, bank, H, mode='auto'){
+// ctx: transfers already made in the open window (pend flags on the squad), the window's limit,
+// players taken out in this window (bringing them back is free) and bonuses for the coming round.
+// A plan's cost follows the fantasy site: kept players added in this window + new players not taken out earlier.
+function recommend(sq, coach, bank, H, mode='auto', ctx={}){
+  const limit = ctx.limit ?? 3, free = ctx.free || new Set(), bo = ctx.boost || null;
+  const costOf = (keep, keepCoach, ins) => keep.filter(x=>x.pend).length + (keepCoach&&keepCoach.pend?1:0) + ins.filter(x=>!free.has(x.s5id)).length;
   const inSquad = new Set(sq.map(x=>x.s5id));
   const pool = P.filter(p=>p.ranked && p.s5id!=null && p.price!=null && POS3.includes(p.s5pos) && !p.injured && !p.out3 && !inSquad.has(p.s5id))
                 .map(p=>{ const fps=fpsOf(p,false,H); return {s5id:p.s5id, p, name:p.he||p.name, price:p.price, pos:p.s5pos, team:p.team, fps, tot:fps.reduce((a,b)=>a+b,0)}; });
   sq.forEach(x=>{ x.fps = fpsOf(x.p, x.injured, H); x.tot = x.fps.reduce((a,b)=>a+b,0); });
-  const cur = coachItem(coach, H);
+  const cur = coachItem(coach, H); if(cur) cur.pend = !!(coach&&coach.pend);
   const coachPool = (D.coaches||[]).filter(c=>c.fut && !c.injured && (!cur || c.s5id!==cur.s5id)).map(c=>coachItem(c,H));
   // forced coach: apply the swap first, it uses one of the 3 transfers
   let baseCoach = cur, money0 = bank, forced = null;
@@ -1054,19 +1066,24 @@ function recommend(sq, coach, bank, H, mode='auto'){
     if(forced){ money0 = bank + (cur?cur.price:0) - forced.price; baseCoach = forced; }
   }
   const coachSwappable = mode==='auto';
-  const val = (players, c) => { const v = squadValue(players, H); return v==null ? null : v + (c?c.tot:0); };
+  const val = (players, c) => { const v = squadValue(players, H, bo); return v==null ? null : v + (c?c.tot:0); };
   const baseV = val(sq, cur);
   const top = [];
   const push = plan => { top.push(plan); top.sort((a,b)=>b.v-a.v); if(top.length>3) top.pop(); };
   const extraOut = forced ? [cur].filter(Boolean) : [], extraIn = forced ? [forced] : [];
-  const maxCap = arr => { let m=0; for(let h=0;h<H;h++){ let b=0; for(const x of arr) if(x.fps[h]>b) b=x.fps[h]; m+=b; } return m; };
-  const kMax = 3 - (forced?1:0);
-  if(!forced){ if(baseV!=null) push({k:0, v:baseV, outs:[], ins:[], left:bank, squad:sq, coach:cur}); }
-  else if(money0 >= 0){
+  const extraB = bo && (bo.tc||bo.dc) ? 1 : 0;
+  const maxCap = arr => { let m=0; for(let h=0;h<H;h++){ let b=0; for(const x of arr) if(x.fps[h]>b) b=x.fps[h]; m+=b*(h===0?1+extraB:1); } return m; };
+  const made = costOf(sq, cur, []);
+  if(!forced){ if(baseV!=null) push({k:made, v:baseV, outs:[], ins:[], left:bank, squad:sq, coach:cur, base:true}); }
+  else if(money0 >= 0 && costOf(sq, null, [forced]) <= limit){
     const club = {}; [...sq, baseCoach].forEach(x=>club[x.team]=(club[x.team]||0)+1);
-    if(Object.values(club).every(n=>n<=2)){ const v = val(sq, baseCoach); if(v!=null) push({k:1, v, outs:extraOut, ins:extraIn, left:money0, squad:sq, coach:baseCoach}); }
+    if(Object.values(club).every(n=>n<=2)){ const v = val(sq, baseCoach); if(v!=null) push({k:costOf(sq, null, [forced]), v, outs:extraOut, ins:extraIn, left:money0, squad:sq, coach:baseCoach}); }
   }
   const items = coachSwappable && cur ? [...sq, cur] : [...sq];
+  // outgoing count: what the remaining transfers allow, plus players added in this window (taking them out is free);
+  // capped at 4 so the search stays a couple of seconds on a phone
+  const pendN = items.filter(x=>x.pend).length;
+  const kMax = Math.min(4, items.length, Math.max(0, limit - made) + pendN);
   for(let k=1;k<=kMax;k++){
     for(const outs of combos(items,k)){
       const coachOut = outs.some(x=>x.isCoach);
@@ -1085,19 +1102,27 @@ function recommend(sq, coach, bank, H, mode='auto'){
         const m2 = money - (nc?nc.price:0); if(m2 < 0) continue;
         const coachV = (nc || keepCoach) ? (nc || keepCoach).tot : 0;
         for(const ins of combos(cand.filter(x=>x.price<=m2), nPl)){
+          const tk = costOf(keep, nc?null:keepCoach, nc?[...ins, nc]:ins) + (forced && !nc ? (free.has(forced.s5id)?0:1) : 0);
+          if(tk > limit) continue;
           let cost=0; for(const x of ins) cost+=x.price; if(cost>m2) continue;
           const cc = {...cc0}; let ok=true; for(const x of ins){ cc[x.team]=(cc[x.team]||0)+1; if(cc[x.team]>2){ok=false;break;} } if(!ok) continue;
           const ub = keepTot + ins.reduce((s,x)=>s+x.tot,0) + maxCap([...keep,...ins]) + coachV;
           if(top.length===3 && ub <= top[2].v) continue;
-          const nsq = [...keep, ...ins], v = squadValue(nsq, H); if(v==null) continue;
+          const nsq = [...keep, ...ins], v = squadValue(nsq, H, bo); if(v==null) continue;
           const tv = v + coachV;
-          if(top.length<3 || tv>top[2].v) push({k:k+(forced?1:0), v:tv, outs:[...extraOut, ...outs], ins:[...extraIn, ...ins, ...(nc?[nc]:[])],
+          if(top.length<3 || tv>top[2].v) push({k:tk, v:tv, outs:[...extraOut, ...outs], ins:[...extraIn, ...ins, ...(nc?[nc]:[])],
                                                  left:m2-cost, squad:nsq, coach:nc||keepCoach});
         }
       }
     }
   }
   return {baseV, plans:top, H};
+}
+function ilTime(str){
+  const t = Date.parse(str+'Z'); if(isNaN(t)) return NaN;
+  const p = Object.fromEntries(new Intl.DateTimeFormat('en-US',{timeZone:'Asia/Jerusalem',hourCycle:'h23',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}).formatToParts(new Date(t)).map(x=>[x.type,x.value]));
+  const asIl = Date.parse(`${p.year}-${p.month}-${p.day}T${p.hour}:${p.minute}:00Z`);
+  return t - (asIl - t);
 }
 async function mtLookup(name, userId){
   MT.loading = true; MT.err = null; MT.data = null; MT.rec = null; MT.sq = null; renderMyTeam();
@@ -1109,12 +1134,21 @@ async function mtLookup(name, userId){
     if(j.team){
       MT.q = j.team.name.trim(); MT.capId = j.captainId; MT.vcId = j.subCaptainId; MT.coachMode = 'auto';
       try{ localStorage.setItem('el_my_team', j.team.name); }catch(e){}
-      const coachRaw = j.squad.find(x=>x.pos===4);
+      // transfer window: entries added for the open round are this window's transfers (the fantasy site counts only those)
+      const R = j.round || null, open = !!(R && R.windowEnd && Date.now() < ilTime(R.windowEnd));
+      const pendOf = x => !!(open && x.added!=null && x.added===R.id);
+      const coachRaw = j.squad.filter(x=>x.pos===4).sort((a,b)=>(b.added||0)-(a.added||0))[0];
       MT.sq = j.squad.filter(x=>x.pos!==4).map(x=>{ const p = byS5.get(x.s5id);
-        return {s5id:x.s5id, p, name:(p&&(p.he||p.name))||x.name, price:x.price, pos:S5POS[x.pos],
+        return {s5id:x.s5id, p, name:(p&&(p.he||p.name))||x.name, price:x.price, pos:S5POS[x.pos], pend:pendOf(x),
                 team:(p&&p.team)||(D.s5teams||{})[x.teamId]||String(x.teamId), injured:x.injured, reserve:x.reserve}; });
       const cp = coachRaw ? (D.coaches||[]).find(c=>c.s5id===coachRaw.s5id) : null;
-      MT.coach = coachRaw ? {name:coachRaw.name, price:coachRaw.price, s5id:coachRaw.s5id, team:(cp&&cp.team)||(D.s5teams||{})[coachRaw.teamId]||String(coachRaw.teamId)} : null;
+      MT.coach = coachRaw ? {name:coachRaw.name, price:coachRaw.price, s5id:coachRaw.s5id, pend:pendOf(coachRaw), team:(cp&&cp.team)||(D.s5teams||{})[coachRaw.teamId]||String(coachRaw.teamId)} : null;
+      // bonuses: 1 triple captain, 2 extra transfers, 3 captain + vice-captain double, 4 full bench
+      const on = id => open && (j.bonuses||[]).some(b=>b.id===id && b.round===R.id);
+      MT.win = {open, round:R, made: MT.sq.filter(x=>x.pend).length + (MT.coach&&MT.coach.pend?1:0),
+                limit: R ? (on(2) && R.subsBonus ? R.subsBonus : (R.subs ?? 3)) : 3,
+                free: new Set(open ? (j.removed||[]) : []), bonuses: j.bonuses||[],
+                boost: (on(1)||on(3)||on(4)) ? {tc:on(1), dc:on(3), bench:on(4)} : null, subsOn: on(2)};
       MT.bank = 100 - MT.sq.reduce((s,x)=>s+x.price,0) - (MT.coach?MT.coach.price:0);
       await mtCompute();
     }
@@ -1124,7 +1158,7 @@ async function mtLookup(name, userId){
 async function mtCompute(){
   MT.rec = null; renderMyTeam();
   await new Promise(r=>setTimeout(r,30));   // paint first; the search can take a second or two
-  MT.rec = recommend(MT.sq, MT.coach, MT.bank, MT.H, MT.coachMode); MT.sel = 0;
+  MT.rec = recommend(MT.sq, MT.coach, MT.bank, MT.H, MT.coachMode, MT.win||{}); MT.sel = 0;
   renderMyTeam();
 }
 function mtCard(x, isCap, h, cls=''){
@@ -1136,15 +1170,16 @@ function mtCard(x, isCap, h, cls=''){
     <div class="cmeta">${f(x.price,0)}M${p&&ownTxt(p)?' · '+ownTxt(p)+' אחזקה':''}${out?' · <b style="color:#c0262d">פצוע/לא משחק</b>':''}</div></div>`;
 }
 function mtCourt(sq, coach){
-  const lu = lineupAt(sq, 0); if(!lu) return '';
+  const bo = MT.win && MT.win.boost, lu = lineupAt(sq, 0, bo); if(!lu) return '';
   const ci = coach ? coachItem(coach, 1) : null;
-  const row = pos => lu.starters.filter(x=>x.pos===pos).sort((a,b)=>b.fps[0]-a.fps[0]).map(x=>mtCard(x, x===lu.cap, 0)).join('');
+  const vcT = x => x===lu.vc ? mtCard(x,false,0).replace('<span class="cfp">','<span class="ccap vc">VC</span><span class="cfp">') : mtCard(x, x===lu.cap, 0);
+  const row = pos => lu.starters.filter(x=>x.pos===pos).sort((a,b)=>b.fps[0]-a.fps[0]).map(vcT).join('');
   return `<div class="court"><svg class="lines" viewBox="0 0 100 140" preserveAspectRatio="none" aria-hidden="true">
       <rect x="3" y="2" width="94" height="136" fill="none"/><rect x="34" y="2" width="32" height="30" fill="none"/>
       <path d="M34 32 A16 10 0 0 0 66 32" fill="none"/><line x1="3" y1="70" x2="97" y2="70"/>
       <circle cx="50" cy="70" r="11" fill="none"/><path d="M10 138 L10 120 A40 32 0 0 1 90 120 L90 138" fill="none"/></svg>
       <div class="crow">${row('Center')}</div><div class="crow">${row('Forward')}</div><div class="crow">${row('Guard')}</div></div>
-    ${benchRow(`ספסל · 50% · מחזור ${FUT[0]??''}`, lu.bench.map(x=>mtCard(x,false,0,'bcard')).join(''), ci?coachCard(ci.c, ci.fps[0]):'')}`;
+    ${benchRow(`ספסל · ${bo&&bo.bench?'100% (בונוס)':'50%'} · מחזור ${FUT[0]??''}`, lu.bench.map(x=>mtCard(x,false,0,'bcard')).join(''), ci?coachCard(ci.c, ci.fps[0]):'')}`;
 }
 // High-ownership players the team does not have, ranked by ownership x projected points (they hurt you if they score)
 function threats(sq, H){
@@ -1167,11 +1202,13 @@ function siteSquad(){
   if(!MT.sq) return '';
   MT.sq.forEach(x=>{ if(!x.fps) x.fps = fpsOf(x.p, x.injured, Math.max(1,MT.H)); });
   const st = MT.sq.filter(x=>!x.reserve), bn = MT.sq.filter(x=>x.reserve);
-  const tag = x => x.s5id===MT.capId ? '<span class="ccap">C</span>' : x.s5id===MT.vcId ? '<span class="ccap vc">VC</span>' : '';
+  const tag = x => (x.s5id===MT.capId ? '<span class="ccap">C</span>' : x.s5id===MT.vcId ? '<span class="ccap vc">VC</span>' : '') + (x.pend ? '<span class="cnew">חדש</span>' : '');
   const card = (x, cls='') => mtCard(x, false, 0, cls).replace('<span class="cfp">', tag(x)+'<span class="cfp">');
+  const bo = (MT.win && MT.win.boost) || {};
   const row = pos => st.filter(x=>x.pos===pos).map(x=>card(x)).join('');
   const ci = MT.coach ? coachItem(MT.coach, 1) : null;
-  const tot = st.reduce((s,x)=>s+x.fps[0],0) + (st.find(x=>x.s5id===MT.capId)||{fps:[0]}).fps[0] + bn.reduce((s,x)=>s+x.fps[0],0)/2 + (ci?ci.fps[0]:0);
+  const capF = (st.find(x=>x.s5id===MT.capId)||{fps:[0]}).fps[0], vcF = (st.find(x=>x.s5id===MT.vcId)||{fps:[0]}).fps[0];
+  const tot = st.reduce((s,x)=>s+x.fps[0],0) + capF*(bo.tc?2:1) + (bo.dc?vcF:0) + bn.reduce((s,x)=>s+x.fps[0],0)*(bo.bench?1:0.5) + (ci?ci.fps[0]:0);
   return `<div class="card" style="margin-top:16px">
       <h2>הסגל כפי שהוא באתר הפנטזי</h2>
       <div class="roundnote">מעודכן ל: ${roundState()} · הנתונים מאתר הפנטזי עד רבע שעה אחורה</div>
@@ -1181,8 +1218,20 @@ function siteSquad(){
         <path d="M34 32 A16 10 0 0 0 66 32" fill="none"/><line x1="3" y1="70" x2="97" y2="70"/>
         <circle cx="50" cy="70" r="11" fill="none"/><path d="M10 138 L10 120 A40 32 0 0 1 90 120 L90 138" fill="none"/></svg>
         <div class="crow">${row('Center')}</div><div class="crow">${row('Forward')}</div><div class="crow">${row('Guard')}</div></div>
-      ${benchRow('ספסל באתר · 50%', bn.map(x=>card(x,'bcard')).join(''), ci?coachCard(ci.c, ci.fps[0]):'')}
+      ${MT.win&&MT.win.made?`<div class="note">חדש = שחקן שהוכנס בחלון החילופים הנוכחי (${MT.win.made} מתוך ${MT.win.limit} חילופים נוצלו). אפשר להוציא אותו או להחזיר את מי שיצא בלי לבזבז חילוף.</div>`:''}
+      ${benchRow(`ספסל באתר · ${bo.bench?'100% (בונוס)':'50%'}`, bn.map(x=>card(x,'bcard')).join(''), ci?coachCard(ci.c, ci.fps[0], MT.coach.pend?'<span class="cnew">חדש</span>':''):'')}
     </div>`;
+}
+// the 4 fantasy bonuses (each once a season): used in which round / on for the coming round / still available
+function bonusLine(){
+  const W = MT.win; if(!W || !W.round) return '';
+  const R = W.round, num = id => id - (R.id - ((R.index??0)+1));
+  const names = {1:'טריפל קפטן', 3:'דאבל קפטנים', 4:'ניקוד לכל הסגל', 2:`${R.subsBonus||9} חילופים`};
+  const st = id => { const b = W.bonuses.find(x=>x.id===id);
+    if(!b) return `<span class="bon av">${names[id]}: זמין</span>`;
+    if(b.round===R.id && W.open) return `<span class="bon on">${names[id]}: מופעל למחזור ${num(b.round)}</span>`;
+    return `<span class="bon used">${names[id]}: נוצל (מחזור ${num(b.round)})</span>`; };
+  return `<div class="bons">בונוסים: ${[1,3,4,2].map(st).join('')}</div>`;
 }
 function renderMyTeam(){
   const box = $('#myTeamView'); if(!box) return;
@@ -1209,6 +1258,7 @@ function renderMyTeam(){
           <div class="kpi"><span>אחוזון</span><b>${f(top,1)}%</b><small>העליונים</small></div>
           <div class="kpi"><span>ניקוד עונה / מחזור</span><b>${t.totalScore}</b><small>מחזור אחרון: ${t.roundScore}</small></div>
         </div>
+        ${bonusLine()}
         <div class="note">מאמן: ${MT.coach?`${esc(MT.coach.name)} (${f(MT.coach.price,0)}M${(()=>{const c=(D.coaches||[]).find(c=>c.s5id===MT.coach.s5id); return c?` · צפי ${f(coachFp(c),1)}${ownTxt(c)?` · ${ownTxt(c)} אחזקה`:''}`:''})()})`:'–'} · בקופה: ${f(MT.bank,0)}M · הנתונים מאתר הפנטזי מתעדכנים עד כל רבע שעה</div>
       </div>
       ${siteSquad()}
@@ -1218,12 +1268,12 @@ function renderMyTeam(){
             <option value="keep" ${MT.coachMode==='keep'?'selected':''}>להשאיר את ${esc(MT.coach?MT.coach.name:'המאמן')}</option>
             ${[...(D.coaches||[])].filter(c=>c.fut && (!MT.coach || c.s5id!==MT.coach.s5id)).sort((a,b)=>coachFp(b)-coachFp(a)).map(c=>`<option value="${c.s5id}" ${String(MT.coachMode)===String(c.s5id)?'selected':''}>להחליף ל-${esc(c.he||c.raw)} (${f(c.price,0)}M, צפי ${f(coachFp(c),1)})</option>`).join('')}</select></label>
           <label class="hzl">להסתכל קדימה: <select id="mtH">${hz.map(h=>`<option value="${h}" ${h===H?'selected':''}>${h===1?`מחזור ${rr(0)} בלבד`:`${h} מחזורים (${rr(0)}–${rr(h-1)})`}</option>`).join('')}</select></label></div>
-        <div class="hint">3 התוכניות עם הכי הרבה נקודות צפויות ב${rangeTxt}. לחץ על תוכנית כדי לראות את ההרכב.</div>
+        <div class="hint">3 התוכניות עם הכי הרבה נקודות צפויות ב${rangeTxt}. לחץ על תוכנית כדי לראות את ההרכב.${MT.win&&MT.win.open?` מספר החילופים בכל תוכנית נספר כמו באתר הפנטזי – סה"כ בחלון הנוכחי, מתוך ${MT.win.limit}${MT.win.subsOn?' (בונוס חילופים מופעל)':''}${MT.win.made?`; ${MT.win.made} כבר בוצעו, ואפשר לבטל אותם בלי עלות`:''}.`:''}${MT.win&&MT.win.boost?` הבונוסים שהפעלת למחזור ${rr(0)} נלקחים בחשבון.`:''}</div>
         ${!rec?'<div class="empty">מחשב חילופים…</div>':`<div class="note">הסגל הנוכחי בלי חילופים: <b>${f(rec.baseV,1)}</b> נקודות צפויות ב${rangeTxt}</div>
           ${plans.map((r,i)=>{ const gain = r.v-rec.baseV;
             return `<div class="trow pick ${i===MT.sel?'best':''}" data-plan="${i}" title="לחץ להצגת ההרכב של התוכנית">
-              <div class="tk"><span class="rank">${i+1}</span> ${r.k===0?'בלי חילופים':`${r.k} ${r.k===1?'חילוף':'חילופים'}`}</div>
-              <div class="tio">${r.k===0?'<div class="note">להשאיר את הסגל כמו שהוא</div>':(()=>{ const ins = pairByPos(r.outs, r.ins); const ph = {Guard:'ג',Forward:'פ',Center:'ס',Coach:'מאמן'};
+              <div class="tk"><span class="rank">${i+1}</span> ${r.base?(r.k?`${r.k} ${r.k===1?'חילוף':'חילופים'} (כבר בוצעו)`:'בלי חילופים'):r.k===0?'0 חילופים':`${r.k} ${r.k===1?'חילוף':'חילופים'}`}</div>
+              <div class="tio">${!r.outs.length?'<div class="note">להשאיר את הסגל כמו שהוא</div>':(()=>{ const ins = pairByPos(r.outs, r.ins); const ph = {Guard:'ג',Forward:'פ',Center:'ס',Coach:'מאמן'};
                 return r.outs.map((o,j)=>`<div><span class="out">⬅ ${esc(o.name)} <small>(${ph[o.pos]}, ${f(o.tot,1)})</small></span> <span class="in">➜ ${esc(ins[j].name)} <small>(${ph[ins[j].pos]}, ${f(ins[j].tot,1)}, ${f(ins[j].price,0)}M${ownTxt(ins[j].p||ins[j].c)?', '+ownTxt(ins[j].p||ins[j].c)+' אחזקה':''})</small></span></div>`).join(''); })()}</div>
               <div class="tg"><b class="${gain>0.05?'up':''}"><bdi dir="ltr">${gain>0.05?'+':''}${f(gain,1)}</bdi></b><small>סה"כ ${f(r.v,1)} · נשאר ${f(r.left,0)}M</small></div></div>`; }).join('')}
           ${plans[MT.sel]?`<h3 style="margin-top:16px">ההרכב לפי תוכנית ${MT.sel+1} למחזור הקרוב (${rr(0)}) – קפטן מומלץ מסומן C${H>1?` · התוכנית נבחרה לפי ${H} מחזורים`:''}</h3>${mtCourt(plans[MT.sel].squad, plans[MT.sel].coach)}`:''}`}
