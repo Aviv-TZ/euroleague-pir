@@ -73,6 +73,23 @@ async function season(env) {
   return (SEASON = FALLBACK_SEASON);
 }
 
+// Current fantasy round (public): id, transfers allowed, window end. Cached 10 minutes.
+let ROUND = null, ROUND_AT = 0;
+async function currentRound(env) {
+  if (ROUND && Date.now() - ROUND_AT < 600e3) return ROUND;
+  try {
+    const r = await fetch(API + `Leagues/Get?seasonId=${await season(env)}`, { headers: BH }).then(r => r.json());
+    const d = r && r.data;
+    if (d && d.id) {
+      ROUND = { id: d.id, index: d.roundIndex, subs: d.availableSubstitutions,
+                subsBonus: d.season ? d.season.allowedSubsInSubsBonus : null,
+                windowStart: d.exchangeStartDate, windowEnd: d.exchangeEndDate };
+      ROUND_AT = Date.now();
+    }
+  } catch (e) {}
+  return ROUND;
+}
+
 const leaguePage = async (env, page, search = '') =>
   api(env, `CustomLeagues/GetLeagueData?seasonId=${await season(env)}&isPerRound=false&page=${page}&searchText=${encodeURIComponent(search)}`);
 const teamsOf = r => (r && r.data && r.data.teams) || [];
@@ -153,8 +170,12 @@ async function lookup(env, url) {
     teamId: x.player.teamId, reserve: !!x.isReserve,
     injured: (x.player.injuredStatus || 0) > 0 || (x.player.missingStatus || 0) > 0,
     lastRound: x.player.lastRoundPlayerStats ? x.player.lastRoundPlayerStats.points : null }));
+  // players taken out during the open window: bringing one back is free on the fantasy site
+  const removed = (ut.userTeamPlayers || []).filter(x => x && x.player && x.isRemoved).map(x => x.player.id);
+  const bonuses = (ut.bonusesData || []).map(b => ({ id: b.bonusId, round: b.usageRoundId }));
   return json({ team: info, leagueSize: size, percentile: Math.round(1000 * info.position / size) / 10,
-                squad: players, captainId: ut.captainId ?? null, subCaptainId: ut.subCaptainId ?? null },
+                squad: players, removed, bonuses, round: await currentRound(env),
+                captainId: ut.captainId ?? null, subCaptainId: ut.subCaptainId ?? null },
               200, { 'Cache-Control': 'public, max-age=900' });
 }
 
