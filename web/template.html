@@ -1222,7 +1222,7 @@ function siteSquad(){
         <path d="M34 32 A16 10 0 0 0 66 32" fill="none"/><line x1="3" y1="70" x2="97" y2="70"/>
         <circle cx="50" cy="70" r="11" fill="none"/><path d="M10 138 L10 120 A40 32 0 0 1 90 120 L90 138" fill="none"/></svg>
         <div class="crow">${row('Center')}</div><div class="crow">${row('Forward')}</div><div class="crow">${row('Guard')}</div></div>
-      ${MT.win&&MT.win.open?`<div class="note">${MT.win.made?`חדש = שחקן שהוכנס בחלון החילופים הנוכחי (${MT.win.made} מתוך ${MT.win.limit} חילופים נוצלו). אפשר להוציא אותו או להחזיר את מי שיצא בלי לבזבז חילוף.`:`עוד לא בוצעו חילופים בחלון הנוכחי (0 מתוך ${MT.win.limit}).`}</div>`:''}
+      ${MT.win&&MT.win.open?`<div class="note">${MT.win.made?`חדש = שחקן שהוכנס בחלון החילופים הנוכחי (${MT.win.made} מתוך ${MT.win.limit} חילופים נוצלו). אפשר להוציא אותו או להחזיר את מי שיצא בלי לבזבז חילוף.`:`חלון החילופים פתוח: אתר הפנטזי מציג קבוצות רק כפי שננעלו במחזור הקודם, כך שחילופים שביצעת עכשיו לא מופיעים כאן עד תחילת המחזור. ההמלצות מחושבות מהסגל הנעול, כאילו כל ${MT.win.limit} החילופים עוד פנויים.`}</div>`:''}
       ${benchRow(`ספסל באתר · ${bo.bench?'100% (בונוס)':'50%'}`, bn.map(x=>card(x,'bcard')).join(''), ci?coachCard(ci.c, ci.fps[0], MT.coach.pend?'<span class="cnew">חדש</span>':''):'')}
     </div>`;
 }
