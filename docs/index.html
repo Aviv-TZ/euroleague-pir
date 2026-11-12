@@ -276,6 +276,7 @@ td.num.up{color:var(--good)} td.num.down{color:var(--bad)}
   .brow .cname{font-size:11px} .brow .cmeta{font-size:9.5px} .brow .cfp{font-size:11.5px;padding:1px 6px} .brow .chalf{font-size:9.5px;padding:1px 4px;right:-3px} }
 .cact{margin-top:4px;display:flex;flex-direction:column;align-items:center;gap:1px}
 .cact small{font-size:10.5px;color:#666;direction:ltr}
+.cact small.gup{color:#1a8f4c;font-weight:700} .cact small.gdn{color:#c0262d;font-weight:700}
 .game .t small.coach-final{color:#e6c38f}
 .coachcard .cph.logo{background-size:70%;background-position:center;background-color:#fff}
 .cfp{direction:ltr;unicode-bidi:isolate}
@@ -894,14 +895,14 @@ function coachActualTag(c){
   return a.live ? `<div class="cact live"><span class="badge live sm"><i></i>LIVE ${v}</span><small>${a.score}</small></div>`
                 : `<div class="cact"><span class="badge final sm">✓ ${v}</span><small>${a.score}</small></div>`;
 }
-function coachCard(c, fp, extra=''){
+function coachCard(c, fp, extra='', foot=''){
   return `<div class="ccard coachcard">${extra}<span class="cfp ${fp<0?'neg':''}">${f(fp,1)}</span>
       ${(()=>{ const cc=(D.coaches||[]).find(x=>x.s5id===c.s5id)||c; const ov=COACH_IMG[cc.raw];
         if(ov) return `<div class="cph" style="background-image:url('${esc(ov)}')"></div>`;
         return cc.logo
           ? `<div class="cph logo" data-coachimg="${esc(cc.raw||'')}" style="background-image:url('${esc(cc.logo)}')"></div>`
           : `<div class="cph ini" data-coachimg="${esc(cc.raw||'')}">🧑‍💼</div>`; })()}<div class="cname">${esc(c.he||c.name||c.raw||'')}</div>
-      <div class="cmeta">מאמן · ${esc(coachOpp(c))} · ${f(c.price,0)}M${ownTxt(c)?` · ${ownTxt(c)} אחזקה`:''}</div>${coachActualTag(c)}</div>`;
+      <div class="cmeta">מאמן · ${esc(coachOpp(c))} · ${f(c.price,0)}M${ownTxt(c)?` · ${ownTxt(c)} אחזקה`:''}</div>${coachActualTag(c)}${foot}</div>`;
 }
 
 // fixed coach photos (take precedence over the logo and the Wikipedia search)
@@ -1180,13 +1181,13 @@ async function mtCompute(){
   MT.rec = recommend(MT.sq, MT.coach, MT.bank, MT.H, MT.coachMode, MT.win||{}); MT.sel = 0;
   renderMyTeam();
 }
-function mtCard(x, isCap, h, cls=''){
+function mtCard(x, isCap, h, cls='', foot=''){
   const p = x.p, ph = p&&p.img ? `<div class="cph" style="background-image:url('${esc(p.img)}')"></div>` : `<div class="cph ini">${esc((x.name||'?').slice(0,2))}</div>`;
   const out = x.injured||(p&&(p.injured||p.out3));
   return `<div class="ccard ${cls} ${p?'pl':''}" ${p?`data-id="${p.id}"`:''}>
     <span class="cfp">${f(x.fps?x.fps[h]:0,1)}</span>${isCap?'<span class="ccap">C</span>':''}${ph}
     <div class="cname">${esc(x.name)}</div>
-    <div class="cmeta">${f(x.price,0)}M${p&&ownTxt(p)?' · '+ownTxt(p)+' אחזקה':''}${out?' · <b style="color:#c0262d">פצוע/לא משחק</b>':''}</div></div>`;
+    <div class="cmeta">${f(x.price,0)}M${p&&ownTxt(p)?' · '+ownTxt(p)+' אחזקה':''}${out?' · <b style="color:#c0262d">פצוע/לא משחק</b>':''}</div>${foot}</div>`;
 }
 function mtCourt(sq, coach){
   const bo = MT.win && MT.win.boost, lu = lineupAt(sq, 0, bo); if(!lu) return '';
@@ -1233,12 +1234,20 @@ function roundState(){
   const done = L && L.round===r && L.round_finished>=L.round_games;
   return done ? `אחרי מחזור ${r} (המחזור הסתיים)` : started ? `מחזור ${r} – המחזור בעיצומו, הסגל נעול` : `לקראת מחזור ${r} – חלון החילופים פתוח`;
 }
+// actual points this round and the gap to the projection, shown under a card
+function gapFoot(act, live, pred, withAct=true){
+  if(act==null) return '';
+  const d = act - pred, sg = v => `<bdi dir="ltr">${v>0.05?'+':''}${f(v,1)}</bdi>`;
+  const badge = withAct ? (live ? `<span class="badge live sm"><i></i>LIVE ${f(act,0)}</span>` : `<span class="badge final sm">✓ ${f(act,0)}</span>`) : '';
+  return `<div class="cact">${badge}<small class="${d>0.05?'gup':d<-0.05?'gdn':''}">פער ${sg(d)}</small></div>`;
+}
 function siteSquad(){
   if(!MT.sq) return '';
   MT.sq.forEach(x=>{ if(!x.fps) x.fps = fpsOf(x.p, x.injured, Math.max(1,MT.H)); });
   const st = MT.sq.filter(x=>!x.reserve), bn = MT.sq.filter(x=>x.reserve);
   const tag = x => (x.s5id===MT.capId ? '<span class="ccap">C</span>' : x.s5id===MT.vcId ? '<span class="ccap vc">VC</span>' : '') + (x.pend ? '<span class="cnew">חדש</span>' : '');
-  const card = (x, cls='') => mtCard(x, false, 0, cls).replace('<span class="cfp">', tag(x)+'<span class="cfp">');
+  const foot = x => { const a = x.p ? getActual(x.p) : null; return a ? gapFoot(a.pir, a.status!=='final', x.fps[0]) : ''; };
+  const card = (x, cls='') => mtCard(x, false, 0, cls, foot(x)).replace('<span class="cfp">', tag(x)+'<span class="cfp">');
   const bo = (MT.win && MT.win.boost) || {};
   const row = pos => st.filter(x=>x.pos===pos).map(x=>card(x)).join('');
   const ci = MT.coach ? coachItem(MT.coach, 1) : null;
@@ -1254,7 +1263,7 @@ function siteSquad(){
         <circle cx="50" cy="70" r="11" fill="none"/><path d="M10 138 L10 120 A40 32 0 0 1 90 120 L90 138" fill="none"/></svg>
         <div class="crow">${row('Center')}</div><div class="crow">${row('Forward')}</div><div class="crow">${row('Guard')}</div></div>
       ${MT.win&&MT.win.open?`<div class="note">${MT.win.made?`חדש = שחקן שהוכנס בחלון החילופים הנוכחי (${MT.win.made} מתוך ${MT.win.limit} חילופים נוצלו). אפשר להוציא אותו או להחזיר את מי שיצא בלי לבזבז חילוף.`:`הסגל כפי שננעל במחזור הקודם (חילופים פתוחים לא מוצגים)`}</div>`:''}
-      ${benchRow(`ספסל באתר · ${bo.bench?'100% (בונוס)':'50%'}`, bn.map(x=>card(x,'bcard')).join(''), ci?coachCard(ci.c, ci.fps[0], MT.coach.pend?'<span class="cnew">חדש</span>':''):'')}
+      ${benchRow(`ספסל באתר · ${bo.bench?'100% (בונוס)':'50%'}`, bn.map(x=>card(x,'bcard')).join(''), ci?coachCard(ci.c, ci.fps[0], MT.coach.pend?'<span class="cnew">חדש</span>':'', (()=>{ const a = coachActual(ci.c.team); return a ? gapFoot(a.pts, a.live, ci.fps[0], false) : ''; })()):'')}
     </div>`;
 }
 // the 4 fantasy bonuses (each once a season): used in which round / on for the coming round / still available
