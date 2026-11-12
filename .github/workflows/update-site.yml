@@ -70,18 +70,30 @@ jobs:
         run: |
           git config user.name  "el-bot"
           git config user.email "el-bot@users.noreply.github.com"
+          # Never let a publish problem end the loop: our files are regenerated from scratch every
+          # time, so on a clash with another run's commit we keep ours; if that still fails we drop
+          # this round of changes and continue (the next iteration publishes fresh files anyway).
           publish() {
             git add docs output
             if git diff --cached --quiet; then echo "Nothing new"; return 0; fi
             git commit -q -m "Update EuroLeague page $(date -u +%Y-%m-%dT%H:%MZ)"
-            git pull -q --rebase origin main || true
-            git push -q && echo "Published"
+            for i in 1 2 3; do
+              if git pull -q --rebase -X theirs origin main && git push -q; then echo "Published"; return 0; fi
+              git rebase --abort 2>/dev/null || true
+              sleep 5
+            done
+            echo "Publish failed - skipped"; git reset -q --hard origin/main || true
           }
+          sync_code() {   # pick up code changes pushed meanwhile
+            git pull -q --rebase -X theirs origin main || { git rebase --abort 2>/dev/null; git reset -q --hard origin/main; } || true
+          }
+          START=$(date +%s)
           Rscript R/EuroLeague_auto_update_v12.R $FORCE || echo "update failed"
           publish
-          while [ "$(date -u +%H)" -ge 15 ] && [ "$(date -u +%H)" -lt 23 ]; do
+          # loop during game hours, but leave before GitHub's 6-hour job limit (the next run takes over)
+          while [ "$(date -u +%H)" -ge 15 ] && [ "$(date -u +%H)" -lt 23 ] && [ $(( $(date +%s) - START )) -lt 19800 ]; do
             sleep 600
-            git pull -q --rebase origin main || true   # pick up code changes pushed meanwhile
+            sync_code
             Rscript R/EuroLeague_auto_update_v12.R || echo "update failed"
             publish
           done
