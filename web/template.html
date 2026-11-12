@@ -147,6 +147,7 @@ tbody tr:hover{background:var(--panel2)}
 /* top15 actual column + hits table */
 td.act small{display:block;font-size:11px;color:var(--muted);margin-top:2px;white-space:nowrap}
 td.act .up{color:var(--good)} td.act .down{color:var(--bad)}
+td.num.up{color:var(--good)} td.num.down{color:var(--bad)}
 .hits th.grp{text-align:center}
 .hits td.best{color:var(--good);font-weight:700}
 .hits tr.avg td{border-top:2px solid var(--line)}
@@ -1209,6 +1210,22 @@ function threats(sq, H){
   return [...players, ...coaches]
     .sort((a,b)=> MT.thrSort==='own' ? (b.own-a.own || b.tot-a.tot) : (b.risk-a.risk)).slice(0,8);
 }
+// During a round: players/coaches the team does not have, by actual harm = ownership x actual points,
+// next to the harm the projection expected for this round (ownership x projected points)
+function actualHarm(sq){
+  if(!LIVE.nPlayed) return [];
+  const mine = new Set(sq.map(x=>x.s5id)); if(MT.coach) mine.add(MT.coach.s5id);
+  const out = [];
+  P.forEach(p=>{ if(p.s5id==null || mine.has(p.s5id) || ownPct(p)==null) return;
+    const a = getActual(p); if(!a) return;
+    const own = ownPct(p)/100, pr = fpsOf(p,false,1)[0];
+    out.push({p, own:own*100, act:a.pir, live:a.status!=='final', pred:pr, harm:own*a.pir, exp:own*pr}); });
+  (D.coaches||[]).forEach(c=>{ if(mine.has(c.s5id) || ownPct(c)==null || !c.fut) return;
+    const a = coachActual(c.team); if(!a) return;
+    const own = ownPct(c)/100, pr = coachFp(c,0);
+    out.push({coach:c, own:own*100, act:a.pts, live:a.live, pred:pr, harm:own*a.pts, exp:own*pr}); });
+  return out.sort((a,b)=>b.harm-a.harm).slice(0,10);
+}
 // The squad exactly as it is on the fantasy site now (starters / bench / captain / vice-captain)
 function roundState(){
   const L = LIVE.data, r = M.next_round;
@@ -1296,6 +1313,15 @@ function renderMyTeam(){
               <div class="tg"><b class="${gain>0.05?'up':''}"><bdi dir="ltr">${gain>0.05?'+':''}${f(gain,1)}</bdi></b><small>סה"כ ${f(r.v,1)} · נשאר ${f(r.left,0)}M</small></div></div>`; }).join('')}
           ${plans[MT.sel]?`<h3 style="margin-top:16px">ההרכב לפי תוכנית ${MT.sel+1} למחזור הקרוב (${rr(0)}) – קפטן מומלץ מסומן C${H>1?` · התוכנית נבחרה לפי ${H} מחזורים`:''}</h3>${mtCourt(plans[MT.sel].squad, plans[MT.sel].coach)}`:''}`}
       </div>
+      ${(()=>{ const ah = MT.sq ? actualHarm(MT.sq) : []; if(!ah.length) return '';
+        const sg = v => `<bdi dir="ltr">${v>0.05?'+':''}${f(v,1)}</bdi>`;
+        return `<div class="card" style="margin-top:16px">
+        <h2>מי פגע בך בפועל · מחזור ${LIVE.round}</h2>
+        <div class="hint">פגיעה = % אחזקה × ניקוד בפועל. פער = פגיעה בפועל פחות הפגיעה שהתחזית צפתה (% אחזקה × צפי).</div>
+        <div class="scroll"><table><thead><tr><th>שחקן</th><th class="num">% אחזקה</th><th class="num">בפועל</th><th class="num col-price">צפי</th><th class="num">פגיעה</th><th class="num">פער</th></tr></thead><tbody>
+        ${ah.map(x=>`<tr><td class="pl" ${x.p?`data-id="${x.p.id}"`:''}><b>${esc(x.p?(x.p.he||x.p.name):(x.coach.he||x.coach.raw))}</b><small>${tName(x.p?x.p.team:x.coach.team)} · ${x.p?x.p.pos_he:'מאמן'}${x.live?' · <span class="badge live sm"><i></i>LIVE</span>':''}</small></td>
+          <td class="num">${f(x.own,0)}%</td><td class="num"><b>${sg(x.act)}</b></td><td class="num col-price">${f(x.pred,1)}</td>
+          <td class="num"><b>${f(x.harm,1)}</b></td><td class="num ${x.harm-x.exp>0.05?'down':'up'}">${sg(x.harm-x.exp)}</td></tr>`).join('')}</tbody></table></div></div>`; })()}
       <div class="card" style="margin-top:16px">
         <div class="phead"><h2>השחקנים שהכי פוגעים בך</h2>
           <div class="seg" id="thrSort"><button data-s="risk" class="${MT.thrSort==='risk'?'on':''}">לפי אחזקה × צפי</button><button data-s="own" class="${MT.thrSort==='own'?'on':''}">לפי % אחזקה</button></div></div>
