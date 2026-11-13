@@ -707,6 +707,8 @@ function renderOpp(){
   v.querySelectorAll('#mxPanel .pl').forEach(el=>el.onclick=()=>openPlayer(+el.dataset.id));
 }
 
+// actual points and gap on the ideal-five cards (only when showing the round being played)
+function liveFoot(x){ if(BUILD.nx) return ''; const a = getActual(x.p); return a ? gapFoot(a.pir, a.status!=='final', x.fp) : ''; }
 function courtCard(x, isCap){
   const p = x.p, nm = p.he || p.name;
   const ph = p.img ? `<div class="cph" style="background-image:url('${esc(p.img)}')"></div>`
@@ -716,7 +718,7 @@ function courtCard(x, isCap){
       <span class="cfp">${f(x.fp,1)}</span>${isCap?'<span class="ccap" title="קפטן – ניקוד כפול">C</span>':''}
       ${ph}
       <div class="cname">${esc(nm)}</div>
-      <div class="cmeta">${esc(oppShort(p))} · ${f(x.price,0)}M${ownTxt(p)?` · ${ownTxt(p)}`:''}</div>
+      <div class="cmeta">${esc(x.ot!=null?x.ot:oppShort(p))} · ${f(x.price,0)}M${ownTxt(p)?` · ${ownTxt(p)}`:''}</div>${liveFoot(x)}
     </div>`;
 }
 const oppShort = p => p.opp ? `${p.venue==='Home'?'נגד':'@'} ${tShort(p.opp)}` : '';
@@ -739,6 +741,10 @@ function courtView(r){
     </div>
     <div class="csum">
       <div><span>צפי לחמישייה (כולל קפטן ×2)</span><b>${f(r.total,1)}</b></div>
+      ${(()=>{ if(BUILD.nx) return ''; const act = x => { const a = getActual(x.p); return a ? a.pir : null; };
+        const got = r.five.filter(x=>act(x)!=null); if(!got.length) return '';
+        const v = got.reduce((s,x)=>s+act(x),0) + (act(cap)||0);
+        return `<div><span>בפועל עד עכשיו (${got.length} מתוך 5 שיחקו)</span><b>${f(v,0)}</b><small>כולל הקפטן ×2</small></div>`; })()}
       <div><span>קפטן מומלץ</span><b>${esc(cap.p.he||cap.p.name)}</b><small>${f(cap.fp,1)} ×2 = ${f(2*cap.fp,1)}</small></div>
       <div><span>עלות החמישייה</span><b>${f(spent,0)}M</b><small>מתוך ${f(BUILD.budget,0)}M שהוגדרו</small></div>
       <div><span>נשאר מתקציב החמישייה</span><b>${f(BUILD.budget-spent,0)}M</b></div>
@@ -747,13 +753,18 @@ function courtView(r){
 }
 
 // ---------- F. Ideal five (sport5 rules: 5 starters, 1-3 G / 1-3 F / 1-2 C, max 2 per club, captain x2) ----------
-const BUILD = {budget:null, model:1, injured:true, excluded:new Set()};   // model index 1 = Model 2
+const BUILD = {budget:null, model:1, injured:true, excluded:new Set(), nx:false};   // model index 1 = Model 2
 const POS3 = ['Guard','Forward','Center'];
 const LIM = {Guard:[1,3], Forward:[1,3], Center:[1,2]};
+// the shown round: BUILD.nx = false -> the round being played / next; true -> the round after it
+const bOut3 = p => BUILD.nx ? (nextOf(p) ? !!nextOf(p).out3 : !!p.out3) : !!p.out3;
+const bItem = p => BUILD.nx ? {p, fp:fpsOf(p,false,1,1)[0], price:p.price, pos:p.s5pos, team:p.team, ot:oppTxt(oppNext(p.team))}
+                            : {p, fp:p.m[BUILD.model].pir, price:p.price, pos:p.s5pos, team:p.team};
+const bCoachFp = c => coachFpN(c, 0, BUILD.nx?1:0);
+const bRound = () => BUILD.nx ? NR() : M.next_round;
 function buildPool(){
-  return P.filter(p=>p.ranked && p.price!=null && p.s5pos && POS3.includes(p.s5pos) && !(BUILD.injured && (p.injured || p.out3)) && !BUILD.excluded.has(p.id))
-          .map(p=>({p, fp:p.m[BUILD.model].pir, price:p.price, pos:p.s5pos, team:p.team}))
-          .filter(x=>x.fp!=null);
+  return P.filter(p=>(BUILD.nx?rankedN(p):p.ranked) && p.price!=null && p.s5pos && POS3.includes(p.s5pos) && !(BUILD.injured && (p.injured || bOut3(p))) && !BUILD.excluded.has(p.id))
+          .map(bItem).filter(x=>x.fp!=null);
 }
 // keep a player only if fewer than 3 same-position players are both cheaper-or-equal and better
 // (3 instead of 1 so the max-2-per-club rule can still be satisfied)
@@ -798,8 +809,9 @@ function renderBuilder(){
   let body = '<div class="empty">אין הרכב חוקי בתקציב הזה</div>';
   if(r) body = courtView(r);
   $('#builderView').innerHTML = `<div class="card">
-    <h2>חמישייה אידיאלית למחזור ${M.next_round??''}</h2>
-    <div class="hint">הקפטן המומלץ מסומן C · ✕ = בלי השחקן</div>
+    <h2>חמישייה אידיאלית למחזור ${bRound()??''}</h2>
+    ${roundStarted()?`<div class="seg" id="bRound" style="margin:6px 0 8px"><button data-nx="0" class="${BUILD.nx?'':'on'}">מחזור ${M.next_round} (נוכחי · לייב)</button><button data-nx="1" class="${BUILD.nx?'on':''}">מחזור ${NR()} (הבא)</button></div>`:''}
+    <div class="hint">הקפטן המומלץ מסומן C · ✕ = בלי השחקן${BUILD.nx?` · התחזית למחזור ${NR()} ${NEXT.data?`עודכנה ${dayFmt.format(new Date(NEXT.data.generated_utc))} ${timeFmt.format(new Date(NEXT.data.generated_utc))}, כולל משחקי מחזור ${M.next_round} ששוחקו`:`מחושבת מהנתונים שלפני מחזור ${M.next_round}; מתעדכנת כל בוקר אחרי יום משחקים`}`:roundStarted()?' · ✓/LIVE = ניקוד בפועל, פער = בפועל פחות הצפי':''}</div>
     <div class="bctl">
       <label>תקציב לחמישייה: <b>${f(BUILD.budget,0)}M</b>
         <input type="range" id="bBudget" min="25" max="85" step="1" value="${BUILD.budget}"></label>
@@ -814,6 +826,7 @@ function renderBuilder(){
   slider.oninput = ()=>{ v.querySelector('.bctl b').textContent = f(+slider.value,0)+'M'; };
   slider.onchange = ()=>{ BUILD.budget = +slider.value; renderBuilder(); };
   $('#bInj').onchange = e=>{ BUILD.injured = e.target.checked; renderBuilder(); renderSquad(); };
+  v.querySelectorAll('#bRound button').forEach(b=>b.onclick=()=>{ BUILD.nx = b.dataset.nx==='1'; renderBuilder(); renderSquad(); });
   v.querySelectorAll('[data-ex]').forEach(b=>b.onclick=e=>{ e.stopPropagation(); BUILD.excluded.add(+b.dataset.ex); renderBuilder(); });
   const rs = $('#bReset'); if(rs) rs.onclick = ()=>{ BUILD.excluded.clear(); renderBuilder(); };
   v.querySelectorAll('.pl').forEach(el=>el.onclick=()=>openPlayer(+el.dataset.id));
@@ -878,6 +891,37 @@ function solveSquad(pool, opts){
 
 // ---------- coaches: projection (season point differential + home court) and cards ----------
 const coachFp = (c, h=0) => (c && c.fut && c.fut[h]!=null) ? c.fut[h] : 0;
+// ---------- next-round preview (next.json: re-projected the morning after each game day) ----------
+const NEXT = {data:null, map:new Map(), cmap:new Map()};
+const NR = () => (M.next_round||0) + 1;
+const nextOf = p => NEXT.data ? NEXT.map.get(p.raw+'||'+p.team) : null;
+const coachFpN = (c, h=0, off=0) => { if(!off) return coachFp(c,h);
+  const q = NEXT.data && NEXT.cmap.get(c.s5id); const a = q ? q.fut : (c.fut||[]).slice(1); return (a && a[h]!=null) ? a[h] : 0; };
+const rankedN = p => { const q = nextOf(p); return q ? !!q.ranked : !!p.ranked; };
+const roundsFrom = off => off ? (NEXT.data ? NEXT.data.fut_rounds : FUT0.slice(1)) : FUT0;
+// opponent in round NR() from the schedule in live.json
+function oppNext(team){
+  const g = ((LIVE.data && LIVE.data.schedule) || []).find(x=>x.round===NR() && (x.home===team||x.away===team));
+  return g ? {opp: g.home===team ? g.away : g.home, venue: g.home===team ? 'Home' : 'Away'} : null;
+}
+const oppTxt = o => o ? `${o.venue==='Home'?'נגד':'@'} ${tShort(o.opp)}` : '';
+// the round being projected has started / has at least one finished game
+function roundStarted(){ const L = LIVE.data; return !!(L && L.round===M.next_round && (L.games||[]).some(g=>g.status!=='scheduled')); }
+function dayDone(){ const L = LIVE.data; return !!(L && L.round===M.next_round && (L.games||[]).some(g=>g.status==='final')); }
+async function loadNext(){
+  if(location.protocol==='file:') return;
+  const get = u => fetch(u, {cache:'no-store'}).then(r=>r.ok?r.json():null).catch(()=>null);
+  const own = location.hostname.endsWith('.github.io') ? location.hostname.split('.')[0] : null;
+  const repo = own ? location.pathname.split('/').filter(Boolean)[0] : null;
+  const [a, b] = await Promise.all([get('next.json?t='+Date.now()),
+    own && repo ? get(`https://raw.githubusercontent.com/${own}/${repo}/main/docs/next.json?t=${Date.now()}`) : null]);
+  const j = [a, b].filter(x=>x && x.round===NR()).sort((x,y)=>(y.generated_utc||'').localeCompare(x.generated_utc||''))[0];
+  if(!j || (NEXT.data && NEXT.data.generated_utc===j.generated_utc)) return;
+  NEXT.data = j;
+  NEXT.map = new Map((j.players||[]).map(q=>[q.raw+'||'+q.team, q]));
+  NEXT.cmap = new Map((j.coaches||[]).map(q=>[q.s5id, q]));
+  renderBuilder(); renderSquad(); if(MT.sq && MT.off) mtCompute();
+}
 const coachOpp = c => c && c.opp ? `${c.venue==='Home'?'נגד':'@'} ${tShort(c.opp)}` : '';
 // coach fantasy points from a score: win = 5 + margin, loss = -(5 + margin)
 const coachPtsFromScore = (own, opp) => own>opp ? 5+(own-opp) : own<opp ? -(5+(opp-own)) : 0;
@@ -934,16 +978,16 @@ function solveWithCoach(pool){
   const cheapest = Math.min(...list.map(c=>c.price));
   const top = solveSquad(pool, {...base, budget:100-cheapest});      // upper bound for the players part
   let best = null;
-  for(const c of [...list].sort((a,b)=>coachFp(b)-coachFp(a))){
-    if(top && best && top.total + coachFp(c) <= best.total + 1e-9) continue;
+  for(const c of [...list].sort((a,b)=>bCoachFp(b)-bCoachFp(a))){
+    if(top && best && top.total + bCoachFp(c) <= best.total + 1e-9) continue;
     const r = solveSquad(pool, {...base, budget:100-c.price, teamInit:{[c.team]:1}});
-    if(r && (!best || r.total + coachFp(c) > best.total)) best = {...r, coach:c, players:r.total, total:r.total + coachFp(c), cost:r.cost + c.price};
+    if(r && (!best || r.total + bCoachFp(c) > best.total)) best = {...r, coach:c, players:r.total, total:r.total + bCoachFp(c), cost:r.cost + c.price};
   }
   return best;
 }
 function squadPool(){
-  return P.filter(p=>p.ranked && p.price!=null && POS3.includes(p.s5pos) && !(BUILD.injured && (p.injured || p.out3)))
-          .map(p=>({p, fp:p.m[BUILD.model].pir, price:p.price, pos:p.s5pos, team:p.team})).filter(x=>x.fp!=null);
+  return P.filter(p=>(BUILD.nx?rankedN(p):p.ranked) && p.price!=null && POS3.includes(p.s5pos) && !(BUILD.injured && (p.injured || bOut3(p))))
+          .map(bItem).filter(x=>x.fp!=null);
 }
 function benchCard(x, posHe){
   const p = x.p, nm = p.he || p.name;
@@ -952,7 +996,7 @@ function benchCard(x, posHe){
       <button class="cx" data-xb="${p.id}" title="להוציא מהסגל לגמרי">✕</button>
       <span class="cfp">${f(x.fp,1)}</span><span class="chalf" title="שחקן ספסל מקבל 50%">½ = ${f(x.fp/2,1)}</span>
       ${ph}<div class="cname">${esc(nm)}</div>
-      <div class="cmeta">${posHe} · ${esc(oppShort(p))} · ${f(x.price,0)}M</div></div>`;
+      <div class="cmeta">${posHe} · ${esc(x.ot!=null?x.ot:oppShort(p))} · ${f(x.price,0)}M</div>${liveFoot(x)}</div>`;
 }
 function renderSquad(){
   const box = $('#squadView'); if(!box) return;
@@ -977,20 +1021,28 @@ function renderSquad(){
           <circle cx="50" cy="70" r="11" fill="none"/><path d="M10 138 L10 120 A40 32 0 0 1 90 120 L90 138" fill="none"/></svg>
         <div class="crow">${row('Center')}</div><div class="crow">${row('Forward')}</div><div class="crow">${row('Guard')}</div>
       </div>
-      ${benchRow('ספסל · 50%', POS3.map(q=>benchCard(r.bench[q], posHe[q])).join(''), coachCard(r.coach, coachFp(r.coach), `<button class="cx" data-xc="${r.coach.s5id}" title="בלי המאמן הזה">✕</button>`))}
+      ${benchRow('ספסל · 50%', POS3.map(q=>benchCard(r.bench[q], posHe[q])).join(''),
+        coachCard(BUILD.nx ? {...r.coach, ...(oppNext(r.coach.team)||{opp:null})} : r.coach, bCoachFp(r.coach), `<button class="cx" data-xc="${r.coach.s5id}" title="בלי המאמן הזה">✕</button>`,
+          (()=>{ if(BUILD.nx) return ''; const a = coachActual(r.coach.team); return a ? gapFoot(a.pts, a.live, bCoachFp(r.coach), false) : ''; })())
+          .replace(BUILD.nx ? /<div class="cact[^"]*">.*?<\/small><\/div>/ : /^$/, ''))}
       <div class="csum">
-        <div><span>צפי לסגל (מה שנספר)</span><b>${f(r.total,1)}</b><small>חמישייה ${f(sFp,1)} + קפטן ${f(cap.fp,1)} + ½ ספסל ${f(bFp/2,1)} + מאמן ${f(coachFp(r.coach),1)}</small></div>
+        <div><span>צפי לסגל (מה שנספר)</span><b>${f(r.total,1)}</b><small>חמישייה ${f(sFp,1)} + קפטן ${f(cap.fp,1)} + ½ ספסל ${f(bFp/2,1)} + מאמן ${f(bCoachFp(r.coach),1)}</small></div>
+        ${(()=>{ if(BUILD.nx) return ''; const act = x => { const a = getActual(x.p); return a ? a.pir : null; };
+          const bn = POS3.map(q=>r.bench[q]), got = [...r.starters, ...bn].filter(x=>act(x)!=null), ca = coachActual(r.coach.team);
+          if(!got.length && !ca) return '';
+          const v = r.starters.reduce((s,x)=>s+(act(x)||0),0) + (act(cap)||0) + bn.reduce((s,x)=>s+(act(x)||0),0)/2 + (ca?ca.pts:0);
+          return `<div><span>בפועל עד עכשיו (${got.length} מתוך 8 שיחקו${ca?' + מאמן':''})</span><b>${f(v,0)}</b><small>קפטן ×2, ספסל ½</small></div>`; })()}
         <div><span>קפטן מומלץ</span><b>${esc(cap.p.he||cap.p.name)}</b><small>${f(cap.fp,1)} ×2 = ${f(2*cap.fp,1)}</small></div>
         <div><span>ספסל (ניקוד מלא)</span><b>${f(bFp,1)}</b><small>נספר חצי: ${f(bFp/2,1)}</small></div>
         <div><span>עלות הסגל כולל מאמן</span><b>${f(r.cost,0)}M</b><small>מתוך 100M · נשאר ${f(100-r.cost,0)}M</small></div>
       </div>`;
   }
   box.innerHTML = `<div class="card" style="margin-top:22px">
-      <h2>סגל מלא – חמישייה + ספסל + מאמן</h2>
+      <h2>סגל מלא – חמישייה + ספסל + מאמן · מחזור ${bRound()??''}</h2>
       <div class="hint">✕ על שחקן חמישייה = יכול לרדת לספסל · ✕ על שחקן ספסל = לא בסגל · ✕ על המאמן = מאמן אחר</div>
       <div class="bctl">
         <label>מאמן: <select id="sqCoach"><option value="auto" ${SQUAD.coach==='auto'?'selected':''}>הכי משתלם (אוטומטי)</option>
-          ${[...(D.coaches||[])].filter(c=>c.fut).sort((a,b)=>coachFp(b)-coachFp(a)).map(c=>`<option value="${c.s5id}" ${String(SQUAD.coach)===String(c.s5id)?'selected':''}>${esc(c.he||c.raw)} · ${f(c.price,0)}M · צפי ${f(coachFp(c),1)}</option>`).join('')}</select></label>
+          ${[...(D.coaches||[])].filter(c=>c.fut).sort((a,b)=>bCoachFp(b)-bCoachFp(a)).map(c=>`<option value="${c.s5id}" ${String(SQUAD.coach)===String(c.s5id)?'selected':''}>${esc(c.he||c.raw)} · ${f(c.price,0)}M · צפי ${f(bCoachFp(c),1)}</option>`).join('')}</select></label>
         <span class="note">תקציב 100M לכל הסגל כולל המאמן</span>
         ${excl.length?`<span class="exl">הוצאו: ${excl.join(', ')} <button class="btn ghost sm" id="sqReset">↺ אפס</button></span>`:''}
       </div></div>
@@ -1008,7 +1060,7 @@ function renderSquad(){
 const WORKER = 'https://el-fantasy.aviv-tzafrir.workers.dev';
 const S5POS = {1:'Guard', 2:'Forward', 3:'Center', 4:'Coach'};
 const byS5 = new Map(P.filter(p=>p.s5id!=null).map(p=>[p.s5id,p]));
-const FUT = (M.fut_rounds||[]);
+const FUT = (M.fut_rounds||[]), FUT0 = FUT;
 const MT = {data:null, loading:false, err:null, rec:null, H:1, q:'', sel:0, thrSort:'risk', coachMode:'auto'};
 // ownership (own.json, refreshed every 6 hours)
 const OWN = {size:null, own:{}, updated:null};
@@ -1020,10 +1072,16 @@ async function loadOwn(){
        const j = await r.json(); OWN.size=j.size; OWN.own=j.own||{}; OWN.updated=j.updated_utc; renderAll(); }catch(e){}
 }
 // projected fantasy points per future round (index 0 = next round); 0 if injured / out
-function fpsOf(p, injured, H){
+// off = 0: projections from the round being played (or the next one); off = 1: from the round after it
+// (the mid-round preview in next.json when available, otherwise the main projection shifted by one round)
+function fpsOf(p, injured, H, off=0){
   const z = Array(H).fill(0);
-  if(!p || injured || p.injured || p.out3 || !p.fut) return z;
-  return p.fut.slice(0,H).map(v=>v||0);
+  if(!p || injured || p.injured) return z;
+  const q = off ? nextOf(p) : null;
+  if(off ? (q ? q.out3 : p.out3) : p.out3) return z;
+  const a = off ? (q ? q.fut : (p.fut||[]).slice(1)) : p.fut;
+  if(!a) return z;
+  return Array.from({length:H}, (_,h)=>a[h]||0);
 }
 // best lineup for one round h: bench 1 G + 1 F + 1 C (50%), five = the rest (1-3 G, 1-3 F, 1-2 C), captain x2
 function lineupAt(sq, h, b){
@@ -1055,10 +1113,10 @@ function combos(arr, k, start=0, acc=[], out=[]){
   return out;
 }
 // coach as a squad item (projection per round from the coach formula)
-function coachItem(c, H){
+function coachItem(c, H, off=0){
   if(!c) return null;
   const d = (D.coaches||[]).find(x=>x.s5id===c.s5id) || c;
-  const fps = Array.from({length:H},(_,h)=> d.injured ? 0 : coachFp(d,h));
+  const fps = Array.from({length:H},(_,h)=> d.injured ? 0 : coachFpN(d,h,off));
   return {isCoach:true, s5id:d.s5id, c:d, name:d.he||d.raw||c.name, price:d.price??c.price, pos:'Coach', team:d.team||c.team, fps, tot:fps.reduce((a,b)=>a+b,0)};
 }
 // Top 3 transfer plans (0-3 transfers incl. the coach) by total projected points over the next H rounds.
@@ -1067,18 +1125,18 @@ function coachItem(c, H){
 // players taken out in this window (bringing them back is free) and bonuses for the coming round.
 // A plan's cost follows the fantasy site: kept players added in this window + new players not taken out earlier.
 function recommend(sq, coach, bank, H, mode='auto', ctx={}){
-  const limit = ctx.limit ?? 3, free = ctx.free || new Set(), bo = ctx.boost || null;
+  const limit = ctx.limit ?? 3, free = ctx.free || new Set(), bo = ctx.boost || null, off = ctx.off || 0;
   // the removed list also holds players dropped in earlier rounds, so a return is treated as free
   // only as an undo: at most as many as the transfers already made in this window
   const pend0 = sq.filter(x=>x.pend).length + (coach&&coach.pend?1:0);
   const costOf = (keep, keepCoach, ins) => { const back = Math.min(pend0, ins.filter(x=>free.has(x.s5id)).length);
     return keep.filter(x=>x.pend).length + (keepCoach&&keepCoach.pend?1:0) + ins.length - back; };
   const inSquad = new Set(sq.map(x=>x.s5id));
-  const pool = P.filter(p=>p.ranked && p.s5id!=null && p.price!=null && POS3.includes(p.s5pos) && !p.injured && !p.out3 && !inSquad.has(p.s5id))
-                .map(p=>{ const fps=fpsOf(p,false,H); return {s5id:p.s5id, p, name:p.he||p.name, price:p.price, pos:p.s5pos, team:p.team, fps, tot:fps.reduce((a,b)=>a+b,0)}; });
-  sq.forEach(x=>{ x.fps = fpsOf(x.p, x.injured, H); x.tot = x.fps.reduce((a,b)=>a+b,0); });
-  const cur = coachItem(coach, H); if(cur) cur.pend = !!(coach&&coach.pend);
-  const coachPool = (D.coaches||[]).filter(c=>c.fut && !c.injured && (!cur || c.s5id!==cur.s5id)).map(c=>coachItem(c,H));
+  const pool = P.filter(p=>(off?rankedN(p):p.ranked) && p.s5id!=null && p.price!=null && POS3.includes(p.s5pos) && !p.injured && !(off ? (nextOf(p)?nextOf(p).out3:p.out3) : p.out3) && !inSquad.has(p.s5id))
+                .map(p=>{ const fps=fpsOf(p,false,H,off); return {s5id:p.s5id, p, name:p.he||p.name, price:p.price, pos:p.s5pos, team:p.team, fps, tot:fps.reduce((a,b)=>a+b,0)}; });
+  sq.forEach(x=>{ x.fps = fpsOf(x.p, x.injured, H, off); x.tot = x.fps.reduce((a,b)=>a+b,0); });
+  const cur = coachItem(coach, H, off); if(cur) cur.pend = !!(coach&&coach.pend);
+  const coachPool = (D.coaches||[]).filter(c=>c.fut && !c.injured && (!cur || c.s5id!==cur.s5id)).map(c=>coachItem(c,H,off));
   // forced coach: apply the swap first, it uses one of the 3 transfers
   let baseCoach = cur, money0 = bank, forced = null;
   if(mode!=='auto' && mode!=='keep' && (!cur || String(cur.s5id)!==String(mode))){
@@ -1178,7 +1236,9 @@ async function mtLookup(name, userId){
 async function mtCompute(){
   MT.rec = null; renderMyTeam();
   await new Promise(r=>setTimeout(r,30));   // paint first; the search can take a second or two
-  MT.rec = recommend(MT.sq, MT.coach, MT.bank, MT.H, MT.coachMode, MT.win||{}); MT.sel = 0;
+  MT.off = dayDone() ? 1 : 0;
+  MT.H = Math.min(MT.H, Math.max(1, Math.min(5, roundsFrom(MT.off).length)));
+  MT.rec = recommend(MT.sq, MT.coach, MT.bank, MT.H, MT.coachMode, {...(MT.win||{}), off:MT.off}); MT.sel = 0;
   renderMyTeam();
 }
 function mtCard(x, isCap, h, cls='', foot=''){
@@ -1191,7 +1251,7 @@ function mtCard(x, isCap, h, cls='', foot=''){
 }
 function mtCourt(sq, coach){
   const bo = MT.win && MT.win.boost, lu = lineupAt(sq, 0, bo); if(!lu) return '';
-  const ci = coach ? coachItem(coach, 1) : null;
+  const ci = coach ? coachItem(coach, 1, MT.off||0) : null;
   const vcT = x => x===lu.vc ? mtCard(x,false,0).replace('<span class="cfp">','<span class="ccap vc">VC</span><span class="cfp">') : mtCard(x, x===lu.cap, 0);
   const row = pos => lu.starters.filter(x=>x.pos===pos).sort((a,b)=>b.fps[0]-a.fps[0]).map(vcT).join('');
   return `<div class="court"><svg class="lines" viewBox="0 0 100 140" preserveAspectRatio="none" aria-hidden="true">
@@ -1199,7 +1259,7 @@ function mtCourt(sq, coach){
       <path d="M34 32 A16 10 0 0 0 66 32" fill="none"/><line x1="3" y1="70" x2="97" y2="70"/>
       <circle cx="50" cy="70" r="11" fill="none"/><path d="M10 138 L10 120 A40 32 0 0 1 90 120 L90 138" fill="none"/></svg>
       <div class="crow">${row('Center')}</div><div class="crow">${row('Forward')}</div><div class="crow">${row('Guard')}</div></div>
-    ${benchRow(`ספסל · ${bo&&bo.bench?'100% (בונוס)':'50%'} · מחזור ${FUT[0]??''}`, lu.bench.map(x=>mtCard(x,false,0,'bcard')).join(''), ci?coachCard(ci.c, ci.fps[0]):'')}`;
+    ${benchRow(`ספסל · ${bo&&bo.bench?'100% (בונוס)':'50%'} · מחזור ${roundsFrom(MT.off||0)[0]??''}`, lu.bench.map(x=>mtCard(x,false,0,'bcard')).join(''), ci?coachCard(ci.c, ci.fps[0]):'')}`;
 }
 // High-ownership players the team does not have, ranked by ownership x projected points (they hurt you if they score)
 function threats(sq, H){
@@ -1243,8 +1303,8 @@ function gapFoot(act, live, pred, withAct=true){
 }
 function siteSquad(){
   if(!MT.sq) return '';
-  MT.sq.forEach(x=>{ if(!x.fps) x.fps = fpsOf(x.p, x.injured, Math.max(1,MT.H)); });
-  const st = MT.sq.filter(x=>!x.reserve), bn = MT.sq.filter(x=>x.reserve);
+  const SQ = MT.sq.map(x=>({...x, fps:fpsOf(x.p, x.injured, 1)}));
+  const st = SQ.filter(x=>!x.reserve), bn = SQ.filter(x=>x.reserve);
   const tag = x => (x.s5id===MT.capId ? '<span class="ccap">C</span>' : x.s5id===MT.vcId ? '<span class="ccap vc">VC</span>' : '') + (x.pend ? '<span class="cnew">חדש</span>' : '');
   const foot = x => { const a = x.p ? getActual(x.p) : null; return a ? gapFoot(a.pir, a.status!=='final', x.fps[0]) : ''; };
   const card = (x, cls='') => mtCard(x, false, 0, cls, foot(x)).replace('<span class="cfp">', tag(x)+'<span class="cfp">');
@@ -1280,7 +1340,8 @@ function bonusLine(){
 function renderMyTeam(){
   const box = $('#myTeamView'); if(!box) return;
   let saved = ''; try{ saved = localStorage.getItem('el_my_team')||''; }catch(e){}
-  const rr = h => FUT[h]!=null ? FUT[h] : '';
+  const RO = roundsFrom(MT.off||0), rr = h => RO[h]!=null ? RO[h] : '';
+  const rr0 = h => FUT0[h]!=null ? FUT0[h] : '';
   let body = '';
   if(MT.loading && !MT.sq) body = '<div class="empty">מחפש את הקבוצה…</div>';
   else if(MT.err) body = `<div class="warn">שגיאה: ${esc(MT.err)}</div>`;
@@ -1291,8 +1352,9 @@ function renderMyTeam(){
   else if(MT.data && MT.data.team){
     const t = MT.data.team, top = Math.max(0.1, Math.round(1000*t.position/MT.data.leagueSize)/10);
     const rec = MT.rec, H = MT.H;
-    const hz = Array.from({length:Math.min(5,FUT.length)},(_,i)=>i+1);
+    const hz = Array.from({length:Math.min(5,RO.length)},(_,i)=>i+1);
     const rangeTxt = H===1 ? `מחזור ${rr(0)}` : `מחזורים ${rr(0)}–${rr(H-1)}`;
+    const thrRange = H===1 ? `מחזור ${rr0(0)}` : `מחזורים ${rr0(0)}–${rr0(H-1)}`;
     const plans = rec ? rec.plans : [];
     const thr = MT.sq ? threats(MT.sq, H) : [];
     body = `<div class="card mt-head">
@@ -1312,6 +1374,7 @@ function renderMyTeam(){
             <option value="keep" ${MT.coachMode==='keep'?'selected':''}>להשאיר את ${esc(MT.coach?MT.coach.name:'המאמן')}</option>
             ${[...(D.coaches||[])].filter(c=>c.fut && (!MT.coach || c.s5id!==MT.coach.s5id)).sort((a,b)=>coachFp(b)-coachFp(a)).map(c=>`<option value="${c.s5id}" ${String(MT.coachMode)===String(c.s5id)?'selected':''}>להחליף ל-${esc(c.he||c.raw)} (${f(c.price,0)}M, צפי ${f(coachFp(c),1)})</option>`).join('')}</select></label>
           <label class="hzl">להסתכל קדימה: <select id="mtH">${hz.map(h=>`<option value="${h}" ${h===H?'selected':''}>${h===1?`מחזור ${rr(0)} בלבד`:`${h} מחזורים (${rr(0)}–${rr(h-1)})`}</option>`).join('')}</select></label></div>
+        ${MT.off?`<div class="roundnote">מחזור ${M.next_round} כבר בעיצומו – החילופים מחושבים לקראת מחזור ${NR()}${NEXT.data?` (תחזית מעודכנת ${dayFmt.format(new Date(NEXT.data.generated_utc))})`:''}</div>`:''}
         <div class="hint">3 התוכניות עם הכי הרבה נקודות צפויות ב${rangeTxt}. לחץ על תוכנית כדי לראות את ההרכב.${MT.win&&MT.win.open?` מספר החילופים בכל תוכנית נספר כמו באתר הפנטזי – סה"כ בחלון הנוכחי, מתוך ${MT.win.limit}${MT.win.subsOn?' (בונוס חילופים מופעל)':''}${MT.win.made?`; ${MT.win.made} כבר בוצעו, ואפשר לבטל אותם בלי עלות`:''}.`:''}${MT.win&&MT.win.boost?` הבונוסים שהפעלת למחזור ${rr(0)} נלקחים בחשבון.`:''}</div>
         ${!rec?'<div class="empty">מחשב חילופים…</div>':`<div class="note">הסגל הנוכחי בלי חילופים: <b>${f(rec.baseV,1)}</b> נקודות צפויות ב${rangeTxt}</div>
           ${plans.map((r,i)=>{ const gain = r.v-rec.baseV;
@@ -1334,8 +1397,8 @@ function renderMyTeam(){
       <div class="card" style="margin-top:16px">
         <div class="phead"><h2>השחקנים שהכי פוגעים בך</h2>
           <div class="seg" id="thrSort"><button data-s="risk" class="${MT.thrSort==='risk'?'on':''}">לפי אחזקה × צפי</button><button data-s="own" class="${MT.thrSort==='own'?'on':''}">לפי % אחזקה</button></div></div>
-        <div class="hint">שחקנים ומאמנים פופולריים שאין לך. מדורג ${MT.thrSort==='own'?'לפי אחוז האחזקה':`לפי אחוז אחזקה × צפי ב${rangeTxt}`}.${OWN.updated?` אחזקה עודכנה: ${timeFmt.format(new Date(OWN.updated))}`:''}</div>
-        ${!OWN.size?'<div class="note">נתוני אחזקה עוד לא זמינים</div>':`<div class="scroll"><table><thead><tr><th>שחקן</th><th class="num">% אחזקה</th><th class="num">צפי (${rangeTxt})</th><th class="num">"פגיעה"</th><th class="num col-price">מחיר</th></tr></thead><tbody>
+        <div class="hint">שחקנים ומאמנים פופולריים שאין לך. מדורג ${MT.thrSort==='own'?'לפי אחוז האחזקה':`לפי אחוז אחזקה × צפי ב${thrRange}`}.${OWN.updated?` אחזקה עודכנה: ${timeFmt.format(new Date(OWN.updated))}`:''}</div>
+        ${!OWN.size?'<div class="note">נתוני אחזקה עוד לא זמינים</div>':`<div class="scroll"><table><thead><tr><th>שחקן</th><th class="num">% אחזקה</th><th class="num">צפי (${thrRange})</th><th class="num">"פגיעה"</th><th class="num col-price">מחיר</th></tr></thead><tbody>
           ${thr.map(x=>x.coach ? `<tr><td class="pl"><b>${esc(x.coach.he||x.coach.raw)}</b><small>${tName(x.coach.team)} · מאמן</small></td>
             <td class="num"><b>${f(x.own,0)}%</b></td><td class="num">${f(x.tot,1)}</td><td class="num">${f(x.risk,1)}</td><td class="num col-price">${f(x.coach.price,0)}M</td></tr>`
             : `<tr><td class="pl" data-id="${x.p.id}"><b>${esc(x.p.he||x.p.name)}</b><small>${tName(x.p.team)} · ${x.p.pos_he}</small></td>
@@ -1661,11 +1724,15 @@ $('#foot').innerHTML = `יעד: נקודות פנטזי לפי חוקי ערוץ
 makeSearch($('#mainSearch'),'חפש שחקן… (שם באנגלית/עברית או קבוצה)', p=>openPlayer(p.id), ()=>new Set());
 function renderAll(){
   updateSubline(); renderTops(); renderFixtures(); renderOpp(); renderBuilder(); renderSquad();
+  if(MT.sq && !MT.loading){ const ae0 = document.activeElement;
+    if((dayDone()?1:0) !== (MT.off||0)) mtCompute();
+    else if(!(ae0 && ae0.id==='mtName')) renderMyTeam(); }
   const ae = document.activeElement;   // do not rebuild the search area while the user is typing
   if(!(ae && ae.tagName==='INPUT' && $('#tab-search').contains(ae))) renderPlayer();
 }
 updateSubline(); renderTops(); renderFixtures(); renderOpp(); renderBuilder(); renderSquad(); renderMyTeam(); readHash(); renderPlayer();
-loadLive().then(pollDirect); loadOwn();
+loadLive().then(()=>{ pollDirect(); loadNext(); }); loadOwn();
+setInterval(loadNext, 30*60e3);
 window.addEventListener('hashchange', ()=>{ readHash(); renderPlayer(); });
 })();
 </script>

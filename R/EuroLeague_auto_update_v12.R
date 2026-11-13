@@ -117,7 +117,41 @@ el_round_status <- function(schedule, last_published, delay_hours=12, game_hours
        reason=paste0('Round ', r, ' ended ~', fmt(ended), ' (Israel) - updating'))
 }
 
+# Mid-round preview of the NEXT round: due the morning after each game day of a round in progress
+# (delay hours after the last finished game of that round), once per game day.
+el_next_status <- function(schedule, done_upto, delay_hours=8, game_hours=2.5, now=Sys.time()) {
+  s <- schedule[is.finite(schedule$Round) & schedule$Round >= 1 & nzchar(schedule$Game),,drop=FALSE]
+  open_r <- s$Round[!s$Played]
+  if (!length(open_r)) return(list(due=FALSE))
+  r <- min(open_r)
+  played <- s[s$Round == r & s$Played & !is.na(s$Utc),,drop=FALSE]
+  if (!nrow(played) || !any(s$Round == r + 1)) return(list(due=FALSE, round=r))
+  last_tip <- max(played$Utc)
+  due_at <- last_tip + (game_hours + delay_hours)*3600
+  if (now < due_at) return(list(due=FALSE, round=r))
+  if (is.finite(done_upto) && as.numeric(last_tip) <= done_upto) return(list(due=FALSE, round=r))
+  list(due=TRUE, round=r, target=r + 1, upto=as.numeric(last_tip))
+}
+el_next_preview <- function(ns, schedule, output_dir, site_dir, template, code_dir) {
+  source(file.path(code_dir, 'EuroLeague_ranking_models_v12.R'))
+  source(file.path(code_dir, 'EuroLeague_web_export_v12.R'))
+  model <- file.path(output_dir, 'EuroLeague_historical_models_2024_2026_v12_fantasy.rds')
+  tmp <- file.path(tempdir(), 'el_next'); tmp_site <- file.path(tmp, 'site')
+  dir.create(tmp_site, recursive=TRUE, showWarnings=FALSE)
+  build_euroleague_2026_27(tmp, season='E2026', mode='predict', trained_model_file=model, target_round=ns$target)
+  d <- export_euroleague_web(tmp, tmp_site, template, schedule=schedule, trained_model_file=model)
+  fr <- unlist(d$meta$fut_rounds)
+  if (!length(fr) || fr[1] != ns$target) stop('preview projected round ', fr[1], ' instead of ', ns$target)
+  keep <- function(x, k) x[intersect(k, names(x))]
+  out <- list(round=ns$target, generated_utc=d$meta$generated_utc, fut_rounds=d$meta$fut_rounds,
+              players=lapply(d$players, keep, c('raw','team','fut','ranked','opp','venue','date','out3','injured','s5id')),
+              coaches=lapply(d$coaches, keep, c('s5id','team','fut','opp','venue')))
+  jsonlite::write_json(out, file.path(site_dir, 'next.json'), auto_unbox=TRUE, null='null', na='null', digits=NA)
+  message('Next-round preview written: round ', ns$target, ' (', length(out$players), ' players)')
+}
+
 el_auto_update <- function(force=FALSE) {
+  `%||%` <- function(a, b) if (is.null(a) || !length(a)) b else a
   for (pkg in c('httr','jsonlite','openxlsx'))
     if (!requireNamespace(pkg, quietly=TRUE)) install.packages(pkg, repos='https://cloud.r-project.org')
   code_dir <- Sys.getenv('EL_CODE_DIR', el_script_dir())
@@ -141,7 +175,21 @@ el_auto_update <- function(force=FALSE) {
              error=function(e) message('Live update failed: ', conditionMessage(e)))
     tryCatch(el_ownership(site_dir), error=function(e) message('Ownership failed: ', conditionMessage(e)))
   }
-  if (!st$due && !force) { run_live(); return(invisible(FALSE)) }
+  if (!st$due && !force) {
+    run_live()
+    # the morning after a game day: preview of the next round (prediction only, no training)
+    ns <- tryCatch(el_next_status(schedule, suppressWarnings(as.numeric(state$next_upto %||% NA)),
+                                  as.numeric(Sys.getenv('EL_NEXT_DELAY_HOURS', '8')), game_hours),
+                   error=function(e) list(due=FALSE))
+    if (isTRUE(ns$due)) {
+      message('Next-round preview due: round ', ns$target)
+      ok <- tryCatch({ el_next_preview(ns, schedule, output_dir, site_dir, template, code_dir); TRUE },
+                     error=function(e) { message('Next-round preview failed: ', conditionMessage(e)); FALSE })
+      if (ok) { state$next_upto <- ns$upto
+        jsonlite::write_json(state, state_file, auto_unbox=TRUE, pretty=TRUE) }
+    }
+    return(invisible(FALSE))
+  }
   if (force) message('--force: running now')
 
   source(file.path(code_dir, 'EuroLeague_ranking_models_v12.R'))
