@@ -939,14 +939,14 @@ function coachActualTag(c){
   return a.live ? `<div class="cact live"><span class="badge live sm"><i></i>LIVE ${v}</span><small>${a.score}</small></div>`
                 : `<div class="cact"><span class="badge final sm">✓ ${v}</span><small>${a.score}</small></div>`;
 }
-function coachCard(c, fp, extra='', foot=''){
+function coachCard(c, fp, extra='', foot='', noAct=false){
   return `<div class="ccard coachcard">${extra}<span class="cfp ${fp<0?'neg':''}">${f(fp,1)}</span>
       ${(()=>{ const cc=(D.coaches||[]).find(x=>x.s5id===c.s5id)||c; const ov=COACH_IMG[cc.raw];
         if(ov) return `<div class="cph" style="background-image:url('${esc(ov)}')"></div>`;
         return cc.logo
           ? `<div class="cph logo" data-coachimg="${esc(cc.raw||'')}" style="background-image:url('${esc(cc.logo)}')"></div>`
           : `<div class="cph ini" data-coachimg="${esc(cc.raw||'')}">🧑‍💼</div>`; })()}<div class="cname">${esc(c.he||c.name||c.raw||'')}</div>
-      <div class="cmeta">מאמן · ${esc(coachOpp(c))} · ${f(c.price,0)}M${ownTxt(c)?` · ${ownTxt(c)} אחזקה`:''}</div>${coachActualTag(c)}${foot}</div>`;
+      <div class="cmeta">מאמן · ${esc(coachOpp(c))} · ${f(c.price,0)}M${ownTxt(c)?` · ${ownTxt(c)} אחזקה`:''}</div>${noAct?'':coachActualTag(c)}${foot}</div>`;
 }
 
 // fixed coach photos (take precedence over the logo and the Wikipedia search)
@@ -1023,8 +1023,7 @@ function renderSquad(){
       </div>
       ${benchRow('ספסל · 50%', POS3.map(q=>benchCard(r.bench[q], posHe[q])).join(''),
         coachCard(BUILD.nx ? {...r.coach, ...(oppNext(r.coach.team)||{opp:null})} : r.coach, bCoachFp(r.coach), `<button class="cx" data-xc="${r.coach.s5id}" title="בלי המאמן הזה">✕</button>`,
-          (()=>{ if(BUILD.nx) return ''; const a = coachActual(r.coach.team); return a ? gapFoot(a.pts, a.live, bCoachFp(r.coach), false) : ''; })())
-          .replace(BUILD.nx ? /<div class="cact[^"]*">.*?<\/small><\/div>/ : /^$/, ''))}
+          (()=>{ if(BUILD.nx) return ''; const a = coachActual(r.coach.team); return a ? gapFoot(a.pts, a.live, bCoachFp(r.coach), false) : ''; })(), BUILD.nx))}
       <div class="csum">
         <div><span>צפי לסגל (מה שנספר)</span><b>${f(r.total,1)}</b><small>חמישייה ${f(sFp,1)} + קפטן ${f(cap.fp,1)} + ½ ספסל ${f(bFp/2,1)} + מאמן ${f(bCoachFp(r.coach),1)}</small></div>
         ${(()=>{ if(BUILD.nx) return ''; const act = x => { const a = getActual(x.p); return a ? a.pir : null; };
@@ -1259,7 +1258,7 @@ function mtCourt(sq, coach){
       <path d="M34 32 A16 10 0 0 0 66 32" fill="none"/><line x1="3" y1="70" x2="97" y2="70"/>
       <circle cx="50" cy="70" r="11" fill="none"/><path d="M10 138 L10 120 A40 32 0 0 1 90 120 L90 138" fill="none"/></svg>
       <div class="crow">${row('Center')}</div><div class="crow">${row('Forward')}</div><div class="crow">${row('Guard')}</div></div>
-    ${benchRow(`ספסל · ${bo&&bo.bench?'100% (בונוס)':'50%'} · מחזור ${roundsFrom(MT.off||0)[0]??''}`, lu.bench.map(x=>mtCard(x,false,0,'bcard')).join(''), ci?coachCard(ci.c, ci.fps[0]):'')}`;
+    ${benchRow(`ספסל · ${bo&&bo.bench?'100% (בונוס)':'50%'} · מחזור ${roundsFrom(MT.off||0)[0]??''}`, lu.bench.map(x=>mtCard(x,false,0,'bcard')).join(''), ci?coachCard(MT.off ? {...ci.c, ...(oppNext(ci.c.team)||{opp:null})} : ci.c, ci.fps[0], '', '', !!MT.off):'')}`;
 }
 // High-ownership players the team does not have, ranked by ownership x projected points (they hurt you if they score)
 function threats(sq, H){
@@ -1354,6 +1353,9 @@ function renderMyTeam(){
     const rec = MT.rec, H = MT.H;
     const hz = Array.from({length:Math.min(5,RO.length)},(_,i)=>i+1);
     const rangeTxt = H===1 ? `מחזור ${rr(0)}` : `מחזורים ${rr(0)}–${rr(H-1)}`;
+    // coach projection over the recommendation's rounds (the coach menu)
+    const cH = c => Array.from({length:H},(_,h)=>coachFpN(c,h,MT.off||0)).reduce((a,b)=>a+b,0);
+    const cLbl = H===1 ? `מחזור ${rr(0)}` : `${rr(0)}–${rr(H-1)}`;
     const thrRange = H===1 ? `מחזור ${rr0(0)}` : `מחזורים ${rr0(0)}–${rr0(H-1)}`;
     const plans = rec ? rec.plans : [];
     const thr = MT.sq ? threats(MT.sq, H) : [];
@@ -1372,7 +1374,7 @@ function renderMyTeam(){
         <div class="phead"><h2>חילופים מומלצים</h2>
           <label class="hzl">מאמן: <select id="mtCoach"><option value="auto" ${MT.coachMode==='auto'?'selected':''}>אוטומטי (גם החלפת מאמן)</option>
             <option value="keep" ${MT.coachMode==='keep'?'selected':''}>להשאיר את ${esc(MT.coach?MT.coach.name:'המאמן')}</option>
-            ${[...(D.coaches||[])].filter(c=>c.fut && (!MT.coach || c.s5id!==MT.coach.s5id)).sort((a,b)=>coachFp(b)-coachFp(a)).map(c=>`<option value="${c.s5id}" ${String(MT.coachMode)===String(c.s5id)?'selected':''}>להחליף ל-${esc(c.he||c.raw)} (${f(c.price,0)}M, צפי ${f(coachFp(c),1)})</option>`).join('')}</select></label>
+            ${[...(D.coaches||[])].filter(c=>c.fut && (!MT.coach || c.s5id!==MT.coach.s5id)).sort((a,b)=>cH(b)-cH(a)).map(c=>`<option value="${c.s5id}" ${String(MT.coachMode)===String(c.s5id)?'selected':''}>להחליף ל-${esc(c.he||c.raw)} (${f(c.price,0)}M, צפי ${cLbl} ${f(cH(c),1)})</option>`).join('')}</select></label>
           <label class="hzl">להסתכל קדימה: <select id="mtH">${hz.map(h=>`<option value="${h}" ${h===H?'selected':''}>${h===1?`מחזור ${rr(0)} בלבד`:`${h} מחזורים (${rr(0)}–${rr(h-1)})`}</option>`).join('')}</select></label></div>
         ${MT.off?`<div class="roundnote">מחזור ${M.next_round} כבר בעיצומו – החילופים מחושבים לקראת מחזור ${NR()}${NEXT.data?` (תחזית מעודכנת ${dayFmt.format(new Date(NEXT.data.generated_utc))})`:''}</div>`:''}
         <div class="hint">3 התוכניות עם הכי הרבה נקודות צפויות ב${rangeTxt}. לחץ על תוכנית כדי לראות את ההרכב.${MT.win&&MT.win.open?` מספר החילופים בכל תוכנית נספר כמו באתר הפנטזי – סה"כ בחלון הנוכחי, מתוך ${MT.win.limit}${MT.win.subsOn?' (בונוס חילופים מופעל)':''}${MT.win.made?`; ${MT.win.made} כבר בוצעו, ואפשר לבטל אותם בלי עלות`:''}.`:''}${MT.win&&MT.win.boost?` הבונוסים שהפעלת למחזור ${rr(0)} נלקחים בחשבון.`:''}</div>
