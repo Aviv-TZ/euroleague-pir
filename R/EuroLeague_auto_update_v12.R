@@ -140,6 +140,7 @@ el_next_preview <- function(ns, schedule, output_dir, site_dir, template, code_d
   dir.create(tmp_site, recursive=TRUE, showWarnings=FALSE)
   build_euroleague_2026_27(tmp, season='E2026', mode='predict', trained_model_file=model, target_round=ns$target)
   d <- export_euroleague_web(tmp, tmp_site, template, schedule=schedule, trained_model_file=model)
+  if (!length(d$coaches)) stop('no fantasy prices/coaches (download failed) - will retry next run')
   fr <- unlist(d$meta$fut_rounds)
   if (!length(fr) || fr[1] != ns$target) stop('preview projected round ', fr[1], ' instead of ', ns$target)
   keep <- function(x, k) x[intersect(k, names(x))]

@@ -57,9 +57,10 @@ EL_S5_TEAMS <- c('אנדולו אפס'='IST','באסקוניה'='BAS','הכוכ�
   'מכבי ת"א'='TEL','אולימפיאקוס'='OLY','פנאתינייקוס'='PAN','פריז באסקט'='PRS','פרטיזן בלגרד'='PAR',
   'ריאל מדריד'='MAD','ולנסיה'='PAM','וירטוס בולוניה'='VIR',"ז'לגיריס קובנה"='ZAL','בשיקטש'='BES')
 el_web_prices <- function(season='E2026') {
-  get <- function(u) { r <- tryCatch(httr::GET(u, httr::timeout(40), httr::user_agent('EuroLeague-R/2.0')), error=identity)
+  get1 <- function(u) { r <- tryCatch(httr::GET(u, httr::timeout(40), httr::user_agent('EuroLeague-R/2.0')), error=identity)
     if (inherits(r,'error') || httr::status_code(r) != 200) return(NULL)
     tryCatch(jsonlite::fromJSON(httr::content(r,'text',encoding='UTF-8'), simplifyVector=FALSE), error=function(e) NULL) }
+  get <- function(u) { for (k in 1:3) { x <- get1(u); if (!is.null(x)) return(x); Sys.sleep(15) }; NULL }   # 3 tries
   lg <- get('https://dreamteam.sport5.co.il/api/Leagues/GetLeagues')
   sid <- NULL
   for (l in lg$data) if (identical(l$urlName, 'fantasyeuroleague')) sid <- l$currentSeasonId
