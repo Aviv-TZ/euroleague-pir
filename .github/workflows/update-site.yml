@@ -26,7 +26,7 @@ concurrency:
 
 jobs:
   update:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04      # pinned: 'latest' moved to a new Ubuntu and broke the cached R packages
     timeout-minutes: 360
     steps:
       - uses: actions/checkout@v4
@@ -43,23 +43,30 @@ jobs:
         with:
           use-public-rspm: true
 
+      - name: OS and R version (cache key)
+        id: ver
+        run: echo "id=$(lsb_release -cs)-R$(Rscript -e 'cat(as.character(getRversion()))')" >> "$GITHUB_OUTPUT"
+
       - name: Cache R packages
         uses: actions/cache@v4
         with:
           path: ~/R-lib
-          key: rlib-${{ runner.os }}-v1
+          key: rlib-${{ runner.os }}-${{ steps.ver.outputs.id }}-v2
 
       - name: Install R packages
         timeout-minutes: 10
         run: |
           mkdir -p ~/R-lib && echo "R_LIBS_USER=$HOME/R-lib" >> "$GITHUB_ENV"
           R_LIBS_USER=$HOME/R-lib Rscript -e '
-            need <- setdiff(c("httr","jsonlite","openxlsx"), rownames(installed.packages()))
+            pk <- c("httr","jsonlite","openxlsx")
+            need <- pk[!vapply(pk, requireNamespace, logical(1), quietly = TRUE)]   # missing OR not loadable
             if (length(need)) {
               options(HTTPUserAgent = sprintf("R/%s R (%s)", getRversion(), paste(getRversion(), R.version$platform, R.version$arch, R.version$os)))
               rel <- tryCatch(system("lsb_release -cs", intern = TRUE), error = function(e) "noble")
               install.packages(need, lib = Sys.getenv("R_LIBS_USER"),
                                repos = c(sprintf("https://p3m.dev/cran/__linux__/%s/latest", rel), "https://cloud.r-project.org"))
+              bad <- pk[!vapply(pk, requireNamespace, logical(1), quietly = TRUE)]
+              if (length(bad)) install.packages(bad, lib = Sys.getenv("R_LIBS_USER"), repos = "https://cloud.r-project.org", type = "source")
             }
             stopifnot(all(sapply(c("httr","jsonlite","openxlsx"), requireNamespace, quietly = TRUE)))'
 
