@@ -228,6 +228,8 @@ td.num.up{color:var(--good)} td.num.down{color:var(--bad)}
 @media(max-width:600px){ .trow{grid-template-columns:1fr} .mt-head .kpis{grid-template-columns:1fr 1fr 1fr} }
 /* ownership / my team extras */
 .ccap.vc{color:#5b6b86;border-color:#5b6b86;font-size:10px}
+.cvs{font-size:12px;font-weight:600;color:#3a4660;margin-top:1px}
+.cvs:empty{display:none}
 .cnew{position:absolute;bottom:-8px;left:50%;transform:translateX(-50%);background:var(--good);color:#fff;font-size:10px;font-weight:700;border-radius:8px;padding:1px 6px}
 .bons{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:8px 0 2px;font-size:13px;color:var(--muted)}
 .bon{border:1px solid var(--line);border-radius:12px;padding:2px 9px;font-size:12px}
@@ -273,7 +275,7 @@ td.num.up{color:var(--good)} td.num.down{color:var(--bad)}
 .bsep{color:#f0d9bd88;margin:0 4px}
 .coachcard .cph{background-size:cover;background-position:center 20%}
 @media(max-width:600px){ .brow{gap:5px} .brow .ccard{width:calc((100% - 30px)/4);min-width:0;padding:8px 3px 26px} .brow .cph{width:40px;height:40px}
-  .brow .cname{font-size:11px} .brow .cmeta{font-size:9.5px} .brow .cfp{font-size:11.5px;padding:1px 6px} .brow .chalf{font-size:9.5px;padding:1px 4px;right:-3px} }
+  .brow .cname{font-size:11px} .brow .cmeta{font-size:9.5px} .brow .cvs{font-size:10px} .brow .cfp{font-size:11.5px;padding:1px 6px} .brow .chalf{font-size:9.5px;padding:1px 4px;right:-3px} }
 .cact{margin-top:4px;display:flex;flex-direction:column;align-items:center;gap:1px}
 .cact small{font-size:10.5px;color:#666;direction:ltr}
 .cact small.gup{color:#1a8f4c;font-weight:700} .cact small.gdn{color:#c0262d;font-weight:700}
@@ -389,7 +391,9 @@ const TSHORT = {'Anadolu Efes Istanbul':'Efes','Armani Olimpia Milan':'Milan','B
   'Valencia Basket':'Valencia','Virtus Bologna':'Virtus','Zalgiris Kaunas':'Zalgiris'};
 const tShort = t => TSHORT[t] || String(t||'').split(' ')[0];
 const tName = t => `<span class="tl">${esc(t)}</span><span class="ts">${esc(tShort(t))}</span>`;   // long on desktop, short on mobile
-const oppText = p => p.opp ? `${p.venue==='Home'?'נגד':'@'} ${p.opp}` : 'אין משחק במחזור';
+// opponent with the venue: "Bayern (H)" = home game, "Bayern (A)" = away; isolated LTR so Hebrew text around it stays tidy
+const vsTxt = (venue, team, long=false) => `<bdi dir="ltr">${long ? tName(team) : esc(tShort(team))} (${venue==='Home'?'H':'A'})</bdi>`;   // HTML
+const oppText = p => p.opp ? vsTxt(p.venue, p.opp, true) : 'אין משחק במחזור';
 
 // ---------- Live / in-round results (live.json, refreshed by the server every 10-60 min) ----------
 const LIVE = {data:null, rows:[], map:new Map(), direct:new Map(), round:M.next_round, nPlayed:0, nFinal:0, roundDone:false};
@@ -421,7 +425,7 @@ function nextGameOf(p){
   const done = (L.games||[]).some(g=>g.status==='final' && (g.home===p.team||g.away===p.team));
   return done ? teamNext(p.team) : null;
 }
-const nextGameTxt = n => `${n.venue==='Home'?'נגד':'@'} ${tName(n.vs)} (מחזור ${n.round})`;
+const nextGameTxt = n => `${vsTxt(n.venue, n.vs, true)} (מחזור ${n.round})`;
 function nextAfter(p){
   const n = nextGameOf(p);
   return n ? ` · <span class="note">הבאה: ${nextGameTxt(n)}</span>` : '';
@@ -511,7 +515,7 @@ function renderTops(){
         <tbody>${rows.map(p=>`<tr>
           <td class="rk">${p.m[m.k].rank}</td>
           <td class="pl" data-id="${p.id}"><b>${esc(p.name)}</b><small>${tName(p.team)} · ${p.pos_he}${ownTxt(p)?` · ${ownTxt(p)} אחזקה`:''}</small></td>
-          <td>${p.opp?`${p.venue==='Home'?'נגד':'@'} ${tName(p.opp)}`:'אין משחק'}<br><small class="note">${nextGameOf(p)?`הבאה: ${nextGameTxt(nextGameOf(p))}`:fmtShortDate(p.date)}</small></td>
+          <td>${p.opp?vsTxt(p.venue, p.opp, true):'אין משחק'}<br><small class="note">${nextGameOf(p)?`הבאה: ${vsTxt(nextGameOf(p).venue, nextGameOf(p).vs)}`:fmtShortDate(p.date)}</small></td>
           <td class="num score ${m.cls}c col-score">${f(p.m[m.k].score,2)}</td>
           <td class="num">${f(p.m[m.k].pir)}</td>
           ${actualCell(p,m.k)}</tr>`).join('')}</tbody>
@@ -657,8 +661,8 @@ function matchupPanel(){
   else {
     const list = P.filter(p=>p.team===o.next_vs && (p.s5pos||p.pos)===pos).sort((a,b)=>(b.min||0)-(a.min||0));
     body = list.length ? `<div class="scroll"><table>
-      <thead><tr><th>שחקן</th><th class="num">משחקים</th><th class="num">דקות ממוצע</th><th class="num">פנטזי ממוצע עונה</th></tr></thead>
-      <tbody>${list.map(p=>`<tr><td class="pl" data-id="${p.id}"><b>${esc(p.name)}</b><small>${esc(p.raw)}</small></td>
+      <thead><tr><th>שחקן</th><th class="num"><span class="tl">משחקים</span><span class="ts">מש'</span></th><th class="num"><span class="tl">דקות ממוצע</span><span class="ts">דק'</span></th><th class="num"><span class="tl">פנטזי ממוצע עונה</span><span class="ts">פנטזי</span></th></tr></thead>
+      <tbody>${list.map(p=>`<tr><td class="pl" data-id="${p.id}"><b>${esc(p.he||p.name)}</b><small class="tl">${esc(p.raw)}</small></td>
         <td class="num">${p.games}</td><td class="num">${f(p.min,1)}</td><td class="num score">${f(p.avg,2)}</td></tr>`).join('')}</tbody></table></div>`
       : '<div class="empty">אין שחקנים בעמדה זו</div>';
   }
@@ -669,7 +673,7 @@ function matchupPanel(){
 }
 function nextCell(o){
   const n = oppNext(o), pl = playedThisRound(o.team);
-  const nx = n ? `${n.venue==='Home'?'נגד':'@'} ${tName(n.vs)}${pl||n.round!==M.next_round?` <small>(מחזור ${n.round})</small>`:''}` : '–';
+  const nx = n ? `${vsTxt(n.venue, n.vs, true)}${pl||n.round!==M.next_round?` <small>(מחזור ${n.round})</small>`:''}` : '–';
   return pl ? `<span class="badge final sm">✓ <span class="tl">שיחקה במחזור ${LIVE.round}</span></span> ${nx}` : nx;
 }
 const OPP_VIEW_LBL = {season:'כל העונה', last5:'5 משחקים אחרונים', home:'כל העונה, במשחקי הבית שלה', away:'כל העונה, במשחקי החוץ שלה'};
@@ -686,7 +690,7 @@ function renderOpp(){
   $('#oppView').innerHTML = `<div class="card">
     <div class="opp-top"><div>
       <h2>נקודות פנטזי שהיריבה מאפשרת לפי עמדה</h2>
-      <div class="hint">ממוצע פנטזי (משוקלל לפי דקות) של שחקני היריבות בכל עמדה מול כל קבוצה. ערך גבוה = הגנה חלשה מול העמדה. לחיצה על כותרת ממיינת · <b>לחיצה על ערך מציגה את השחקנים מהיריבה הבאה בעמדה הזו</b></div>
+      <div class="hint">ממוצע פנטזי (משוקלל לפי דקות) של שחקני היריבות בכל עמדה מול כל קבוצה. ערך גבוה = הגנה חלשה מול העמדה. לחיצה על כותרת ממיינת · <b>לחיצה על ערך מציגה את השחקנים מהיריבה הבאה בעמדה הזו</b> · H = משחק בית, A = משחק חוץ</div>
       ${prog}</div>
       <div class="seg"><button data-v="season" class="${oppView==='season'?'on':''}">עונה</button><button data-v="last5" class="${oppView==='last5'?'on':''}">5 אחרונים</button><button data-v="home" class="${oppView==='home'?'on':''}" title="כל העונה, במשחקי הבית של הקבוצה">בבית</button><button data-v="away" class="${oppView==='away'?'on':''}" title="כל העונה, במשחקי החוץ של הקבוצה">בחוץ</button></div></div>
     <div class="legend">ממוצע ליגה: ${POS.map(([p,h])=>`${h} <b>${f(L[p],2)}</b>`).join(' · ')}
@@ -724,10 +728,10 @@ function courtCard(x, isCap){
       <span class="cfp">${f(x.fp,1)}</span>${isCap?'<span class="ccap" title="קפטן – ניקוד כפול">C</span>':''}
       ${ph}
       <div class="cname">${esc(nm)}</div>
-      <div class="cmeta">${esc(x.ot!=null?x.ot:oppShort(p))} · ${f(x.price,0)}M${ownTxt(p)?` · ${ownTxt(p)}`:''}</div>${liveFoot(x)}
+      <div class="cvs">${x.ot!=null?x.ot:oppShort(p)}</div><div class="cmeta">${f(x.price,0)}M${ownTxt(p)?` · ${ownTxt(p)}`:''}</div>${liveFoot(x)}
     </div>`;
 }
-const oppShort = p => p.opp ? `${p.venue==='Home'?'נגד':'@'} ${tShort(p.opp)}` : '';
+const oppShort = p => p.opp ? vsTxt(p.venue, p.opp) : '';
 function courtView(r){
   const cap = r.five.reduce((a,b)=>b.fp>a.fp?b:a);
   const row = pos => r.five.filter(x=>x.pos===pos).sort((a,b)=>b.fp-a.fp).map(x=>courtCard(x, x===cap)).join('');
@@ -817,7 +821,7 @@ function renderBuilder(){
   $('#builderView').innerHTML = `<div class="card">
     <h2>חמישייה אידיאלית למחזור ${bRound()??''}</h2>
     ${roundStarted()?`<div class="seg" id="bRound" style="margin:6px 0 8px"><button data-nx="0" class="${BUILD.nx?'':'on'}">מחזור ${M.next_round} (נוכחי · לייב)</button><button data-nx="1" class="${BUILD.nx?'on':''}">מחזור ${NR()} (הבא)</button></div>`:''}
-    <div class="hint">הקפטן המומלץ מסומן C · ✕ = בלי השחקן${BUILD.nx?` · התחזית למחזור ${NR()} ${NEXT.data?`עודכנה ${dayFmt.format(new Date(NEXT.data.generated_utc))} ${timeFmt.format(new Date(NEXT.data.generated_utc))}, כולל משחקי מחזור ${M.next_round} ששוחקו`:`מחושבת מהנתונים שלפני מחזור ${M.next_round}; מתעדכנת כל בוקר אחרי יום משחקים`}`:roundStarted()?' · ✓/LIVE = ניקוד בפועל, פער = בפועל פחות הצפי':''}</div>
+    <div class="hint">הקפטן המומלץ מסומן C · ✕ = בלי השחקן · H/A = בית/חוץ${BUILD.nx?` · התחזית למחזור ${NR()} ${NEXT.data?`עודכנה ${dayFmt.format(new Date(NEXT.data.generated_utc))} ${timeFmt.format(new Date(NEXT.data.generated_utc))}, כולל משחקי מחזור ${M.next_round} ששוחקו`:`מחושבת מהנתונים שלפני מחזור ${M.next_round}; מתעדכנת כל בוקר אחרי יום משחקים`}`:roundStarted()?' · ✓/LIVE = ניקוד בפועל, פער = בפועל פחות הצפי':''}</div>
     <div class="bctl">
       <label>תקציב לחמישייה: <b>${f(BUILD.budget,0)}M</b>
         <input type="range" id="bBudget" min="25" max="85" step="1" value="${BUILD.budget}"></label>
@@ -910,7 +914,7 @@ function oppNR(team){
   const g = ((LIVE.data && LIVE.data.schedule) || []).find(x=>x.round===NR() && (x.home===team||x.away===team));
   return g ? {opp: g.home===team ? g.away : g.home, venue: g.home===team ? 'Home' : 'Away'} : null;
 }
-const oppTxt = o => o ? `${o.venue==='Home'?'נגד':'@'} ${tShort(o.opp)}` : '';
+const oppTxt = o => o ? vsTxt(o.venue, o.opp) : '';
 // the round being projected has started / has at least one finished game
 function roundStarted(){ const L = LIVE.data; return !!(L && L.round===M.next_round && (L.games||[]).some(g=>g.status!=='scheduled')); }
 function dayDone(){ const L = LIVE.data; return !!(L && L.round===M.next_round && (L.games||[]).some(g=>g.status==='final')); }
@@ -928,7 +932,7 @@ async function loadNext(){
   NEXT.cmap = new Map((j.coaches||[]).map(q=>[q.s5id, q]));
   renderBuilder(); renderSquad(); if(MT.sq && MT.off) mtCompute();
 }
-const coachOpp = c => c && c.opp ? `${c.venue==='Home'?'נגד':'@'} ${tShort(c.opp)}` : '';
+const coachOpp = c => c && c.opp ? vsTxt(c.venue, c.opp) : '';
 // coach fantasy points from a score: win = 5 + margin, loss = -(5 + margin)
 const coachPtsFromScore = (own, opp) => own>opp ? 5+(own-opp) : own<opp ? -(5+(opp-own)) : 0;
 // the team's game in the current round (final or in progress) -> {pts, live, score}
@@ -952,7 +956,7 @@ function coachCard(c, fp, extra='', foot='', noAct=false){
         return cc.logo
           ? `<div class="cph logo" data-coachimg="${esc(cc.raw||'')}" style="background-image:url('${esc(cc.logo)}')"></div>`
           : `<div class="cph ini" data-coachimg="${esc(cc.raw||'')}">🧑‍💼</div>`; })()}<div class="cname">${esc(c.he||c.name||c.raw||'')}</div>
-      <div class="cmeta">מאמן · ${esc(coachOpp(c))} · ${f(c.price,0)}M${ownTxt(c)?` · ${ownTxt(c)} אחזקה`:''}</div>${noAct?'':coachActualTag(c)}${foot}</div>`;
+      <div class="cvs">${coachOpp(c)}</div><div class="cmeta">מאמן · ${f(c.price,0)}M${ownTxt(c)?` · ${ownTxt(c)} אחזקה`:''}</div>${noAct?'':coachActualTag(c)}${foot}</div>`;
 }
 
 // fixed coach photos (take precedence over the logo and the Wikipedia search)
@@ -1002,7 +1006,7 @@ function benchCard(x, posHe){
       <button class="cx" data-xb="${p.id}" title="להוציא מהסגל לגמרי">✕</button>
       <span class="cfp">${f(x.fp,1)}</span><span class="chalf" title="שחקן ספסל מקבל 50%">½ = ${f(x.fp/2,1)}</span>
       ${ph}<div class="cname">${esc(nm)}</div>
-      <div class="cmeta">${posHe} · ${esc(x.ot!=null?x.ot:oppShort(p))} · ${f(x.price,0)}M</div>${liveFoot(x)}</div>`;
+      <div class="cvs">${x.ot!=null?x.ot:oppShort(p)}</div><div class="cmeta">${posHe} · ${f(x.price,0)}M</div>${liveFoot(x)}</div>`;
 }
 function renderSquad(){
   const box = $('#squadView'); if(!box) return;
@@ -1252,9 +1256,10 @@ function mtCard(x, isCap, h, cls='', foot=''){
   return `<div class="ccard ${cls} ${p?'pl':''}" ${p?`data-id="${p.id}"`:''}>
     <span class="cfp">${f(x.fps?x.fps[h]:0,1)}</span>${isCap?'<span class="ccap">C</span>':''}${ph}
     <div class="cname">${esc(x.name)}</div>
-    <div class="cmeta">${f(x.price,0)}M${p&&ownTxt(p)?' · '+ownTxt(p)+' אחזקה':''}${out?' · <b style="color:#c0262d">פצוע/לא משחק</b>':''}</div>${foot}</div>`;
+    ${x.ot?`<div class="cvs">${x.ot}</div>`:''}<div class="cmeta">${f(x.price,0)}M${p&&ownTxt(p)?' · '+ownTxt(p)+' אחזקה':''}${out?' · <b style="color:#c0262d">פצוע/לא משחק</b>':''}</div>${foot}</div>`;
 }
 function mtCourt(sq, coach){
+  sq = sq.map(x=>({...x, ot: MT.off ? oppTxt(oppNR(x.team)) : (x.p ? oppShort(x.p) : '')}));
   const bo = MT.win && MT.win.boost, lu = lineupAt(sq, 0, bo); if(!lu) return '';
   const ci = coach ? coachItem(coach, 1, MT.off||0) : null;
   const vcT = x => x===lu.vc ? mtCard(x,false,0).replace('<span class="cfp">','<span class="ccap vc">VC</span><span class="cfp">') : mtCard(x, x===lu.cap, 0);
@@ -1308,7 +1313,7 @@ function gapFoot(act, live, pred, withAct=true){
 }
 function siteSquad(){
   if(!MT.sq) return '';
-  const SQ = MT.sq.map(x=>({...x, fps:fpsOf(x.p, x.injured, 1)}));
+  const SQ = MT.sq.map(x=>({...x, fps:fpsOf(x.p, x.injured, 1), ot:x.p?oppShort(x.p):''}));
   const st = SQ.filter(x=>!x.reserve), bn = SQ.filter(x=>x.reserve);
   const tag = x => (x.s5id===MT.capId ? '<span class="ccap">C</span>' : x.s5id===MT.vcId ? '<span class="ccap vc">VC</span>' : '') + (x.pend ? '<span class="cnew">חדש</span>' : '');
   const foot = x => { const a = x.p ? getActual(x.p) : null; return a ? gapFoot(a.pir, a.status!=='final', x.fps[0]) : ''; };
@@ -1511,7 +1516,7 @@ function renderFilter(){
       <td class="rk">${i+1}</td>
       <td class="pl" data-id="${p.id}"><b>${esc(p.he||p.name)}</b><small>${esc(p.name)} · ${esc(p.team)}</small></td>
       <td><span class="tag">${posHe[p.s5pos||p.pos]}</span></td>
-      <td>${esc(oppText(p))}</td>
+      <td>${oppText(p)}</td>
       <td class="num">${f(p.price,0)}M</td>
       <td class="num"><b class="m2c">${f(p.m[1].pir,1)}</b></td></tr>`).join('');
   box.innerHTML = `<details class="card filt" ${box.dataset.open==='1'?'open':''}><summary><h2>חיפוש לפי עמדה ומחיר</h2></summary>
@@ -1558,7 +1563,7 @@ function playerCard(p){
       <h2>${esc(p.name)}</h2>
       <div class="note">${esc(p.he?p.he+' · ':'')}${esc(p.raw)} · ${esc(p.team)} · ${p.pos_he}</div></div>
       <button class="btn" id="goCompare">⇄ השוואה</button></div>
-    <div class="opp" style="margin-top:8px">יריבה במחזור: <b>${esc(oppText(p))}</b>${p.date?` · ${fmtShortDate(p.date)}`:''}${nextAfter(p)}</div>
+    <div class="opp" style="margin-top:8px">יריבה במחזור: <b>${oppText(p)}</b>${p.date?` · ${fmtShortDate(p.date)}`:''}${nextAfter(p)}</div>
     ${actualBanner(p)}
     <div class="chips">
       ${p.price!=null?`<span class="chip">מחיר פנטזי<b>${f(p.price,0)}M</b></span>`:''}${ownTxt(p)?`<span class="chip">אחזקה<b>${ownTxt(p)}</b></span>`:''}${p.injured?'<span class="chip warnchip">פצוע/חסר באתר הפנטזי</span>':''}
@@ -1679,9 +1684,9 @@ function compareTable(ps){
     h += row('מתוך', p=>{const a=getActual(p); return a?(a.status==='live'?LIVE.nPlayed:LIVE.nFinal):null;}, {d:0,cls:'real'});
   }
   h += sec('כללי');
-  h += row('יריבה במחזור', p=>p.opp?`<span dir="rtl">${p.venue==='Home'?'נגד':'@'} ${tName(p.opp)}</span>`:'אין משחק');
+  h += row('יריבה במחזור', p=>p.opp?vsTxt(p.venue, p.opp, true):'אין משחק');
   h += row('תאריך', p=>fmtShortDate(p.date)||'–');
-  if(ps.some(nextGameOf)) h += row('המשחק הבא', p=>{ const n = nextGameOf(p); return n ? `<span dir="rtl">${nextGameTxt(n)}</span>` : '–'; });
+  if(ps.some(nextGameOf)) h += row('המשחק הבא', p=>{ const n = nextGameOf(p); return n ? nextGameTxt(n) : '–'; });
   h += row('משחקים', p=>p.games, {d:0});
   h += row('% אחזקה בפנטזי', p=>ownPct(p), {d:1});
   h += row('פנטזי ממוצע עונה', p=>p.avg, {best:'max'});
