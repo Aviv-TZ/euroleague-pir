@@ -516,7 +516,7 @@ el_evaluate_frozen_models <- function(raw,meta,complete_rounds,artifact,
 # Ranking-first player selection, two models and round-level evaluation.
 
 build_euroleague_2026_27 <- function(output_dir, season='E2026', mode='predict',
-                                       trained_model_file=NULL) {
+                                       trained_model_file=NULL, target_round=NULL) {
   if (!mode %in% c('predict','collect')) stop('mode must be predict or collect')
   if (mode=='predict' && is.null(trained_model_file))
     trained_model_file <- file.path(output_dir,'EuroLeague_historical_models_2024_2026_v12_fantasy.rds')
@@ -861,6 +861,8 @@ build_euroleague_2026_27 <- function(output_dir, season='E2026', mode='predict',
   # One common competition round, rather than the next fixture of each individual club.
   if(nrow(upcoming) && any(is.finite(upcoming$Round))) {
     first_round <- min(upcoming$Round[is.finite(upcoming$Round)])
+    # target_round: project a later round (used mid-round for the NEXT round's preview)
+    if (!is.null(target_round) && is.finite(target_round)) first_round <- target_round
     upcoming <- upcoming[upcoming$Round==first_round,,drop=FALSE]
   }
   next_fixtures <- if (nrow(upcoming)) {
