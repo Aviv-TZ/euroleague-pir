@@ -415,10 +415,16 @@ function rebuildLive(){
 }
 const getActual = p => LIVE.map.get(akey(p.raw,p.team)) || null;
 const teamNext = t => (LIVE.data && LIVE.data.next_game && LIVE.data.next_game[t]) || null;
+// the team's game this round is over (even if the player did not play): its next game
+function nextGameOf(p){
+  const L = LIVE.data; if(!L || L.round!==M.next_round) return null;
+  const done = (L.games||[]).some(g=>g.status==='final' && (g.home===p.team||g.away===p.team));
+  return done ? teamNext(p.team) : null;
+}
+const nextGameTxt = n => `${n.venue==='Home'?'נגד':'@'} ${tName(n.vs)} (מחזור ${n.round})`;
 function nextAfter(p){
-  const a = getActual(p); if(!a || a.status!=='final') return '';
-  const n = teamNext(p.team);
-  return n ? ` · <span class="note">הבאה: ${n.venue==='Home'?'נגד':'@'} ${esc(n.vs)} (מחזור ${n.round})</span>` : '';
+  const n = nextGameOf(p);
+  return n ? ` · <span class="note">הבאה: ${nextGameTxt(n)}</span>` : '';
 }
 function liveGame(g){ return LIVE.data && (LIVE.data.games||[]).find(x=>String(x.game)===String(g)); }
 
@@ -505,7 +511,7 @@ function renderTops(){
         <tbody>${rows.map(p=>`<tr>
           <td class="rk">${p.m[m.k].rank}</td>
           <td class="pl" data-id="${p.id}"><b>${esc(p.name)}</b><small>${tName(p.team)} · ${p.pos_he}${ownTxt(p)?` · ${ownTxt(p)} אחזקה`:''}</small></td>
-          <td>${p.opp?`${p.venue==='Home'?'נגד':'@'} ${tName(p.opp)}`:'אין משחק'}<br><small class="note">${fmtShortDate(p.date)}</small></td>
+          <td>${p.opp?`${p.venue==='Home'?'נגד':'@'} ${tName(p.opp)}`:'אין משחק'}<br><small class="note">${nextGameOf(p)?`הבאה: ${nextGameTxt(nextGameOf(p))}`:fmtShortDate(p.date)}</small></td>
           <td class="num score ${m.cls}c col-score">${f(p.m[m.k].score,2)}</td>
           <td class="num">${f(p.m[m.k].pir)}</td>
           ${actualCell(p,m.k)}</tr>`).join('')}</tbody>
@@ -1675,6 +1681,7 @@ function compareTable(ps){
   h += sec('כללי');
   h += row('יריבה במחזור', p=>p.opp?`<span dir="rtl">${p.venue==='Home'?'נגד':'@'} ${tName(p.opp)}</span>`:'אין משחק');
   h += row('תאריך', p=>fmtShortDate(p.date)||'–');
+  if(ps.some(nextGameOf)) h += row('המשחק הבא', p=>{ const n = nextGameOf(p); return n ? `<span dir="rtl">${nextGameTxt(n)}</span>` : '–'; });
   h += row('משחקים', p=>p.games, {d:0});
   h += row('% אחזקה בפנטזי', p=>ownPct(p), {d:1});
   h += row('פנטזי ממוצע עונה', p=>p.avg, {best:'max'});
