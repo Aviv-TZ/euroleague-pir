@@ -758,7 +758,7 @@ const POS3 = ['Guard','Forward','Center'];
 const LIM = {Guard:[1,3], Forward:[1,3], Center:[1,2]};
 // the shown round: BUILD.nx = false -> the round being played / next; true -> the round after it
 const bOut3 = p => BUILD.nx ? (nextOf(p) ? !!nextOf(p).out3 : !!p.out3) : !!p.out3;
-const bItem = p => BUILD.nx ? {p, fp:fpsOf(p,false,1,1)[0], price:p.price, pos:p.s5pos, team:p.team, ot:oppTxt(oppNext(p.team))}
+const bItem = p => BUILD.nx ? {p, fp:fpsOf(p,false,1,1)[0], price:p.price, pos:p.s5pos, team:p.team, ot:oppTxt(oppNR(p.team))}
                             : {p, fp:p.m[BUILD.model].pir, price:p.price, pos:p.s5pos, team:p.team};
 const bCoachFp = c => coachFpN(c, 0, BUILD.nx?1:0);
 const bRound = () => BUILD.nx ? NR() : M.next_round;
@@ -900,7 +900,7 @@ const coachFpN = (c, h=0, off=0) => { if(!off) return coachFp(c,h);
 const rankedN = p => { const q = nextOf(p); return q ? !!q.ranked : !!p.ranked; };
 const roundsFrom = off => off ? (NEXT.data ? NEXT.data.fut_rounds : FUT0.slice(1)) : FUT0;
 // opponent in round NR() from the schedule in live.json
-function oppNext(team){
+function oppNR(team){
   const g = ((LIVE.data && LIVE.data.schedule) || []).find(x=>x.round===NR() && (x.home===team||x.away===team));
   return g ? {opp: g.home===team ? g.away : g.home, venue: g.home===team ? 'Home' : 'Away'} : null;
 }
@@ -1022,7 +1022,7 @@ function renderSquad(){
         <div class="crow">${row('Center')}</div><div class="crow">${row('Forward')}</div><div class="crow">${row('Guard')}</div>
       </div>
       ${benchRow('ספסל · 50%', POS3.map(q=>benchCard(r.bench[q], posHe[q])).join(''),
-        coachCard(BUILD.nx ? {...r.coach, ...(oppNext(r.coach.team)||{opp:null})} : r.coach, bCoachFp(r.coach), `<button class="cx" data-xc="${r.coach.s5id}" title="בלי המאמן הזה">✕</button>`,
+        coachCard(BUILD.nx ? {...r.coach, ...(oppNR(r.coach.team)||{opp:null})} : r.coach, bCoachFp(r.coach), `<button class="cx" data-xc="${r.coach.s5id}" title="בלי המאמן הזה">✕</button>`,
           (()=>{ if(BUILD.nx) return ''; const a = coachActual(r.coach.team); return a ? gapFoot(a.pts, a.live, bCoachFp(r.coach), false) : ''; })(), BUILD.nx))}
       <div class="csum">
         <div><span>צפי לסגל (מה שנספר)</span><b>${f(r.total,1)}</b><small>חמישייה ${f(sFp,1)} + קפטן ${f(cap.fp,1)} + ½ ספסל ${f(bFp/2,1)} + מאמן ${f(bCoachFp(r.coach),1)}</small></div>
@@ -1258,7 +1258,7 @@ function mtCourt(sq, coach){
       <path d="M34 32 A16 10 0 0 0 66 32" fill="none"/><line x1="3" y1="70" x2="97" y2="70"/>
       <circle cx="50" cy="70" r="11" fill="none"/><path d="M10 138 L10 120 A40 32 0 0 1 90 120 L90 138" fill="none"/></svg>
       <div class="crow">${row('Center')}</div><div class="crow">${row('Forward')}</div><div class="crow">${row('Guard')}</div></div>
-    ${benchRow(`ספסל · ${bo&&bo.bench?'100% (בונוס)':'50%'} · מחזור ${roundsFrom(MT.off||0)[0]??''}`, lu.bench.map(x=>mtCard(x,false,0,'bcard')).join(''), ci?coachCard(MT.off ? {...ci.c, ...(oppNext(ci.c.team)||{opp:null})} : ci.c, ci.fps[0], '', '', !!MT.off):'')}`;
+    ${benchRow(`ספסל · ${bo&&bo.bench?'100% (בונוס)':'50%'} · מחזור ${roundsFrom(MT.off||0)[0]??''}`, lu.bench.map(x=>mtCard(x,false,0,'bcard')).join(''), ci?coachCard(MT.off ? {...ci.c, ...(oppNR(ci.c.team)||{opp:null})} : ci.c, ci.fps[0], '', '', !!MT.off):'')}`;
 }
 // High-ownership players the team does not have, ranked by ownership x projected points (they hurt you if they score)
 function threats(sq, H){
