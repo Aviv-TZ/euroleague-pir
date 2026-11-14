@@ -524,20 +524,31 @@ function renderTops(){
   $('#tops').querySelectorAll('.pl[data-id]').forEach(td=>td.onclick=()=>openPlayer(+td.dataset.id));
 }
 // Actual top 15 of the round in progress (live + finished games), next to what the model predicted
+// the round that just ended (saved before the forecast moved on): shown until the next round starts
+const PREV = {data:null};
+async function loadPrev(){
+  if(location.protocol==='file:') return;
+  const j = await fetch('prev_round.json?t='+Date.now(), {cache:'no-store'}).then(r=>r.ok?r.json():null).catch(()=>null);
+  if(j && j.round===(M.next_round||0)-1 && (j.rows||[]).length){ PREV.data = j; renderTops(); }
+}
 function actualTopTable(){
+  // the round in progress, or (before it starts) the round that just ended with its saved predictions
+  const prevMode = !(LIVE.rows||[]).length && !!PREV.data;
+  const src = prevMode ? PREV.data.rows.map(r=>({...r, status:'final'})) : (LIVE.rows||[]);
   // at most 15 rows: ties at the cut go by fewer minutes (more points per minute) and the rest are counted below
-  const all = [...(LIVE.rows||[])].sort((a,b)=>b.pir-a.pir || (a.min||0)-(b.min||0)); if(!all.length) return '';
+  const all = [...src].sort((a,b)=>b.pir-a.pir || (a.min||0)-(b.min||0)); if(!all.length) return '';
   const rows = all.slice(0,15), cut = rows[rows.length-1].pir, more = all.slice(15).filter(a=>a.pir===cut).length;
   const k = MODELS[0].k, byRaw = new Map(P.map(p=>[akey(p.raw,p.team),p]));
-  const nextOfTeam = t => { const L = LIVE.data;
+  const predOf = (a, p) => prevMode ? (a.pred!=null ? {pir:a.pred, rank:a.pred_rank} : null) : (p && p.ranked ? p.m[k] : null);
+  const nextOfTeam = t => { const L = LIVE.data; if(prevMode) return teamNext(t);
     const done = L && (L.games||[]).some(g=>g.status==='final' && (g.home===t||g.away===t));
     return done ? teamNext(t) : null; };
   return `<div class="card" style="margin-top:16px">
-    <h2>טופ 15 בפועל · מחזור ${LIVE.round}</h2>
-    <div class="hint">${LIVE.roundDone?'המחזור הסתיים':`${LIVE.nFinal} שחקנים סיימו, ${LIVE.nPlayed-LIVE.nFinal} משחקים עכשיו`} · LIVE = משחק בעיצומו · מקום חזוי = המקום בדירוג החיזוי של המחזור</div>
+    <h2>טופ 15 בפועל · מחזור ${prevMode?PREV.data.round:LIVE.round}</h2>
+    <div class="hint">${prevMode?`המחזור הסתיים · יוחלף בטבלה החיה כשמחזור ${M.next_round} יתחיל`:LIVE.roundDone?'המחזור הסתיים':`${LIVE.nFinal} שחקנים סיימו, ${LIVE.nPlayed-LIVE.nFinal} משחקים עכשיו · LIVE = משחק בעיצומו`} · מקום חזוי = המקום בדירוג החיזוי של המחזור</div>
     <div class="scroll"><table>
       <thead><tr><th>#</th><th>שחקן</th><th class="num">בפועל</th><th class="num">צפי<br><small>מקום חזוי</small></th><th>המשחק הבא</th></tr></thead>
-      <tbody>${rows.map(a=>{ const p = byRaw.get(akey(a.raw,a.team)), m = p && p.ranked ? p.m[k] : null, n = nextOfTeam(a.team);
+      <tbody>${rows.map(a=>{ const p = byRaw.get(akey(a.raw,a.team)), m = predOf(a, p), n = nextOfTeam(a.team);
         return `<tr><td class="rk">${a.rank}</td>
           <td class="pl" ${p?`data-id="${p.id}"`:''}><b>${esc(p?p.name:fmtRaw(a.raw))}</b><small>${tName(a.team)}${p?` · ${p.pos_he}`:''}${p&&ownTxt(p)?` · ${ownTxt(p)} אחזקה`:''}</small></td>
           <td class="num act ${a.status}"><span class="badge ${a.status} sm">${a.status==='live'?'<i></i>':'✓ '}${f(a.pir,0)}</span><small>${f(a.min,0)} דק'</small></td>
@@ -1767,7 +1778,7 @@ function renderAll(){
   if(!(ae && ae.tagName==='INPUT' && $('#tab-search').contains(ae))) renderPlayer();
 }
 updateSubline(); renderTops(); renderFixtures(); renderOpp(); renderBuilder(); renderSquad(); renderMyTeam(); readHash(); renderPlayer();
-loadLive().then(()=>{ pollDirect(); loadNext(); }); loadOwn();
+loadLive().then(()=>{ pollDirect(); loadNext(); loadPrev(); }); loadOwn();
 setInterval(loadNext, 30*60e3);
 window.addEventListener('hashchange', ()=>{ readHash(); renderPlayer(); });
 })();
