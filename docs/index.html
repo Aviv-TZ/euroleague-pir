@@ -525,7 +525,9 @@ function renderTops(){
 }
 // Actual top 15 of the round in progress (live + finished games), next to what the model predicted
 function actualTopTable(){
-  const rows = (LIVE.rows||[]).filter(a=>a.rank<=15).sort((a,b)=>b.pir-a.pir); if(!rows.length) return '';
+  // at most 15 rows: ties at the cut go by fewer minutes (more points per minute) and the rest are counted below
+  const all = [...(LIVE.rows||[])].sort((a,b)=>b.pir-a.pir || (a.min||0)-(b.min||0)); if(!all.length) return '';
+  const rows = all.slice(0,15), cut = rows[rows.length-1].pir, more = all.slice(15).filter(a=>a.pir===cut).length;
   const k = MODELS[0].k, byRaw = new Map(P.map(p=>[akey(p.raw,p.team),p]));
   const nextOfTeam = t => { const L = LIVE.data;
     const done = L && (L.games||[]).some(g=>g.status==='final' && (g.home===t||g.away===t));
@@ -541,7 +543,7 @@ function actualTopTable(){
           <td class="num act ${a.status}"><span class="badge ${a.status} sm">${a.status==='live'?'<i></i>':'✓ '}${f(a.pir,0)}</span><small>${f(a.min,0)} דק'</small></td>
           <td class="num">${m?`${f(m.pir,1)}<small class="note" style="display:block">מקום ${m.rank}</small>`:'<small class="note">לא דורג</small>'}</td>
           <td>${n?`${vsTxt(n.venue, n.vs, true)}<small class="note" style="display:block">מחזור ${n.round}</small>`:a.status==='live'?'<small class="note">משחק עכשיו</small>':'–'}</td></tr>`; }).join('')}</tbody>
-    </table></div></div>`;
+    </table></div>${more?`<div class="note" style="margin-top:6px">ועוד ${more} ${more===1?'שחקן':'שחקנים'} עם ${f(cut,0)} נקודות (שוויון במקום ${rows[rows.length-1].rank})</div>`:''}</div>`;
 }
 // Hits per round: predicted top K vs actual top K among everyone who played (ties at the cutoff count).
 function currentRoundHits(){
