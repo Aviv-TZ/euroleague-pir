@@ -197,6 +197,12 @@ td.num.up{color:var(--good)} td.num.down{color:var(--bad)}
 .fctl{display:flex;flex-wrap:wrap;gap:12px 18px;align-items:center;margin:10px 0}
 .fctl input[type=range]{width:200px;vertical-align:middle;margin-inline-start:8px;accent-color:var(--accent)}
 .fctl .chk{font-size:13px;color:var(--muted)}
+@media(max-width:600px){
+  .col-mh{display:none}
+  .fctl{gap:10px} .fctl .seg{width:100%;display:flex} .fctl .seg button{flex:1}
+  .fctl label:not(.chk){width:100%;display:flex;align-items:center;gap:8px} .fctl input[type=range]{flex:1;width:auto;margin:0}
+  .filt td.pl small .ts{white-space:normal}
+}
 /* builder exclude */
 .cx{position:absolute;bottom:4px;left:4px;width:22px;height:22px;border-radius:50%;border:1px solid #ddd;background:#fff;color:#c0262d;font-weight:800;cursor:pointer;font-size:11px;line-height:1}
 .cx:hover{background:#c0262d;color:#fff}
@@ -1545,16 +1551,17 @@ function renderFilter(){
         <input type="range" id="fMax" min="5" max="17" step="1" value="${FILT.max}"></label>
       <label class="chk"><input type="checkbox" id="fInj" ${FILT.injured?'checked':''}> בלי פצועים / מי שלא שיחק ב-3 האחרונים</label>
       <span class="note">${list.length} שחקנים</span></div>`;
+  // phones: position and opponent move into the player's second line, so the row fits without scrolling
   const rows = list.slice(0,60).map((p,i)=>`<tr>
       <td class="rk">${i+1}</td>
-      <td class="pl" data-id="${p.id}"><b>${esc(p.he||p.name)}</b><small>${esc(p.name)} · ${esc(p.team)}</small></td>
-      <td><span class="tag">${posHe[p.s5pos||p.pos]}</span></td>
-      <td>${oppText(p)}</td>
+      <td class="pl" data-id="${p.id}"><b>${esc(p.he||p.name)}</b><small><span class="tl">${esc(p.name)} · ${esc(p.team)}</span><span class="ts">${esc(tShort(p.team))} · ${posHe[p.s5pos||p.pos]} · ${p.opp?vsTxt(p.venue,p.opp):'אין משחק'}</span></small></td>
+      <td class="col-mh"><span class="tag">${posHe[p.s5pos||p.pos]}</span></td>
+      <td class="col-mh">${oppText(p)}</td>
       <td class="num">${f(p.price,0)}M</td>
       <td class="num"><b class="m2c">${f(p.m[1].pir,1)}</b></td></tr>`).join('');
   box.innerHTML = `<details class="card filt" ${box.dataset.open==='1'?'open':''}><summary><h2>חיפוש לפי עמדה ומחיר</h2></summary>
     ${head}
-    ${list.length?`<div class="scroll"><table><thead><tr><th>#</th><th>שחקן</th><th>עמדה</th><th>יריבה</th><th class="num">מחיר</th><th class="num">פנטזי צפוי</th></tr></thead><tbody>${rows}</tbody></table></div>
+    ${list.length?`<div class="scroll"><table><thead><tr><th>#</th><th>שחקן</th><th class="col-mh">עמדה</th><th class="col-mh">יריבה</th><th class="num">מחיר</th><th class="num"><span class="tl">פנטזי צפוי</span><span class="ts">צפי</span></th></tr></thead><tbody>${rows}</tbody></table></div>
     ${list.length>60?'<p class="note">מוצגים 60 הראשונים</p>':''}`:'<div class="empty">אין שחקנים שעומדים בסינון</div>'}
   </details>`;
   const d = $('details.filt', box); d.ontoggle = ()=>{ box.dataset.open = d.open?'1':'0'; };
