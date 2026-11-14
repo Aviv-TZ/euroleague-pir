@@ -151,6 +151,30 @@ el_next_preview <- function(ns, schedule, output_dir, site_dir, template, code_d
   message('Next-round preview written: round ', ns$target, ' (', length(out$players), ' players)')
 }
 
+# Before the round-end export replaces the forecast: keep the finished round's actual top players with
+# what the model had predicted for them (prev_round.json) - the site shows it until the next round starts.
+el_save_prev_round <- function(site_dir, n=40) {
+  `%||%` <- function(a, b) if (is.null(a) || !length(a)) b else a
+  lf <- file.path(site_dir, 'live.json'); df <- file.path(site_dir, 'data.json')
+  if (!file.exists(lf) || !file.exists(df)) return(invisible(FALSE))
+  L <- jsonlite::fromJSON(lf, simplifyVector=FALSE); D <- jsonlite::fromJSON(df, simplifyVector=FALSE)
+  if (!identical(as.numeric(L$round), as.numeric(D$meta$next_round)) ||
+      as.numeric(L$round_finished %||% 0) < as.numeric(L$round_games %||% 1)) return(invisible(FALSE))
+  act <- Filter(function(a) identical(a$status, 'final'), L$actual %||% list())
+  if (!length(act)) return(invisible(FALSE))
+  act <- act[order(-vapply(act, function(a) as.numeric(a$pir), 0))][seq_len(min(n, length(act)))]
+  pk <- vapply(D$players, function(p) paste(p$raw, p$team, sep='||'), '')
+  rows <- lapply(act, function(a) {
+    j <- match(paste(a$raw, a$team, sep='||'), pk)
+    p <- if (!is.na(j)) D$players[[j]] else NULL
+    m <- if (!is.null(p) && isTRUE(p$ranked) && length(p$m) >= 2) p$m[[2]] else NULL
+    list(raw=a$raw, team=a$team, pir=a$pir, min=a$min, rank=a$rank, pred=m$pir, pred_rank=m$rank) })
+  jsonlite::write_json(list(round=L$round, saved_utc=format(Sys.time(), '%Y-%m-%dT%H:%M:%SZ', tz='UTC'), rows=rows),
+                       file.path(site_dir, 'prev_round.json'), auto_unbox=TRUE, null='null', na='null', digits=NA)
+  message('Saved the actual top of round ', L$round, ' (prev_round.json)')
+  invisible(TRUE)
+}
+
 el_auto_update <- function(force=FALSE) {
   `%||%` <- function(a, b) if (is.null(a) || !length(a)) b else a
   for (pkg in c('httr','jsonlite','openxlsx'))
@@ -209,6 +233,7 @@ el_auto_update <- function(force=FALSE) {
     message('Round ', st$round, ' box scores not complete in the API yet - will retry next run')
     run_live(); return(invisible(FALSE))
   }
+  tryCatch(el_save_prev_round(site_dir), error=function(e) message('prev_round failed: ', conditionMessage(e)))
   export_euroleague_web(output_dir, site_dir, template, schedule=schedule,
                         extra_meta=list(last_complete_round=if (round_ok) st$round else max(parsed, na.rm=TRUE)))
   jsonlite::write_json(list(last_round=if (is.finite(st$round)) st$round else last,
