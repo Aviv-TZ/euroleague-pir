@@ -520,8 +520,28 @@ function renderTops(){
           <td class="num">${f(p.m[m.k].pir)}</td>
           ${actualCell(p,m.k)}</tr>`).join('')}</tbody>
       </table></div></div>`;
-  }).join('') + hitsTable();
-  $('#tops').querySelectorAll('.pl').forEach(td=>td.onclick=()=>openPlayer(+td.dataset.id));
+  }).join('') + actualTopTable() + hitsTable();
+  $('#tops').querySelectorAll('.pl[data-id]').forEach(td=>td.onclick=()=>openPlayer(+td.dataset.id));
+}
+// Actual top 15 of the round in progress (live + finished games), next to what the model predicted
+function actualTopTable(){
+  const rows = (LIVE.rows||[]).filter(a=>a.rank<=15).sort((a,b)=>b.pir-a.pir); if(!rows.length) return '';
+  const k = MODELS[0].k, byRaw = new Map(P.map(p=>[akey(p.raw,p.team),p]));
+  const nextOfTeam = t => { const L = LIVE.data;
+    const done = L && (L.games||[]).some(g=>g.status==='final' && (g.home===t||g.away===t));
+    return done ? teamNext(t) : null; };
+  return `<div class="card" style="margin-top:16px">
+    <h2>טופ 15 בפועל · מחזור ${LIVE.round}</h2>
+    <div class="hint">${LIVE.roundDone?'המחזור הסתיים':`${LIVE.nFinal} שחקנים סיימו, ${LIVE.nPlayed-LIVE.nFinal} משחקים עכשיו`} · LIVE = משחק בעיצומו · מקום חזוי = המקום בדירוג החיזוי של המחזור</div>
+    <div class="scroll"><table>
+      <thead><tr><th>#</th><th>שחקן</th><th class="num">בפועל</th><th class="num">צפי<br><small>מקום חזוי</small></th><th>המשחק הבא</th></tr></thead>
+      <tbody>${rows.map(a=>{ const p = byRaw.get(akey(a.raw,a.team)), m = p && p.ranked ? p.m[k] : null, n = nextOfTeam(a.team);
+        return `<tr><td class="rk">${a.rank}</td>
+          <td class="pl" ${p?`data-id="${p.id}"`:''}><b>${esc(p?p.name:fmtRaw(a.raw))}</b><small>${tName(a.team)}${p?` · ${p.pos_he}`:''}${p&&ownTxt(p)?` · ${ownTxt(p)} אחזקה`:''}</small></td>
+          <td class="num act ${a.status}"><span class="badge ${a.status} sm">${a.status==='live'?'<i></i>':'✓ '}${f(a.pir,0)}</span><small>${f(a.min,0)} דק'</small></td>
+          <td class="num">${m?`${f(m.pir,1)}<small class="note" style="display:block">מקום ${m.rank}</small>`:'<small class="note">לא דורג</small>'}</td>
+          <td>${n?`${vsTxt(n.venue, n.vs, true)}<small class="note" style="display:block">מחזור ${n.round}</small>`:a.status==='live'?'<small class="note">משחק עכשיו</small>':'–'}</td></tr>`; }).join('')}</tbody>
+    </table></div></div>`;
 }
 // Hits per round: predicted top K vs actual top K among everyone who played (ties at the cutoff count).
 function currentRoundHits(){
