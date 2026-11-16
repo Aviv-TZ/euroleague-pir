@@ -197,11 +197,13 @@ td.num.up{color:var(--good)} td.num.down{color:var(--bad)}
 .fctl{display:flex;flex-wrap:wrap;gap:12px 18px;align-items:center;margin:10px 0}
 .fctl input[type=range]{width:200px;vertical-align:middle;margin-inline-start:8px;accent-color:var(--accent)}
 .fctl .chk{font-size:13px;color:var(--muted)}
+th.fsort{cursor:pointer;user-select:none} th.fsort.on{color:var(--accent)}
 @media(max-width:600px){
   .col-mh{display:none}
   .fctl{gap:10px} .fctl .seg{width:100%;display:flex} .fctl .seg button{flex:1}
   .fctl label:not(.chk){width:100%;display:flex;align-items:center;gap:8px} .fctl input[type=range]{flex:1;width:auto;margin:0}
   .filt td.pl small .ts{white-space:normal}
+  .filt th,.filt td{padding-left:4px;padding-right:4px} .filt td.num{font-size:13px}
 }
 /* builder exclude */
 .cx{position:absolute;bottom:4px;left:4px;width:22px;height:22px;border-radius:50%;border:1px solid #ddd;background:#fff;color:#c0262d;font-weight:800;cursor:pointer;font-size:11px;line-height:1}
@@ -1538,19 +1540,22 @@ function makeSearch(container, placeholder, onPick, getExclude){
 }
 
 // ---------- Search by position(s) and max price ----------
-const FILT = {pos:new Set(['Guard','Forward','Center']), max:17, injured:true};
+const vfm = p => p.price ? p.m[1].pir / p.price : 0;   // value for money: projected points per 1M
+const FILT = {pos:new Set(['Guard','Forward','Center']), max:17, injured:true, sort:'pir'};   // sort: pir | vfm | price
 function renderFilter(){
   const box = $('#filterView'); if(!box) return;
   const posHe = {Guard:'גארד', Forward:'פורוורד', Center:'סנטר'};
   const list = P.filter(p=>p.ranked && p.price!=null && FILT.pos.has(p.s5pos||p.pos) && p.price<=FILT.max &&
                            !(FILT.injured && (p.injured || p.out3)))
-                .sort((a,b)=>b.m[1].pir-a.m[1].pir);
+                .sort(FILT.sort==='vfm' ? (a,b)=>vfm(b)-vfm(a) || b.m[1].pir-a.m[1].pir
+                    : FILT.sort==='price' ? (a,b)=>a.price-b.price || b.m[1].pir-a.m[1].pir
+                    : (a,b)=>b.m[1].pir-a.m[1].pir);
   const head = `<div class="fctl">
       <div class="seg" id="fPos">${Object.entries(posHe).map(([k,h])=>`<button data-p="${k}" class="${FILT.pos.has(k)?'on':''}">${h}</button>`).join('')}</div>
       <label>עד מחיר: <b id="fMaxLbl">${f(FILT.max,0)}M</b>
         <input type="range" id="fMax" min="5" max="17" step="1" value="${FILT.max}"></label>
       <label class="chk"><input type="checkbox" id="fInj" ${FILT.injured?'checked':''}> בלי פצועים / מי שלא שיחק ב-3 האחרונים</label>
-      <span class="note">${list.length} שחקנים</span></div>`;
+      <span class="note">${list.length} שחקנים · לחיצה על מחיר / צפי / נק׳ למיליון ממיינת</span></div>`;
   // phones: position and opponent move into the player's second line, so the row fits without scrolling
   const rows = list.slice(0,60).map((p,i)=>`<tr>
       <td class="rk">${i+1}</td>
@@ -1558,10 +1563,11 @@ function renderFilter(){
       <td class="col-mh"><span class="tag">${posHe[p.s5pos||p.pos]}</span></td>
       <td class="col-mh">${oppText(p)}</td>
       <td class="num">${f(p.price,0)}M</td>
-      <td class="num"><b class="m2c">${f(p.m[1].pir,1)}</b></td></tr>`).join('');
+      <td class="num"><b class="m2c">${f(p.m[1].pir,1)}</b></td>
+      <td class="num">${f(vfm(p),2)}</td></tr>`).join('');
   box.innerHTML = `<details class="card filt" ${box.dataset.open==='1'?'open':''}><summary><h2>חיפוש לפי עמדה ומחיר</h2></summary>
     ${head}
-    ${list.length?`<div class="scroll"><table><thead><tr><th>#</th><th>שחקן</th><th class="col-mh">עמדה</th><th class="col-mh">יריבה</th><th class="num">מחיר</th><th class="num"><span class="tl">פנטזי צפוי</span><span class="ts">צפי</span></th></tr></thead><tbody>${rows}</tbody></table></div>
+    ${list.length?`<div class="scroll"><table><thead><tr><th>#</th><th>שחקן</th><th class="col-mh">עמדה</th><th class="col-mh">יריבה</th>${[['price','מחיר','מחיר'],['pir','פנטזי צפוי','צפי'],['vfm','נק׳ למיליון','נק׳ ל-1M']].map(([k,l,sh])=>`<th class="num fsort ${FILT.sort===k?'on':''}" data-s="${k}" title="מיון">${FILT.sort===k?'▼ ':''}<span class="tl">${l}</span><span class="ts">${sh}</span></th>`).join('')}</tr></thead><tbody>${rows}</tbody></table></div>
     ${list.length>60?'<p class="note">מוצגים 60 הראשונים</p>':''}`:'<div class="empty">אין שחקנים שעומדים בסינון</div>'}
   </details>`;
   const d = $('details.filt', box); d.ontoggle = ()=>{ box.dataset.open = d.open?'1':'0'; };
@@ -1571,6 +1577,7 @@ function renderFilter(){
   sl.oninput = ()=>{ $('#fMaxLbl').textContent = f(+sl.value,0)+'M'; };
   sl.onchange = ()=>{ FILT.max = +sl.value; renderFilter(); };
   $('#fInj', box).onchange = e=>{ FILT.injured = e.target.checked; renderFilter(); };
+  box.querySelectorAll('th.fsort').forEach(th=>th.onclick=()=>{ FILT.sort = th.dataset.s; renderFilter(); });
   box.querySelectorAll('.pl').forEach(el=>el.onclick=()=>openPlayer(+el.dataset.id));
 }
 
