@@ -128,7 +128,14 @@ el_parse_legacy_box <- function(x, game_id, home, away) {
     }
   }
   res <- if (length(out)) do.call(rbind, out) else NULL
-  el_live_debug(game_id, 'legacy', list(ok=TRUE, top=names(x), teams=length(st),
+  # ended: the feed says not live, or the end-of-quarter scores already include the 4th quarter / overtime
+  # with different scores (the official schedule sometimes closes a game hours later)
+  eq <- h$val(x, c('EndOfQuarter'))
+  q4 <- function(t) { v <- unlist(t[grepl('^(Quarter4|Extra)', names(t))]); v <- suppressWarnings(as.numeric(v)); v <- v[is.finite(v)]; if (length(v)) max(v) else NA }
+  sc <- if (is.list(eq) && length(eq) == 2) vapply(eq, q4, 0) else c(NA, NA)
+  ended <- isFALSE(h$val(x, c('Live'))) || (all(is.finite(sc)) && sc[1] != sc[2])
+  if (!is.null(res)) { attr(res, 'ended') <- ended; attr(res, 'score') <- sc }
+  el_live_debug(game_id, 'legacy', list(ok=TRUE, top=names(x), teams=length(st), ended=ended,
     first=if (length(st)) names(h$val(st[[1]], c('PlayersStats'))[[1]]) else NULL,
     rows=if (is.null(res)) 0L else nrow(res)))
   res
@@ -224,7 +231,8 @@ el_live_update <- function(schedule, site_dir, code_dir, now=Sys.time()) {
   }
   rg <- s[s$Round == R,,drop=FALSE]
   finished <- sort(s$Game[s$Played])
-  live_ids <- s$Game[!s$Played & !is.na(s$Utc) & s$Utc <= now & now <= s$Utc + 3.5*3600]
+  # games started but not yet closed in the official schedule (it can lag by hours after the final buzzer)
+  live_ids <- s$Game[!s$Played & !is.na(s$Utc) & s$Utc <= now & now <= s$Utc + 12*3600]
 
   # ---- finished games: full box-score collection, only when something new finished ----
   same_finished <- identical(as.character(unlist(prev$finished_ids)), as.character(finished)) &&
@@ -269,11 +277,18 @@ el_live_update <- function(schedule, site_dir, code_dir, now=Sys.time()) {
   }
 
   # ---- games in progress (only current-round games are displayed as live) ----
-  live_rows <- NULL
+  live_rows <- NULL; ended_ids <- character(); ended_score <- list()
   for (g in intersect(live_ids, rg$Game)) {
     x <- rg[rg$Game == g,]
     b <- tryCatch(el_live_box(g, x$Home, x$Away), error=function(e) NULL)
-    if (!is.null(b)) live_rows <- rbind(live_rows, b)
+    ended <- !is.null(b) && isTRUE(attr(b, 'ended'))
+    sc <- if (!is.null(b)) attr(b, 'score') else NULL
+    if (!ended && !is.null(b) && is.null(attr(b, 'ended')) && now > x$Utc + 2.5*3600) {
+      lb <- tryCatch(el_live_box_legacy(g, x$Home, x$Away), error=function(e) NULL)   # v2 has no end flag
+      ended <- !is.null(lb) && isTRUE(attr(lb, 'ended')); sc <- if (!is.null(lb)) attr(lb, 'score') else NULL
+    }
+    if (ended) { ended_ids <- c(ended_ids, g); if (length(sc) == 2 && all(is.finite(sc))) ended_score[[g]] <- c(hs=sc[1], as=sc[2]) }
+    if (!is.null(b)) { b$ended <- ended; live_rows <- rbind(live_rows, b) }
   }
   live_score <- list()   # live score = sum of player points per side
   if (!is.null(live_rows) && nrow(live_rows)) {
@@ -281,12 +296,14 @@ el_live_update <- function(schedule, site_dir, code_dir, now=Sys.time()) {
       z <- live_rows[live_rows$Game == g,,drop=FALSE]
       live_score[[g]] <- c(hs=sum(z$Points[z$Side == 'local']), as=sum(z$Points[z$Side == 'road']))
     }
+    for (g in names(ended_score)) live_score[[g]] <- ended_score[[g]]
+    live_ended <- live_rows$ended
     live_rows <- live_rows[, c('Game','Player','Team','Opponent','Minutes','PIR')]
   }
 
   # ---- actual results + real rank among everyone who played in the round so far ----
   rows <- rbind(if (!is.null(final_rows) && nrow(final_rows)) cbind(final_rows, status='final'),
-                if (!is.null(live_rows) && nrow(live_rows)) cbind(live_rows, status='live'))
+                if (!is.null(live_rows) && nrow(live_rows)) cbind(live_rows, status=ifelse(live_ended, 'final', 'live')))
   actual <- list()
   if (!is.null(rows) && nrow(rows)) {
     rows$rank <- rank(-rows$PIR, ties.method='min')
@@ -310,7 +327,7 @@ el_live_update <- function(schedule, site_dir, code_dir, now=Sys.time()) {
   }
   games <- lapply(seq_len(nrow(rg)), function(i) list(game=rg$Game[i], home=rg$Home[i], away=rg$Away[i],
     utc=if (!is.na(rg$Utc[i])) format(rg$Utc[i], '%Y-%m-%dT%H:%M:%SZ', tz='UTC') else NULL,
-    status=if (rg$Played[i]) 'final' else if (rg$Game[i] %in% live_ids) 'live' else 'scheduled',
+    status=if (rg$Played[i] || rg$Game[i] %in% ended_ids) 'final' else if (rg$Game[i] %in% live_ids) 'live' else 'scheduled',
     hs=if (!is.null(live_score[[rg$Game[i]]])) live_score[[rg$Game[i]]][['hs']] else
        if (rg$Played[i] && is.finite(rg$HomeScore[i])) rg$HomeScore[i] else NULL,
     as=if (!is.null(live_score[[rg$Game[i]]])) live_score[[rg$Game[i]]][['as']] else
@@ -322,12 +339,12 @@ el_live_update <- function(schedule, site_dir, code_dir, now=Sys.time()) {
   schedule_out <- lapply(seq_len(nrow(fut)), function(i) list(game=fut$Game[i], round=fut$Round[i],
     date=fut$Date[i], home=fut$Home[i], away=fut$Away[i],
     utc=if (!is.na(fut$Utc[i])) format(fut$Utc[i], '%Y-%m-%dT%H:%M:%SZ', tz='UTC') else NULL,
-    status=if (fut$Played[i]) 'final' else if (fut$Game[i] %in% live_ids) 'live' else 'scheduled',
-    hs=if (fut$Played[i] && is.finite(fut$HomeScore[i])) fut$HomeScore[i] else NULL,
-    as=if (fut$Played[i] && is.finite(fut$AwayScore[i])) fut$AwayScore[i] else NULL))
+    status=if (fut$Played[i] || fut$Game[i] %in% ended_ids) 'final' else if (fut$Game[i] %in% live_ids) 'live' else 'scheduled',
+    hs=if (fut$Played[i] && is.finite(fut$HomeScore[i])) fut$HomeScore[i] else if (!is.null(ended_score[[fut$Game[i]]])) ended_score[[fut$Game[i]]][['hs']] else NULL,
+    as=if (fut$Played[i] && is.finite(fut$AwayScore[i])) fut$AwayScore[i] else if (!is.null(ended_score[[fut$Game[i]]])) ended_score[[fut$Game[i]]][['as']] else NULL))
 
   out <- list(round=R, finished_ids=as.list(finished), schedule=schedule_out,
-              round_finished=sum(rg$Played), round_games=nrow(rg),
+              round_finished=sum(rg$Played | rg$Game %in% ended_ids), round_games=nrow(rg),
               n_played=if (is.null(rows)) 0L else nrow(rows),
               games=games, actual=actual, next_game=nxt,
               opponents=tables$opponents, league=tables$league, past_games=past_games,
@@ -341,7 +358,7 @@ el_live_update <- function(schedule, site_dir, code_dir, now=Sys.time()) {
   out <- c(list(updated_utc=format(now, '%Y-%m-%dT%H:%M:%SZ', tz='UTC')), out)
   writeLines(jsonlite::toJSON(out, auto_unbox=TRUE, null='null', na='null', digits=NA),
              live_file, useBytes=TRUE)
-  message('Live: round ', R, ' - ', sum(rg$Played), '/', nrow(rg), ' finished, ',
+  message('Live: round ', R, ' - ', sum(rg$Played | rg$Game %in% ended_ids), '/', nrow(rg), ' finished, ',
           length(intersect(live_ids, rg$Game)), ' live, ', length(actual), ' player lines')
   invisible(TRUE)
 }
