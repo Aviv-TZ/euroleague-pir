@@ -140,6 +140,22 @@ el_parse_legacy_box <- function(x, game_id, home, away) {
     rows=if (is.null(res)) 0L else nrow(res)))
   res
 }
+# Fixture difficulty: per team, fantasy points its players produce per game and points its opponents
+# score against it per game, at home and away (this season's finished games).
+el_fdr_stats <- function(raw, s) {
+  g <- s[s$Played & s$Game %in% raw$Game, c('Game','Home','Away'),drop=FALSE]
+  tp <- aggregate(PIR ~ Game + Team, data=raw[raw$Game %in% g$Game,,drop=FALSE], FUN=sum)
+  tp$home <- tp$Team == g$Home[match(tp$Game, g$Game)]
+  tp$opp <- ifelse(tp$home, g$Away[match(tp$Game, g$Game)], g$Home[match(tp$Game, g$Game)])
+  teams <- sort(unique(c(g$Home, g$Away)))
+  out <- lapply(teams, function(t) {
+    f <- tp[tp$Team == t,,drop=FALSE]; a <- tp[tp$opp == t,,drop=FALSE]   # a: what opponents scored vs t
+    list(team=t, n_home=sum(f$home), n_away=sum(!f$home),
+         att_home=mean(f$PIR[f$home]), att_away=mean(f$PIR[!f$home]),
+         def_home=mean(a$PIR[!a$home]), def_away=mean(a$PIR[a$home]))   # def_home: allowed when t is at home
+  })
+  out
+}
 .el_dbg <- new.env()
 el_live_debug <- function(game, src, info) assign(paste(game, src), c(list(game=game, src=src), info), envir=.el_dbg)
 `%||%` <- function(a, b) if (is.null(a)) b else a
@@ -235,7 +251,7 @@ el_live_update <- function(schedule, site_dir, code_dir, now=Sys.time()) {
   live_ids <- s$Game[!s$Played & !is.na(s$Utc) & s$Utc <= now & now <= s$Utc + 12*3600]
 
   # ---- finished games: full box-score collection, only when something new finished ----
-  same_finished <- identical(as.character(unlist(prev$finished_ids)), as.character(finished)) &&
+  same_finished <- !is.null(prev$fdr) && identical(as.character(unlist(prev$finished_ids)), as.character(finished)) &&
                    identical(as.numeric(prev$round), as.numeric(R))
   final_rows <- NULL; tables <- NULL; past_games <- NULL
   if (!same_finished) {
@@ -259,6 +275,7 @@ el_live_update <- function(schedule, site_dir, code_dir, now=Sys.time()) {
       }
       tables <- el_opponent_tables(raw, col$meta[col$meta$Game %in% finished,,drop=FALSE])
       past_games <- el_past_games(raw, s)
+      fdr <- tryCatch(el_fdr_stats(raw, s), error=function(e) { message('FDR stats failed: ', conditionMessage(e)); prev$fdr })
       fr <- raw[raw$Game %in% rg$Game,,drop=FALSE]
       final_rows <- if (nrow(fr)) data.frame(Game=fr$Game, Player=fr$Player, Team=fr$Team,
         Opponent=fr$Opponent, Minutes=fr$Minutes, PIR=fr$PIR, stringsAsFactors=FALSE) else
@@ -274,6 +291,7 @@ el_live_update <- function(schedule, site_dir, code_dir, now=Sys.time()) {
       PIR=vapply(pa, function(x) as.numeric(x$pir), 0), stringsAsFactors=FALSE) else NULL
     tables <- list(opponents=prev$opponents, league=prev$league)
     past_games <- prev$past_games
+    fdr <- prev$fdr
   }
 
   # ---- games in progress (only current-round games are displayed as live) ----
@@ -347,7 +365,7 @@ el_live_update <- function(schedule, site_dir, code_dir, now=Sys.time()) {
               round_finished=sum(rg$Played | rg$Game %in% ended_ids), round_games=nrow(rg),
               n_played=if (is.null(rows)) 0L else nrow(rows),
               games=games, actual=actual, next_game=nxt,
-              opponents=tables$opponents, league=tables$league, past_games=past_games,
+              opponents=tables$opponents, league=tables$league, past_games=past_games, fdr=fdr,
               debug=unname(as.list(.el_dbg)))
   body <- jsonlite::toJSON(out, auto_unbox=TRUE, null='null', na='null', digits=NA)
   prev_body <- if (length(prev)) { prev$updated_utc <- NULL

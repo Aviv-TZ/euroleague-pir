@@ -206,6 +206,26 @@ export_euroleague_web <- function(output_dir, site_dir, template_file,
     }, numeric(1))
   }
 
+  # ---- component model (cm/component_model.py): the site's forecast unless EL_MODEL=old ----------
+  # Replaces Model 2's points, ranks, range and 5-round projections; ignored if it projects other rounds.
+  cm_file <- file.path(output_dir, 'component_predictions.json')
+  CM <- if (Sys.getenv('EL_MODEL', 'component') != 'old' && file.exists(cm_file))
+          tryCatch(jsonlite::fromJSON(cm_file, simplifyVector=FALSE), error=function(e) NULL) else NULL
+  if (!is.null(CM) && (!length(fut_rounds) || !identical(as.integer(unlist(CM$rounds))[1], as.integer(fut_rounds[1])))) {
+    message('Component model projects round ', unlist(CM$rounds)[1], ', page needs ', fut_rounds[1], ' - old model used')
+    CM <- NULL
+  }
+  if (!is.null(CM) && nrow(cand)) {
+    cmp <- vapply(cand_key, function(k) { x <- CM$players[[k]]; if (is.null(x)) NA_real_ else as.numeric(x$fut[[1]]) }, 0)
+    ok <- is.finite(cmp); m2 <- model_rows[[2]]
+    m2$pir[ok] <- cmp[ok]; m2$score[ok] <- cmp[ok]                 # the score is the expected points
+    ord <- order(-m2$pir, -cand$AvgMinutes, cand$Player); m2$rank[ord] <- seq_along(ord)
+    m2$pir_lo <- m2$pir + as.numeric(CM$resid$lo); m2$pir_hi <- m2$pir + as.numeric(CM$resid$hi)
+    for (col in c('base','mraw','matchup','mcomb','minf','home')) m2[[col]] <- NA_real_
+    model_rows[[2]] <- m2
+    message('Component model: ', sum(ok), '/', length(ok), ' ranked players projected')
+  }
+
   pos_he <- c(Guard='גארד', Forward='פורוורד', Center='סנטר')
   num <- function(x, d=3) if (is.null(x) || !length(x) || !is.finite(x)) NULL else round(x, d)
 
@@ -236,7 +256,9 @@ export_euroleague_web <- function(output_dir, site_dir, template_file,
               date=if (!is.null(fx)) as.character(fx$Date[1]) else NULL,
               ranked=!is.na(j))
     if (isFALSE(last3_played(a$Player, a$Team))) p$out3 <- TRUE
-    p$fut <- future_fp(j, a$Team, a$Position, a$AvgPIR)
+    cmx <- if (!is.null(CM)) CM$players[[key]] else NULL
+    p$fut <- if (!is.null(cmx)) as.numeric(unlist(cmx$fut)) else future_fp(j, a$Team, a$Position, a$AvgPIR)
+    if (!is.null(cmx)) p$cm <- list(min=cmx$min, e=cmx$e, p_dd=cmx$p_dd, p_td=cmx$p_td)
     if (!is.null(prices)) {
       q <- which(prices$raw == a$Player & prices$team == a$Team)[1]
       if (is.na(q)) q <- which(prices$raw == a$Player)[1]
@@ -330,7 +352,8 @@ export_euroleague_web <- function(output_dir, site_dir, template_file,
   }
 
   now <- Sys.time()
-  meta <- c(list(
+  if (!is.null(CM) && !is.null(CM$backtest)) backtest$m2 <- CM$backtest
+  meta <- c(list(model=if (!is.null(CM)) 'component' else 'weights',
     generated_utc=format(now, '%Y-%m-%dT%H:%M:%SZ', tz='UTC'),
     season='2026/27', n_ranked=nrow(cand), n_players=nrow(avgs),
     weights=list(m1=as.list(W[[1]]), m2=as.list(W[[2]])),
@@ -341,6 +364,8 @@ export_euroleague_web <- function(output_dir, site_dir, template_file,
   raw_csv2 <- file.path(output_dir, 'EuroLeague_2026-27_players.csv')
   round_hits <- if (file.exists(raw_csv2)) el_web_round_hits(hist,
     utils::read.csv(raw_csv2, fileEncoding='UTF-8', stringsAsFactors=FALSE)) else list()
+  if (!is.null(CM) && length(CM$round_hits))     # hits per round of the component model (out of sample)
+    round_hits <- lapply(CM$round_hits, function(h) list(round=h$round, n_played=h$n_played, m1=h$m2, m2=h$m2))
   # Coach projection (tested on 2024/25-2026/27: winner right 63%, the top-ranked coach scored
   # +8..+15 per round vs 0 for an average coach). No betting odds: expected margin from the
   # season point differential (x0.6) + 2.5 home court; margin ~ Normal(mu, 12).

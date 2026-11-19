@@ -236,6 +236,13 @@ th.fsort{cursor:pointer;user-select:none} th.fsort.on{color:var(--accent)}
 @media(max-width:600px){ .trow{grid-template-columns:1fr} .mt-head .kpis{grid-template-columns:1fr 1fr 1fr} }
 /* ownership / my team extras */
 .ccap.vc{color:#5b6b86;border-color:#5b6b86;font-size:10px}
+.fdt td.fdc{text-align:center;color:#fff;font-size:12.5px;line-height:1.15;padding:6px 4px;border:2px solid var(--panel)}
+.fdt td.fdc small{display:block;font-size:10.5px;opacity:.9;margin-top:2px}
+.fdt td.fdc.pl{color:var(--muted);background:transparent}
+.fdt th.fds{cursor:pointer}
+.fdleg{display:flex;gap:4px;align-items:center;margin:8px 0}
+.fdleg span{width:26px;text-align:center;border-radius:6px;color:#fff;font-weight:700;font-size:12px;padding:2px 0}
+@media(max-width:600px){ .fdt td,.fdt th{padding-left:2px;padding-right:2px} .fdt td.fdteam{font-size:12px} .fdt td.fdc{font-size:10.5px;padding:5px 1px} .fdt td.fdc small{font-size:9.5px} .fdt th{font-size:11px;padding:4px 2px} }
 .cvs{font-size:12px;font-weight:600;color:#3a4660;margin-top:1px}
 .cvs:empty{display:none}
 .cnew{position:absolute;bottom:-8px;left:50%;transform:translateX(-50%);background:var(--good);color:#fff;font-size:10px;font-weight:700;border-radius:8px;padding:1px 6px}
@@ -254,8 +261,8 @@ th.fsort{cursor:pointer;user-select:none} th.fsort.on{color:var(--accent)}
 .ts{display:none}
 @media(max-width:600px){
   .tl{display:none} .ts{display:inline}
-  nav{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:12px;padding-bottom:10px}
-  nav button{white-space:nowrap;padding:9px 4px;border-radius:10px;background:var(--panel);border:1px solid var(--line);font-size:14px}
+  nav{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:12px;padding-bottom:10px}
+  nav button{white-space:nowrap;padding:9px 2px;border-radius:10px;background:var(--panel);border:1px solid var(--line);font-size:13px}
   nav button.on{background:var(--accent);color:#1a0f00;box-shadow:none;border-color:var(--accent)}
   main{padding:14px 10px} .card{padding:12px}
   h1{font-size:19px}
@@ -303,6 +310,7 @@ footer{color:var(--muted);font-size:12px;padding:10px 20px 30px;text-align:cente
     <button data-tab="fixtures"><span class="tl">לוח המחזור הקרוב</span><span class="ts">לוח</span></button>
     <button data-tab="search"><span class="tl">חיפוש והשוואת שחקנים</span><span class="ts">חיפוש</span></button>
     <button data-tab="opp"><span class="tl">יריבות לפי עמדה</span><span class="ts">יריבות</span></button>
+    <button data-tab="fdr"><span class="tl">לוח קושי משחקים</span><span class="ts">קושי</span></button>
     <button data-tab="build"><span class="tl">חמישייה אידיאלית</span><span class="ts">חמישייה</span></button>
     <button data-tab="myteam">הקבוצה שלי</button>
   </nav>
@@ -319,6 +327,10 @@ footer{color:var(--muted);font-size:12px;padding:10px 20px 30px;text-align:cente
 
   <section class="tab" id="tab-opp">
     <div id="oppView"></div>
+  </section>
+
+  <section class="tab" id="tab-fdr">
+    <div id="fdrView"></div>
   </section>
 
   <section class="tab" id="tab-myteam">
@@ -346,7 +358,8 @@ const D = EL_DATA || await fetch('data.json').then(r=>r.json());
 const P = D.players, M = D.meta;
 const byId = new Map(P.map(p=>[p.id,p]));
 const MODELS = [
-  {k:1, cls:'m2', name:'מודל 2', long:'תחזית · מודל 2 (Walk-forward)', color:'var(--m2)'}
+  M.model==='component' ? {k:1, cls:'m2', name:'מודל מרכיבים', long:'תחזית · מודל מרכיבים', color:'var(--m2)'}
+                         : {k:1, cls:'m2', name:'מודל 2', long:'תחזית · מודל 2 (Walk-forward)', color:'var(--m2)'}
 ];
 const W = [M.weights.m1, M.weights.m2];
 const CMP_COLORS = ['#ff8a1f','#4fa3ff','#2ec4a0','#d17bff'];
@@ -517,14 +530,14 @@ function renderTops(){
     const RH = (D.round_hits||[]), avg10 = RH.length ? RH.reduce((s,h)=>s+h['m'+(m.k+1)].t10,0)/RH.length : null;
     return `<div class="card">
       <h2><span class="dot ${m.cls}"></span>${m.long}</h2>
-      <div class="hint">15 המובילים בסקור למחזור ${M.next_round??'הקרוב'}${hidden.length?` · הוסתרו ${hidden.length} שלא שיחקו ב-3 המשחקים האחרונים (${hidden.map(p=>esc(p.name)).join(', ')})`:''}${avg10!=null?` · העונה (מחזורים ${RH[0].round}–${RH[RH.length-1].round}): ממוצע ${f(avg10,1)} פגיעות בטופ 10`:''}</div>
+      <div class="hint">15 המובילים ${M.model==='component'?'בפנטזי הצפוי':'בסקור'} למחזור ${M.next_round??'הקרוב'}${hidden.length?` · הוסתרו ${hidden.length} שלא שיחקו ב-3 המשחקים האחרונים (${hidden.map(p=>esc(p.name)).join(', ')})`:''}${avg10!=null?` · העונה (מחזורים ${RH[0].round}–${RH[RH.length-1].round}): ממוצע ${f(avg10,1)} פגיעות בטופ 10`:''}</div>
       <div class="scroll"><table>
-        <thead><tr><th>#</th><th>שחקן</th><th>יריבה</th><th class="num col-score">Score</th><th class="num">פנטזי צפוי</th><th class="num" title="ניקוד בפועל · מקום אמיתי במחזור (פספוס מול החיזוי) · הפרש נקודות">בפועל</th></tr></thead>
+        <thead><tr><th>#</th><th>שחקן</th><th>יריבה</th>${M.model==='component'?'':'<th class="num col-score">Score</th>'}<th class="num">פנטזי צפוי</th><th class="num" title="ניקוד בפועל · מקום אמיתי במחזור (פספוס מול החיזוי) · הפרש נקודות">בפועל</th></tr></thead>
         <tbody>${rows.map(p=>`<tr>
           <td class="rk">${p.m[m.k].rank}</td>
           <td class="pl" data-id="${p.id}"><b>${esc(p.name)}</b><small>${tName(p.team)} · ${p.pos_he}${ownTxt(p)?` · ${ownTxt(p)} אחזקה`:''}</small></td>
           <td>${p.opp?vsTxt(p.venue, p.opp, true):'אין משחק'}<br><small class="note">${nextGameOf(p)?`הבאה: ${vsTxt(nextGameOf(p).venue, nextGameOf(p).vs)}`:fmtShortDate(p.date)}</small></td>
-          <td class="num score ${m.cls}c col-score">${f(p.m[m.k].score,2)}</td>
+          ${M.model==='component'?'':`<td class="num score ${m.cls}c col-score">${f(p.m[m.k].score,2)}</td>`}
           <td class="num">${f(p.m[m.k].pir)}</td>
           ${actualCell(p,m.k)}</tr>`).join('')}</tbody>
       </table></div></div>`;
@@ -588,7 +601,7 @@ function hitsTable(){
   const avg = t => full.length ? full.reduce((s,h)=>s+h.m2[t],0)/full.length : null;
   return `<div class="card hits">
     <h2>פגיעות לפי מחזור</h2>
-    <div class="hint">כמה מהשחקנים שהמודל דירג בטופ K סיימו בפועל בטופ K של המחזור (מתוך כל מי ששיחק; שוויון בקו החיתוך נספר) · מחזורים קודמים = מבחן מחוץ למדגם עם המשקלים הקפואים</div>
+    <div class="hint">כמה מהשחקנים שהמודל דירג בטופ K סיימו בפועל בטופ K של המחזור (מתוך כל מי ששיחק; שוויון בקו החיתוך נספר) · מחזורים קודמים = מבחן מחוץ למדגם (כל מחזור חושב רק ממשחקים שלפניו)</div>
     <div class="scroll"><table>
       <thead><tr><th>מחזור</th><th class="num">שיחקו</th><th class="num">טופ 10</th><th class="num">טופ 30</th><th class="num">טופ 50</th></tr></thead>
       <tbody>${H.sort((a,b)=>a.round-b.round).map(h=>`<tr${h.partial?' class="partial"':''}><td><b>${h.round}</b>${h.partial?' <span class="badge live sm">חלקי</span>':''}</td>
@@ -718,6 +731,52 @@ function nextCell(o){
   return pl ? `<span class="badge final sm">✓ <span class="tl">שיחקה במחזור ${LIVE.round}</span></span> ${nx}` : nx;
 }
 const OPP_VIEW_LBL = {season:'כל העונה', last5:'5 משחקים אחרונים', home:'כל העונה, במשחקי הבית שלה', away:'כל העונה, במשחקי החוץ שלה'};
+// ---------- Fixture difficulty: each team's next 5 rounds, 1 (easy) .. 5 (hard) ----------
+// expected team fantasy points in a game = team's points per game (home or away, as that game) x points the
+// opponent concedes per game (in its own home/away games, as that game) / league average; home/away splits
+// are shrunk toward the team's season average (few games each). The 100 games shown are split into 5 equal groups.
+const FDR_COL = ['', '#1e7d47', '#58a65c', '#5d6677', '#c76b5b', '#a93226'];
+let fdrSort = 'avg';
+const ABBR = {Efes:'EFS', Milan:'MIL', Besiktas:'BJK', Zvezda:'CZV', Dubai:'DUB', Barcelona:'BAR', Bayern:'BAY', Fenerbahce:'FEN',
+  'Hapoel TA':'HTA', Baskonia:'BKN', ASVEL:'ASV', 'Maccabi TA':'MTA', Olympiacos:'OLY', Panathinaikos:'PAO', Paris:'PRS',
+  Partizan:'PAR', 'Real Madrid':'RMB', Valencia:'VAL', Virtus:'VIR', Zalgiris:'ZAL', Monaco:'MCO'};
+const tAbbr = t => ABBR[tShort(t)] || tShort(t).slice(0,3).toUpperCase();
+const tFd = t => `<span class="tl">${esc(tShort(t))}</span><span class="ts">${esc(tAbbr(t))}</span>`;
+function renderFdr(){
+  const box = $('#fdrView'); if(!box) return;
+  const ST = LIVE.data && LIVE.data.fdr, sch = (LIVE.data && LIVE.data.schedule) || [];
+  if(!ST || !ST.length || !sch.length){ box.innerHTML = '<div class="card"><h2>לוח קושי משחקים</h2><div class="empty">הנתונים יחושבו בעדכון הקרוב</div></div>'; return; }
+  const k = 4, by = new Map();
+  ST.forEach(t=>{ const n = t.n_home + t.n_away, att = (t.att_home*t.n_home + t.att_away*t.n_away)/n, def = (t.def_home*t.n_home + t.def_away*t.n_away)/n;
+    const sh = (v, m, avg) => (m*(isFinite(v)?v:avg) + k*avg)/(m + k);
+    by.set(t.team, {att_h:sh(t.att_home,t.n_home,att), att_a:sh(t.att_away,t.n_away,att), def_h:sh(t.def_home,t.n_home,def), def_a:sh(t.def_away,t.n_away,def), att, def}); });
+  const L = [...by.values()].reduce((s,x)=>s+x.att,0)/by.size;
+  const rounds = [...new Set(sch.filter(g=>g.status==='scheduled').map(g=>g.round))].sort((a,b)=>a-b).slice(0,5);
+  const cells = [];
+  const rows = [...by.keys()].map(team=>{
+    const cs = rounds.map(r=>{ const g = sch.find(x=>x.round===r && (x.home===team||x.away===team)); if(!g) return {none:true};
+      if(g.status!=='scheduled') return {played:true, g};
+      const home = g.home===team, opp = home ? g.away : g.home, a = by.get(team), o = by.get(opp);
+      if(!a || !o) return {none:true};
+      const exp = (home ? a.att_h : a.att_a) * (home ? o.def_a : o.def_h) / L;
+      const c = {opp, home, exp}; cells.push(c); return c; });
+    return {team, cs}; });
+  const sorted = [...cells].sort((a,b)=>a.exp-b.exp);
+  sorted.forEach((c,i)=>{ c.r = 5 - Math.floor(i*5/sorted.length); });
+  rows.forEach(x=>{ const v = x.cs.filter(c=>c.r); x.avg = v.length ? v.reduce((s,c)=>s+c.r,0)/v.length : 9; });
+  rows.sort(fdrSort==='team' ? (a,b)=>tShort(a.team).localeCompare(tShort(b.team)) : (a,b)=>a.avg-b.avg || tShort(a.team).localeCompare(tShort(b.team)));
+  const cell = c => c.none ? '<td class="fdc">–</td>' : c.played ? '<td class="fdc pl">✓<small>שוחק</small></td>'
+    : `<td class="fdc" style="background:${FDR_COL[c.r]}" title="צפי לשחקני הקבוצה: ${f(c.exp,0)} נק' פנטזי (ממוצע ליגה ${f(L,0)})"><b>${tFd(c.opp)}</b><small>${c.home?'H':'A'} · ${c.r}</small></td>`;
+  box.innerHTML = `<div class="card">
+    <h2>לוח קושי משחקים · 5 המחזורים הבאים</h2>
+    <div class="hint">1 = משחק קל לשחקני הקבוצה (הרבה נקודות פנטזי צפויות), 5 = קשה. מחושב מכמה נקודות פנטזי שחקני הקבוצה מייצרים למשחק (בבית או בחוץ, לפי המשחק) וכמה נקודות היריבה סופגת למשחק (בבית או בחוץ שלה), מהעונה הנוכחית · H = בית, A = חוץ</div>
+    <div class="fdleg">${[1,2,3,4,5].map(r=>`<span style="background:${FDR_COL[r]}">${r}</span>`).join('')} <small>1 = הכי קל · 5 = הכי קשה</small></div>
+    <div class="scroll"><table class="fdt">
+      <thead><tr><th class="fds" data-s="team">קבוצה${fdrSort==='team'?' ▼':''}</th>${rounds.map(r=>`<th><span class="tl">מחזור </span>${r}</th>`).join('')}<th class="fds num" data-s="avg"><span class="tl">ממוצע</span><span class="ts">ממ׳</span>${fdrSort==='avg'?' ▼':''}</th></tr></thead>
+      <tbody>${rows.map(x=>`<tr><td class="fdteam"><b>${tFd(x.team)}</b></td>${x.cs.map(cell).join('')}<td class="num"><b>${x.avg<9?f(x.avg,1):'–'}</b></td></tr>`).join('')}</tbody>
+    </table></div></div>`;
+  box.querySelectorAll('th.fds').forEach(th=>th.onclick=()=>{ fdrSort = th.dataset.s; renderFdr(); });
+}
 function renderOpp(){
   const O = OPP(), L = LEAGUE();
   if(!O.length){ $('#oppView').innerHTML='<div class="empty">אין נתונים</div>'; return; }
@@ -1583,7 +1642,20 @@ function renderFilter(){
 
 // ---------- C. Player card ----------
 let current = null, compare = [], mode = 'card';   // mode: 'card' | 'compare'
+// component model: expected stats x fantasy weights (+ double/triple-double bonus)
+const CM_ROWS = [['pts','נקודות',1],['reb','ריבאונדים',2],['ast','אסיסטים',2],['stl','חטיפות',3],['blk','חסימות',3],
+                 ['fd','עבירות שנסחטו',1],['tov','איבודים',-2],['miss','החטאות (זריקות + עונשין)',-1],['fc','עבירות',-1]];
+function cmTable(p){
+  const c = p.cm, e = c.e, bonus = 10*c.p_dd + 20*c.p_td;
+  return `<table class="comp">
+    <tr><td>דקות צפויות</td><td class="num">${f(c.min,1)}</td><td></td></tr>
+    ${CM_ROWS.map(([k,l,w])=>`<tr><td>${l} <small class="note"><bdi dir="ltr">×${w}</bdi></small></td><td class="num">${f(e[k],1)}</td><td class="num"><bdi dir="ltr">${w*e[k]>=0?'+':''}${f(w*e[k],1)}</bdi></td></tr>`).join('')}
+    <tr><td>דאבל-דאבל / טריפל-דאבל <small class="note">סיכוי <bdi dir="ltr">${f(100*c.p_dd,0)}% / ${f(100*c.p_td,1)}%</bdi></small></td><td></td><td class="num">+${f(bonus,1)}</td></tr>
+    <tr class="total"><td>פנטזי צפוי</td><td></td><td class="num m2c">${f(p.fut?p.fut[0]:p.m[1].pir,1)}</td></tr>
+  </table>`;
+}
 function componentsTable(p, m){
+  if(p.cm) return cmTable(p);
   const r = p.m[m.k], w = W[m.k], x = p.inputs;
   const pc = v=>Math.round(v*100)+'%';
   return `<table class="comp">
@@ -1624,12 +1696,12 @@ function playerCard(p){
     <div class="models">${MODELS.map(m=>{const r=p.m[m.k]; return `<div class="model ${m.cls}">
       <h2><span class="dot ${m.cls}"></span>${m.long}</h2>
       <div class="kpis">
-        <div class="kpi"><span>Score</span><b class="${m.cls}c">${f(r.score,2)}</b></div>
+        ${p.cm?'':`<div class="kpi"><span>Score</span><b class="${m.cls}c">${f(r.score,2)}</b></div>`}
         <div class="kpi"><span>דירוג</span><b>#${r.rank}</b><small>מתוך ${nRanked}</small></div>
         <div class="kpi"><span>פנטזי צפוי</span><b>${f(r.pir,1)}</b><small>${r.lo!=null?`${f(r.lo,1)} – ${f(r.hi,1)}`:''}</small></div>
       </div>
       ${componentsTable(p,m)}</div>`;}).join('')}</div>
-    <p class="note">פנטזי צפוי = כיול של הסקור לפי תוצאות אמת של עונת 2026/27 (בהנחה שהשחקן משחק). הטווח = 80% מהמקרים.</p>
+    <p class="note">${p.cm?'כל מרכיב חזוי בנפרד: דקות צפויות × קצב לדקה של השחקן × חוזק היריבה מול העמדה במרכיב הזה × בית/חוץ, ואז מוכפל בניקוד של ערוץ הספורט (בהנחה שהשחקן משחק). הטווח = 80% מהמקרים.':'פנטזי צפוי = כיול של הסקור לפי תוצאות אמת של עונת 2026/27 (בהנחה שהשחקן משחק). הטווח = 80% מהמקרים.'}</p>
   </div>`;
 }
 function renderPlayer(){
@@ -1740,21 +1812,30 @@ function compareTable(ps){
   h += row('פנטזי ממוצע 5 אחרונים', p=>p.l5, {best:'max'});
   h += row('דקות ממוצע עונה', p=>p.min, {best:'max',d:1});
   h += row('דקות ממוצע 5 אחרונים', p=>p.l5min, {best:'max',d:1});
+  if(ps.some(p=>p.cm)){
+    h += sec('חיזוי לפי מרכיבים (המחזור הקרוב)');
+    h += row('דקות צפויות', p=>p.cm?p.cm.min:null, {best:'max',d:1});
+    for(const [k,l,w] of CM_ROWS) h += row(l, p=>p.cm?p.cm.e[k]:null, {best:w>0?'max':'min',d:1});
+    h += row('סיכוי לדאבל-דאבל', p=>p.cm?`${f(100*p.cm.p_dd,0)}%`:'–');
+  } else {
   h += sec('קלטי המודל');
   h += row('פקטור יריבה – עונה', p=>p.ranked?p.inputs.msf:null, {best:'max',d:3});
   h += row('פקטור יריבה – 5 אחרונים', p=>p.ranked?p.inputs.ml5f:null, {best:'max',d:3});
   h += row('יחס דקות – עונה', p=>p.ranked?p.inputs.mr:null, {best:'max',d:3});
   h += row('יחס דקות – 5 אחרונים', p=>p.ranked?p.inputs.l5mr:null, {best:'max',d:3});
+  }
   for(const m of MODELS){
     h += sec(`<span class="dot ${m.cls}"></span> ${m.long} – חיזוי`);
-    h += row('<b>Score</b>', p=>mm(p,m.k,'score'), {best:'max',d:2});
+    if(!ps.some(p=>p.cm)) h += row('<b>Score</b>', p=>mm(p,m.k,'score'), {best:'max',d:2});
     h += row('דירוג', p=>mm(p,m.k,'rank'), {best:'min',d:0});
     h += row('<b>פנטזי צפוי</b>', p=>mm(p,m.k,'pir'), {best:'max',d:1});
     h += row('טווח פנטזי (80%)', p=>p.ranked&&p.m[m.k].lo!=null?`${f(p.m[m.k].lo,1)} – ${f(p.m[m.k].hi,1)}`:'–');
+    if(!ps.some(p=>p.cm)){
     h += row('בסיס פנטזי', p=>mm(p,m.k,'base'), {best:'max',d:2});
     h += row('פקטור יריבה', p=>mm(p,m.k,'matchup'), {best:'max',d:4});
     h += row('פקטור דקות', p=>mm(p,m.k,'minf'), {best:'max',d:4});
     h += row('פקטור בית/חוץ', p=>mm(p,m.k,'home'), {best:'max',d:4});
+    }
   }
   const unr = ps.filter(p=>!p.ranked);
   h += `</tbody></table></div>${unr.length?`<div class="warn">${unr.map(p=>`${esc(p.name)}: ${esc(p.reason)}`).join('<br>')}</div>`:''}</div>`;
@@ -1773,25 +1854,25 @@ function readHash(){
     const ids = (h.split('/')[1]||'').split(',').map(Number).filter(id=>byId.has(id)).slice(0,4);
     if(ids.length){ current=ids[0]; compare=ids; mode = h.startsWith('compare')?'compare':'card'; showCmpSearch = mode==='compare'&&ids.length<2; }
     showTab('search');
-  } else if(['top','fixtures','opp','build','myteam'].includes(h)) showTab(h);
+  } else if(['top','fixtures','opp','fdr','build','myteam'].includes(h)) showTab(h);
 }
 
 // ---------- footer ----------
 const bt = M.backtest||{};
-$('#foot').innerHTML = `יעד: נקודות פנטזי לפי חוקי ערוץ הספורט · מודלים שאומנו על 2024/25–2025/26 (משקלים קפואים) · ` +
+$('#foot').innerHTML = (M.model==='component' ? `יעד: נקודות פנטזי לפי חוקי ערוץ הספורט · מודל מרכיבים (כל סטטיסטיקה נחזית בנפרד; הגדרות נבחרו על 2024/25–2025/26) · ` : `יעד: נקודות פנטזי לפי חוקי ערוץ הספורט · מודלים שאומנו על 2024/25–2025/26 (משקלים קפואים) · `) +
   MODELS.map(m=>{const b=bt['m'+(m.k+1)]; return b?`${m.name}: NDCG@10 ${b.ndcg}, Spearman ${b.spearman}`:''}).filter(Boolean).join(' · ') +
   ` · בקטסט על מחזורי 2026/27 (מחוץ למדגם)`;
 
 makeSearch($('#mainSearch'),'חפש שחקן… (שם באנגלית/עברית או קבוצה)', p=>openPlayer(p.id), ()=>new Set());
 function renderAll(){
-  updateSubline(); renderTops(); renderFixtures(); renderOpp(); renderBuilder(); renderSquad();
+  updateSubline(); renderTops(); renderFixtures(); renderOpp(); renderFdr(); renderBuilder(); renderSquad();
   if(MT.sq && !MT.loading){ const ae0 = document.activeElement;
     if((dayDone()?1:0) !== (MT.off||0)) mtCompute();
     else if(!(ae0 && ae0.id==='mtName')) renderMyTeam(); }
   const ae = document.activeElement;   // do not rebuild the search area while the user is typing
   if(!(ae && ae.tagName==='INPUT' && $('#tab-search').contains(ae))) renderPlayer();
 }
-updateSubline(); renderTops(); renderFixtures(); renderOpp(); renderBuilder(); renderSquad(); renderMyTeam(); readHash(); renderPlayer();
+updateSubline(); renderTops(); renderFixtures(); renderOpp(); renderFdr(); renderBuilder(); renderSquad(); renderMyTeam(); readHash(); renderPlayer();
 loadLive().then(()=>{ pollDirect(); loadNext(); loadPrev(); }); loadOwn();
 setInterval(loadNext, 30*60e3);
 window.addEventListener('hashchange', ()=>{ readHash(); renderPlayer(); });
