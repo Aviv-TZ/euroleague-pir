@@ -132,6 +132,18 @@ el_next_status <- function(schedule, done_upto, delay_hours=8, game_hours=2.5, n
   if (is.finite(done_upto) && as.numeric(last_tip) <= done_upto) return(list(due=FALSE, round=r))
   list(due=TRUE, round=r, target=r + 1, upto=as.numeric(last_tip))
 }
+# Component model (cm/component_model.py): writes component_predictions.json into out_dir.
+# On failure the stale file is removed, so the export falls back to the weights model.
+el_run_component <- function(out_dir, code_dir, target=NULL) {
+  f <- file.path(out_dir, 'component_predictions.json'); if (file.exists(f)) file.remove(f)
+  if (Sys.getenv('EL_MODEL', 'component') == 'old') return(invisible(FALSE))
+  py <- Sys.getenv('EL_PYTHON', 'python3')
+  args <- c(file.path(code_dir, '..', 'cm', 'component_model.py'), out_dir, if (!is.null(target)) c('--target-round', target))
+  rc <- tryCatch(system2(py, shQuote(args)), error=function(e) 1L)
+  if (!identical(as.integer(rc), 0L) || !file.exists(f)) { message('Component model failed - weights model used'); return(invisible(FALSE)) }
+  invisible(TRUE)
+}
+
 el_next_preview <- function(ns, schedule, output_dir, site_dir, template, code_dir) {
   source(file.path(code_dir, 'EuroLeague_ranking_models_v12.R'))
   source(file.path(code_dir, 'EuroLeague_web_export_v12.R'))
@@ -139,6 +151,7 @@ el_next_preview <- function(ns, schedule, output_dir, site_dir, template, code_d
   tmp <- file.path(tempdir(), 'el_next'); tmp_site <- file.path(tmp, 'site')
   dir.create(tmp_site, recursive=TRUE, showWarnings=FALSE)
   build_euroleague_2026_27(tmp, season='E2026', mode='predict', trained_model_file=model, target_round=ns$target)
+  el_run_component(tmp, code_dir, ns$target)
   d <- export_euroleague_web(tmp, tmp_site, template, schedule=schedule, trained_model_file=model)
   if (!length(d$coaches)) stop('no fantasy prices/coaches (download failed) - will retry next run')
   fr <- unlist(d$meta$fut_rounds)
@@ -234,6 +247,7 @@ el_auto_update <- function(force=FALSE) {
     run_live(); return(invisible(FALSE))
   }
   tryCatch(el_save_prev_round(site_dir), error=function(e) message('prev_round failed: ', conditionMessage(e)))
+  el_run_component(output_dir, code_dir)
   export_euroleague_web(output_dir, site_dir, template, schedule=schedule,
                         extra_meta=list(last_complete_round=if (round_ok) st$round else max(parsed, na.rm=TRUE)))
   jsonlite::write_json(list(last_round=if (is.finite(st$round)) st$round else last,
