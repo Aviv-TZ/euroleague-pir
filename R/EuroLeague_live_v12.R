@@ -133,8 +133,12 @@ el_parse_legacy_box <- function(x, game_id, home, away) {
   eq <- h$val(x, c('EndOfQuarter'))
   q4 <- function(t) { v <- unlist(t[grepl('^(Quarter4|Extra)', names(t))]); v <- suppressWarnings(as.numeric(v)); v <- v[is.finite(v)]; if (length(v)) max(v) else NA }
   sc <- if (is.list(eq) && length(eq) == 2) vapply(eq, q4, 0) else c(NA, NA)
-  ended <- isFALSE(h$val(x, c('Live'))) || (all(is.finite(sc)) && sc[1] != sc[2])
-  if (!is.null(res)) { attr(res, 'ended') <- ended; attr(res, 'score') <- sc }
+  # the end-of-quarter scores already hold the running 4th-quarter score DURING the 4th quarter, so they
+  # only count as 'ended' together with the time check in el_live_update (>= 3 h after tip-off)
+  feed_over <- isFALSE(h$val(x, c('Live')))
+  q4_scores <- all(is.finite(sc)) && sc[1] != sc[2]
+  ended <- feed_over
+  if (!is.null(res)) { attr(res, 'ended') <- ended; attr(res, 'q4') <- q4_scores; attr(res, 'score') <- sc }
   el_live_debug(game_id, 'legacy', list(ok=TRUE, top=names(x), teams=length(st), ended=ended,
     first=if (length(st)) names(h$val(st[[1]], c('PlayersStats'))[[1]]) else NULL,
     rows=if (is.null(res)) 0L else nrow(res)))
@@ -299,11 +303,12 @@ el_live_update <- function(schedule, site_dir, code_dir, now=Sys.time()) {
   for (g in intersect(live_ids, rg$Game)) {
     x <- rg[rg$Game == g,]
     b <- tryCatch(el_live_box(g, x$Home, x$Away), error=function(e) NULL)
-    ended <- !is.null(b) && isTRUE(attr(b, 'ended'))
+    late <- now > x$Utc + 3*3600            # a game is never over within 3 hours of tip-off unless the feed says so
+    ended <- !is.null(b) && (isTRUE(attr(b, 'ended')) || (late && isTRUE(attr(b, 'q4'))))
     sc <- if (!is.null(b)) attr(b, 'score') else NULL
-    if (!ended && !is.null(b) && is.null(attr(b, 'ended')) && now > x$Utc + 2.5*3600) {
+    if (!ended && !is.null(b) && is.null(attr(b, 'ended')) && late) {
       lb <- tryCatch(el_live_box_legacy(g, x$Home, x$Away), error=function(e) NULL)   # v2 has no end flag
-      ended <- !is.null(lb) && isTRUE(attr(lb, 'ended')); sc <- if (!is.null(lb)) attr(lb, 'score') else NULL
+      ended <- !is.null(lb) && (isTRUE(attr(lb, 'ended')) || isTRUE(attr(lb, 'q4'))); sc <- if (!is.null(lb)) attr(lb, 'score') else NULL
     }
     if (ended) { ended_ids <- c(ended_ids, g); if (length(sc) == 2 && all(is.finite(sc))) ended_score[[g]] <- c(hs=sc[1], as=sc[2]) }
     if (!is.null(b)) { b$ended <- ended; live_rows <- rbind(live_rows, b) }
