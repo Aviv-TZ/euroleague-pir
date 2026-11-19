@@ -27,7 +27,7 @@ section.tab{display:none} section.tab.on{display:block}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px}
 .card h2{margin:0 0 4px;font-size:18px;display:flex;align-items:center;gap:8px}
 .card .hint{color:var(--muted);font-size:12.5px;margin-bottom:12px}
-details.xhelp{margin-top:12px;color:var(--muted);font-size:12px}
+details.xhelp{margin:12px 4px 0;color:var(--muted);font-size:12px}
 details.xhelp summary{cursor:pointer;color:var(--muted);font-size:12px;list-style:none;display:inline-block;border:1px solid var(--line);border-radius:999px;padding:2px 10px}
 details.xhelp summary::-webkit-details-marker{display:none}
 details.xhelp > div{margin-top:6px;line-height:1.5}
@@ -398,17 +398,20 @@ function nextCheckTxt(){
 }
 setInterval(()=>{ try{ updateSubline(); }catch(e){} }, 60000);
 const HINT_MAX = 70;
-function tidyHints(root){
-  root.querySelectorAll('.card .hint:not([data-tidy])').forEach(h=>{
-    h.dataset.tidy = '1';
-    if(h.textContent.trim().length <= HINT_MAX) return;
-    const card = h.closest('.card'); if(!card) return;
-    const d = document.createElement('details'); d.className = 'xhelp';
-    d.innerHTML = '<summary>ℹ︎ הסבר</summary>'; h.removeAttribute('class'); d.appendChild(h);
-    card.appendChild(d);
+// long explanations: collected into one folded "explanation" block at the bottom of the tab
+// (after the tab's content block, never inside a card's layout); short hints stay in place
+function tidyHints(){
+  document.querySelectorAll('section.tab > div[id]').forEach(root=>{
+    const long = [...root.querySelectorAll('.card .hint:not([data-tidy])')].filter(h=>{ h.dataset.tidy = '1'; return h.textContent.trim().length > HINT_MAX; });
+    if(!long.length) return;
+    let d = root.nextElementSibling;
+    if(!(d && d.matches('details.xhelp[data-for="'+root.id+'"]'))){
+      d = document.createElement('details'); d.className = 'xhelp'; d.dataset.for = root.id; root.after(d); }
+    d.innerHTML = '<summary>ℹ︎ הסבר</summary>';
+    long.forEach(h=>{ h.removeAttribute('class'); h.remove(); d.appendChild(h); });
   });
 }
-new MutationObserver(()=>tidyHints(document)).observe(document.querySelector('main'), {childList:true, subtree:true});
+new MutationObserver(()=>tidyHints()).observe(document.querySelector('main'), {childList:true, subtree:true});
 
 // ---------- tabs ----------
 function showTab(t){
