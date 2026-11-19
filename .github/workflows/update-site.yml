@@ -37,22 +37,30 @@ jobs:
         id: r
         run: if command -v Rscript >/dev/null; then echo "have=true" >> "$GITHUB_OUTPUT"; Rscript --version; fi
 
-      - uses: r-lib/actions/setup-r@v2
-        id: setupr
+      # Ubuntu's own R (4.3, the version the pipeline is tested on), without recommended extras: a small
+      # install. The R setup action is only the fallback (it pulls many more packages from the mirrors).
+      - name: Install R from Ubuntu
+        id: aptr
         if: steps.r.outputs.have != 'true'
         continue-on-error: true
-        timeout-minutes: 12
-        with:
-          use-public-rspm: true
-
-      # fallback when the Ubuntu mirrors are slow: Ubuntu's own R, without the extra recommended packages
-      - name: Install R from Ubuntu (fallback)
-        if: steps.setupr.outcome == 'failure'
-        timeout-minutes: 12
+        timeout-minutes: 10
         run: |
           sudo apt-get update -o Acquire::Retries=3 -qq
-          sudo apt-get install -y -qq --no-install-recommends -o Acquire::Retries=3 r-base-core libcurl4-openssl-dev libssl-dev libxml2-dev
+          sudo apt-get install -y -qq --no-install-recommends -o Acquire::Retries=3 -o DPkg::Lock::Timeout=120 r-base-core
           Rscript --version
+
+      - name: Clear a stuck package manager (before the fallback)
+        if: steps.aptr.outcome == 'failure'
+        run: |
+          sudo pkill -9 -f apt-get || true; sudo pkill -9 -f dpkg || true
+          sudo rm -f /var/lib/dpkg/lock-frontend /var/lib/dpkg/lock /var/cache/apt/archives/lock /var/lib/apt/lists/lock
+          sudo dpkg --configure -a || true
+
+      - uses: r-lib/actions/setup-r@v2
+        if: steps.aptr.outcome == 'failure'
+        timeout-minutes: 15
+        with:
+          use-public-rspm: true
 
       - name: OS and R version (cache key)
         id: ver
