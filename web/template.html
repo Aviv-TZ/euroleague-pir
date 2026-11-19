@@ -448,6 +448,12 @@ function rebuildLive(){
     rows = rows.filter(a=>a.status==='final' || !LIVE.direct.has(String(a.game)));
     LIVE.direct.forEach((v,g)=>{ const lg=liveGame(g); if(!(lg&&lg.status==='final')) rows.push(...v); });
   }
+  // one row per player and game: a live row replaces a stale 'final' row of a game that is still on
+  const seen = new Map();
+  rows.forEach(a=>{ const k = a.game+'|'+a.raw+'|'+a.team, o = seen.get(k), g = liveGame(a.game), on = !!(g && g.status==='live');
+    if(!o || (on ? a.status==='live' : a.status==='final')) seen.set(k, a); });
+  rows = [...seen.values()];
+  rows.forEach(a=>{ const g = liveGame(a.game); if(g && g.status==='live') a.status = 'live'; });
   rows.sort((a,b)=>b.pir-a.pir);
   rows.forEach(a=>{ a.rank = 1+rows.filter(b=>b.pir>a.pir).length; });
   LIVE.nPlayed = rows.length; LIVE.nFinal = rows.filter(a=>a.status==='final').length;

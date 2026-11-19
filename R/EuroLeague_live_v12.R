@@ -288,7 +288,8 @@ el_live_update <- function(schedule, site_dir, code_dir, now=Sys.time()) {
     } else same_finished <- TRUE   # keep previous values
   }
   if (same_finished) {
-    pa <- Filter(function(x) identical(x$status, 'final'), prev$actual %||% list())
+    # only rows of games the official schedule has closed (a game marked finished early must not stay 'final')
+    pa <- Filter(function(x) identical(x$status, 'final') && as.character(x$game) %in% finished, prev$actual %||% list())
     final_rows <- if (length(pa)) data.frame(Game=vapply(pa, function(x) as.character(x$game), ''),
       Player=vapply(pa, `[[`, '', 'raw'), Team=vapply(pa, `[[`, '', 'team'),
       Opponent=vapply(pa, `[[`, '', 'opp'), Minutes=vapply(pa, function(x) as.numeric(x$min), 0),
