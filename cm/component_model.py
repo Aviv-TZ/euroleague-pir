@@ -26,7 +26,8 @@ W = dict(pts=1, reb=2, ast=2, stl=3, blk=3, fd=1, tov=-2, fc=-1, miss=-1)
 DDK = ['pts', 'reb', 'ast', 'stl', 'blk']
 P = dict(hl=8, m0=80, m1=400, c=800, alpha=1.0)          # tuned on the two training seasons
 PHI = dict(pts=3.0, reb=1.25, ast=1.5, stl=0.6, blk=0.6)  # dispersion of each count (fitted on 2025/26)
-MIN_GAMES = 5                                              # same eligibility as the site's ranking
+MIN_GAMES = 3                                              # ranked: >= 3 games with the current team
+MIN_EXP_MIN = 5                                            #         and >= 5 expected minutes (tested 2026/27 rounds 6-12)
 
 def get(url, tries=5):
     for k in range(tries):
@@ -192,8 +193,10 @@ def main(out_dir, target_round=None):
         E = fp_from(pd.DataFrame(rows))
         fut = [round(float(v), 1) if pg else 0.0 for v, pg in zip(E.pred, E.playing)]
         first = E.iloc[0]
+        gt = int(st.ngames_team.get((pl, team), 0))
         players[f'{pl}||{team}'] = dict(
-            fut=fut, min=round(first['min'], 1), games=int(st.ngames.loc[pl]),
+            fut=fut, min=round(first['min'], 1), games=int(st.ngames.loc[pl]), games_team=gt,
+            eligible=bool(gt >= MIN_GAMES and first['min'] >= MIN_EXP_MIN and bool(first.playing)),
             e={k: round(float(first['e_' + k]), 2) for k in K},
             p_dd=round(float(first.p_dd), 3), p_td=round(float(first.p_td), 4))
 
@@ -207,7 +210,7 @@ def main(out_dir, target_round=None):
         for _, x in tgt.iterrows():
             if s.ngames_team.get((x.player, x.team), 0) < MIN_GAMES: continue
             e = s.project(x.player, x.pos, x.opp, x.home, HF)
-            if e: rows.append(dict(player=x.player, team=x.team, actual=x.fp, **e))
+            if e and e['min'] >= MIN_EXP_MIN: rows.append(dict(player=x.player, team=x.team, actual=x.fp, **e))
         E = fp_from(pd.DataFrame(rows))
         resid += list(E.actual - E.pred)
         hits_rows.append(dict(round=int(r), n_played=int(len(tgt)), m2=hits(E, tgt)))

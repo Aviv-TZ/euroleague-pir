@@ -225,6 +225,15 @@ export_euroleague_web <- function(output_dir, site_dir, template_file,
     model_rows[[2]] <- m2
     message('Component model: ', sum(ok), '/', length(ok), ' ranked players projected')
   }
+  # who is ranked with the component model: >= 3 games with the current team, >= 5 expected minutes,
+  # a game in the coming round (the model's own rule; tested on 2026/27 rounds 6-12)
+  cm_rank <- NULL; cm_pir <- NULL
+  if (!is.null(CM)) {
+    el <- Filter(function(x) isTRUE(x$eligible), CM$players)
+    cm_pir <- sort(vapply(el, function(x) as.numeric(x$fut[[1]]), 0), decreasing=TRUE)
+    cm_rank <- setNames(seq_along(cm_pir), names(cm_pir))
+    message('Component model: ', length(cm_rank), ' players ranked')
+  }
 
   pos_he <- c(Guard='גארד', Forward='פורוורד', Center='סנטר')
   num <- function(x, d=3) if (is.null(x) || !length(x) || !is.finite(x)) NULL else round(x, d)
@@ -275,7 +284,22 @@ export_euroleague_web <- function(output_dir, site_dir, template_file,
       o <- old_px[[key]]
       for (f in c('price','he','s5pos','injured','s5id','img')) if (!is.null(o[[f]])) p[[f]] <- o[[f]]
     }
-    if (!is.na(j)) {
+    if (!is.null(cm_rank)) {
+      rk <- unname(cm_rank[key]); p$ranked <- !is.na(rk)
+      if (!is.na(j)) { c1 <- cand[j,]
+        p$inputs <- list(msf=num(c1$MatchupSeasonFactor,4), ml5f=num(c1$MatchupLast5Factor,4),
+                         mr=num(c1$MinutesRatio,4), l5mr=num(c1$Last5MinutesRatio,4)) }
+      if (!is.na(rk)) {
+        v <- cm_pir[[key]]
+        mm <- list(score=num(v), rank=rk, pir=num(v,1), lo=num(v + as.numeric(CM$resid$lo),1), hi=num(v + as.numeric(CM$resid$hi),1))
+        p$m <- list(mm, mm)
+      } else {
+        cx <- CM$players[[key]]
+        p$reason <- if (is.null(cx) || cx$games_team < 3) 'פחות מ-3 הופעות בקבוצה הנוכחית' else
+                    if (cx$min < 5) 'פחות מ-5 דקות צפויות' else
+                    if (is.null(fx)) 'לקבוצה אין משחק במחזור הקרוב' else 'לא עומד בתנאי הזכאות של המודל'
+      }
+    } else if (!is.na(j)) {
       c1 <- cand[j,]
       p$inputs <- list(msf=num(c1$MatchupSeasonFactor,4), ml5f=num(c1$MatchupLast5Factor,4),
                        mr=num(c1$MinutesRatio,4), l5mr=num(c1$Last5MinutesRatio,4))
@@ -362,7 +386,7 @@ export_euroleague_web <- function(output_dir, site_dir, template_file,
   if (!is.null(CM) && !is.null(CM$backtest)) backtest$m2 <- CM$backtest
   meta <- c(list(model=if (!is.null(CM)) 'component' else 'weights',
     generated_utc=format(now, '%Y-%m-%dT%H:%M:%SZ', tz='UTC'),
-    season='2026/27', n_ranked=nrow(cand), n_players=nrow(avgs),
+    season='2026/27', n_ranked=if (!is.null(cm_rank)) length(cm_rank) else nrow(cand), n_players=nrow(avgs),
     weights=list(m1=as.list(W[[1]]), m2=as.list(W[[2]])),
     fut_rounds=as.list(fut_rounds),
     calib=lapply(calib, function(c) lapply(c, function(v) if (is.finite(v)) round(v,4) else NULL)),
