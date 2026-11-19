@@ -457,9 +457,7 @@ function rebuildLive(){
   rows.sort((a,b)=>b.pir-a.pir);
   rows.forEach(a=>{ a.rank = 1+rows.filter(b=>b.pir>a.pir).length; });
   LIVE.nPlayed = rows.length; LIVE.nFinal = rows.filter(a=>a.status==='final').length;
-  // rank among finished games only for final rows
-  const fin = rows.filter(a=>a.status==='final');
-  fin.forEach(a=>{ a.rank = 1+fin.filter(b=>b.pir>a.pir).length; });
+  // one ranking for everyone who played so far in the round (finished and live games together)
   rows.forEach(a=>LIVE.map.set(akey(a.raw,a.team),a));
   LIVE.rows = rows;
 }
@@ -1701,7 +1699,7 @@ function componentsTable(p, m){
 }
 function actualBanner(p){
   const a = getActual(p); if(!a) return '';
-  const n = a.status==='live' ? LIVE.nPlayed : LIVE.nFinal;
+  const n = LIVE.nPlayed;
   const rk = a.rank!=null ? ` · דירוג ${a.rank} מתוך ${n} ${LIVE.roundDone?'ששיחקו במחזור':'ששיחקו עד כה במחזור'}` : '';
   if(a.status==='live') return `<div class="actual live"><span class="badge live"><i></i>LIVE</span>
      <span>משחק עכשיו נגד <b>${esc(a.opp)}</b> · פנטזי <b>${f(a.pir,0)}</b> · ${f(a.min,1)} דק'${rk}</span>
@@ -1833,7 +1831,7 @@ function compareTable(ps){
     h += row('פנטזי בפועל', p=>{const a=getActual(p); return a?a.pir:null;}, {best:'max',d:0,cls:'real'});
     h += row('דקות', p=>{const a=getActual(p); return a?a.min:null;}, {best:'max',d:1,cls:'real'});
     h += row(`דירוג אמיתי במחזור`, p=>{const a=getActual(p); return a?a.rank:null;}, {best:'min',d:0,cls:'real'});
-    h += row('מתוך', p=>{const a=getActual(p); return a?(a.status==='live'?LIVE.nPlayed:LIVE.nFinal):null;}, {d:0,cls:'real'});
+    h += row('מתוך', p=>{const a=getActual(p); return a?LIVE.nPlayed:null;}, {d:0,cls:'real'});
   }
   h += sec('כללי');
   h += row('יריבה במחזור', p=>p.opp?vsTxt(p.venue, p.opp, true):'אין משחק');
