@@ -60,7 +60,7 @@ el_web_prices <- function(season='E2026') {
   get1 <- function(u) { r <- tryCatch(httr::GET(u, httr::timeout(40), httr::user_agent('EuroLeague-R/2.0')), error=identity)
     if (inherits(r,'error') || httr::status_code(r) != 200) return(NULL)
     tryCatch(jsonlite::fromJSON(httr::content(r,'text',encoding='UTF-8'), simplifyVector=FALSE), error=function(e) NULL) }
-  get <- function(u) { for (k in 1:3) { x <- get1(u); if (!is.null(x)) return(x); Sys.sleep(15) }; NULL }   # 3 tries
+  get <- function(u) { for (k in 1:5) { x <- get1(u); if (!is.null(x)) return(x); Sys.sleep(20*k) }; NULL }   # 5 tries, longer waits (rate limits)
   lg <- get('https://dreamteam.sport5.co.il/api/Leagues/GetLeagues')
   sid <- NULL
   for (l in lg$data) if (identical(l$urlName, 'fantasyeuroleague')) sid <- l$currentSeasonId
@@ -230,6 +230,10 @@ export_euroleague_web <- function(output_dir, site_dir, template_file,
   num <- function(x, d=3) if (is.null(x) || !length(x) || !is.finite(x)) NULL else round(x, d)
 
   prices <- tryCatch(el_web_prices(), error=function(e) { message('Prices failed: ', conditionMessage(e)); NULL })
+  old_site <- file.path(site_dir, 'data.json')
+  old_data <- if (is.null(prices) && file.exists(old_site)) tryCatch(jsonlite::fromJSON(old_site, simplifyVector=FALSE), error=function(e) NULL) else NULL
+  if (!is.null(old_data)) message('Prices: keeping the previous page prices and coaches')
+  old_px <- if (!is.null(old_data)) setNames(old_data$players, vapply(old_data$players, function(q) paste(q$raw, q$team, sep='||'), '')) else list()
   # Did the player appear (>0 minutes) in any of his team's last 3 games?
   raw_all <- tryCatch(utils::read.csv(file.path(output_dir, 'EuroLeague_2026-27_players.csv'),
                                       fileEncoding='UTF-8', stringsAsFactors=FALSE), error=function(e) NULL)
@@ -267,6 +271,9 @@ export_euroleague_web <- function(output_dir, site_dir, template_file,
       im <- attr(prices, 'images')
       q2 <- which(im$raw == a$Player & im$team == a$Team)[1]; if (is.na(q2)) q2 <- which(im$raw == a$Player)[1]
       if (!is.na(q2) && !is.na(im$img[q2])) p$img <- im$img[q2]
+    } else if (!is.null(old_px[[key]])) {
+      o <- old_px[[key]]
+      for (f in c('price','he','s5pos','injured','s5id','img')) if (!is.null(o[[f]])) p[[f]] <- o[[f]]
     }
     if (!is.na(j)) {
       c1 <- cand[j,]
@@ -396,8 +403,10 @@ export_euroleague_web <- function(output_dir, site_dir, template_file,
     if (length(dropped)) message('Coaches: replaced coach(es) dropped: ', paste(dropped, collapse=', '))
     cp <- cp[!duplicated(cp$team),,drop=FALSE]
     lapply(seq_len(nrow(cp)), function(i) c(list(raw=cp$raw[i], team=cp$team[i], he=cp$he[i], price=cp$price[i], s5id=cp$s5id[i], logo=cp$logo[i],
-      injured=cp$injured[i], fut=coach_fut(cp$team[i])), coach_next(cp$team[i]))) } else list()
-  s5teams <- if (!is.null(prices)) { u <- unique(prices[,c('s5team','team')]); setNames(as.list(u$team), u$s5team) } else list()
+      injured=cp$injured[i], fut=coach_fut(cp$team[i])), coach_next(cp$team[i]))) } else if (!is.null(old_data))
+    lapply(old_data$coaches, function(c) c(list(raw=c$raw, team=c$team, he=c$he, price=c$price, s5id=c$s5id, logo=c$logo,
+      injured=c$injured, fut=coach_fut(c$team)), coach_next(c$team))) else list()
+  s5teams <- if (!is.null(prices)) { u <- unique(prices[,c('s5team','team')]); setNames(as.list(u$team), u$s5team) } else if (!is.null(old_data)) old_data$s5teams else list()
   data <- list(meta=meta, fixtures=fixtures, players=players, round_hits=round_hits, coaches=coaches, s5teams=s5teams,
                opponents=opponents, league=league)
   json <- jsonlite::toJSON(data, auto_unbox=TRUE, null='null', na='null', digits=NA, pretty=FALSE)

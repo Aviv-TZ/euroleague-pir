@@ -38,4 +38,4 @@ Fully completed rounds with parsed box scores: 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11
 Frozen out-of-sample evaluation on E2026 rounds: 6, 7, 8, 9, 10, 11, 12
 Distinct teams in player data: 20; in next fixtures: 20
 Upcoming games: 10; next team fixtures: 20; eligible recommendations: 238; top picks: 10
-Created /home/runner/work/euroleague-pir/euroleague-pir/output/EuroLeague_2026-27_FP_real_data.xlsx with 2706 rows and 2 Top 8 rankings; position counts: Guard 1110, Forward 1049, Center 547
+Created /home/user/clean-pir/output/EuroLeague_2026-27_FP_real_data.xlsx with 2706 rows and 2 Top 8 rankings; position counts: Guard 1110, Forward 1049, Center 547

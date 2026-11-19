@@ -28,7 +28,7 @@ P = dict(hl=8, m0=80, m1=400, c=800, alpha=1.0)          # tuned on the two trai
 PHI = dict(pts=3.0, reb=1.25, ast=1.5, stl=0.6, blk=0.6)  # dispersion of each count (fitted on 2025/26)
 MIN_GAMES = 5                                              # same eligibility as the site's ranking
 
-def get(url, tries=3):
+def get(url, tries=5):
     for k in range(tries):
         try:
             req = urllib.request.Request(url, headers={'User-Agent': 'EuroLeague-R-Boxscore/2.0'})
@@ -36,7 +36,7 @@ def get(url, tries=3):
                 return json.load(r)
         except Exception:
             if k == tries - 1: raise
-            time.sleep(3 + 5 * k)
+            time.sleep(10 + 20 * k)                       # rate limits (HTTP 429) need a real pause
 
 def schedule(season):
     d = get(API.format(s=season) + '/games?limit=1000'); d = d.get('data', d)
@@ -63,7 +63,7 @@ def season_rows(season, sch):
         return out
     played = sch[sch.played & (sch.phase == 'RS')]
     rows = []
-    with cf.ThreadPoolExecutor(6) as ex:
+    with cf.ThreadPoolExecutor(3) as ex:
         for r in ex.map(one, [g for _, g in played.iterrows()]): rows += r
     return pd.DataFrame(rows)
 
