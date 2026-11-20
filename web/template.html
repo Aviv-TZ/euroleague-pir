@@ -1342,16 +1342,18 @@ function ilTime(str){
   const asIl = Date.parse(`${p.year}-${p.month}-${p.day}T${p.hour}:${p.minute}:00Z`);
   return t - (asIl - t);
 }
-async function mtLookup(name, userId){
-  MT.loading = true; MT.err = null; MT.data = null; MT.rec = null; MT.sq = null; renderMyTeam();
+// quiet: background refresh of a team already shown (keeps the page as is until fresh data arrives)
+async function mtLookup(name, userId, quiet=false){
+  if(!quiet){ MT.loading = true; MT.err = null; MT.data = null; MT.rec = null; MT.sq = null; renderMyTeam(); }
   try{
     const q = userId ? `userId=${encodeURIComponent(userId)}&name=${encodeURIComponent(name||'')}` : `name=${encodeURIComponent(name)}`;
     const j = await (await fetch(`${WORKER}/lookup?${q}`)).json();
+    if(quiet && (j.error || !j.team)) return;
     if(j.error) throw new Error(j.error==='busy, try again in a minute' ? 'יותר מדי חיפושים כרגע, נסה שוב בעוד דקה' : j.error);
     MT.data = j;
     if(j.team){
-      MT.q = j.team.name.trim(); MT.capId = j.captainId; MT.vcId = j.subCaptainId; MT.coachMode = 'auto';
-      try{ localStorage.setItem('el_my_team', j.team.name); }catch(e){}
+      MT.q = j.team.name.trim(); MT.capId = j.captainId; MT.vcId = j.subCaptainId; if(!quiet) MT.coachMode = 'auto';
+      try{ localStorage.setItem('el_my_team', j.team.name); localStorage.setItem('el_my_team_id', String(j.team.userId)); }catch(e){}
       // transfer window: entries added for the open round are this window's transfers (the fantasy site counts only those)
       const R = j.round || null, open = !!(R && R.windowEnd && Date.now() < ilTime(R.windowEnd));
       const pendOf = x => !!(open && x.added!=null && x.added===R.id);
@@ -1370,9 +1372,13 @@ async function mtLookup(name, userId){
       MT.bank = 100 - MT.sq.reduce((s,x)=>s+x.price,0) - (MT.coach?MT.coach.price:0);
       await mtCompute();
     }
-  }catch(e){ MT.err = String(e.message||e); }
+  }catch(e){ if(!quiet) MT.err = String(e.message||e); }
   MT.loading = false; renderMyTeam();
 }
+// the saved team opens by itself on every visit, with fresh data; refreshed every 15 minutes while open
+function mtSaved(){ try{ return {name: localStorage.getItem('el_my_team')||'', id: localStorage.getItem('el_my_team_id')||''}; }catch(e){ return {name:'', id:''}; } }
+function mtForget(){ try{ localStorage.removeItem('el_my_team'); localStorage.removeItem('el_my_team_id'); }catch(e){}
+  Object.assign(MT, {data:null, rec:null, sq:null, coach:null, err:null, q:''}); renderMyTeam(); }
 async function mtCompute(){
   MT.rec = null; renderMyTeam();
   await new Promise(r=>setTimeout(r,30));   // paint first; the search can take a second or two
@@ -1502,7 +1508,7 @@ function renderMyTeam(){
     const plans = rec ? rec.plans : [];
     const thr = MT.sq ? threats(MT.sq, H) : [];
     body = `<div class="card mt-head">
-        <h2>${esc(t.name)}</h2>
+        <div class="phead"><h2>${esc(t.name)}</h2><button class="btn ghost sm" id="mtForget" title="הקבוצה לא תיפתח אוטומטית יותר">החלף קבוצה</button></div>
         <div class="kpis">
           <div class="kpi"><span>מקום בליגה הכללית</span><b>${t.position.toLocaleString('he-IL')}</b><small>מתוך ${MT.data.leagueSize.toLocaleString('he-IL')}</small></div>
           <div class="kpi"><span>אחוזון</span><b>${f(top,1)}%</b><small>העליונים</small></div>
@@ -1569,6 +1575,7 @@ function renderMyTeam(){
       }catch(e){} }, 400); };
   inp.onblur = ()=>setTimeout(()=>ac.classList.remove('on'),150);
   const hs = $('#mtH'); if(hs) hs.onchange = ()=>{ MT.H = +hs.value; mtCompute(); };
+  const fg = $('#mtForget'); if(fg) fg.onclick = mtForget;
   const cs = $('#mtCoach'); if(cs) cs.onchange = ()=>{ MT.coachMode = cs.value; mtCompute(); };
   box.querySelectorAll('.trow[data-plan]').forEach(el=>el.onclick=()=>{ MT.sel = +el.dataset.plan; renderMyTeam(); });
   box.querySelectorAll('#thrSort button').forEach(b=>b.onclick=()=>{ MT.thrSort = b.dataset.s; renderMyTeam(); });
@@ -1904,6 +1911,8 @@ function renderAll(){
   if(!(ae && ae.tagName==='INPUT' && $('#tab-search').contains(ae))) renderPlayer();
 }
 updateSubline(); renderTops(); renderFixtures(); renderOpp(); renderFdr(); renderBuilder(); renderSquad(); renderMyTeam(); readHash(); renderPlayer();
+{ const sv = mtSaved(); if(sv.name && location.protocol!=='file:') mtLookup(sv.name, sv.id || null); }
+setInterval(()=>{ if(MT.data && MT.data.team && !MT.loading) mtLookup(MT.data.team.name, MT.data.team.userId, true); }, 15*60e3);
 loadLive().then(()=>{ pollDirect(); loadNext(); loadPrev(); }); loadOwn();
 setInterval(loadNext, 30*60e3);
 window.addEventListener('hashchange', ()=>{ readHash(); renderPlayer(); });
