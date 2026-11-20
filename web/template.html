@@ -358,7 +358,17 @@ footer{color:var(--muted);font-size:12px;padding:10px 20px 30px;text-align:cente
 <script>
 const EL_DATA = /*__EL_DATA__*/null;
 (async function(){
-const D = EL_DATA || await fetch('data.json').then(r=>r.json());
+// Club renames in the EuroLeague data (applied retroactively by the source): every file the page reads is
+// mapped to the current name, so data computed before and after a rename still match.
+const TEAM_ALIAS = {'Besiktas Istanbul':'Besiktas Fuzul Istanbul'};
+function canonTeams(o){
+  if(Array.isArray(o)){ for(let i=0;i<o.length;i++){ const v=o[i]; if(typeof v==='string'){ if(TEAM_ALIAS[v]) o[i]=TEAM_ALIAS[v]; } else if(v && typeof v==='object') canonTeams(v); } return o; }
+  if(o && typeof o==='object') for(const k of Object.keys(o)){
+    let v = o[k]; if(typeof v==='string'){ if(TEAM_ALIAS[v]) o[k] = v = TEAM_ALIAS[v]; } else if(v && typeof v==='object') canonTeams(v);
+    if(TEAM_ALIAS[k]){ o[TEAM_ALIAS[k]] = v; delete o[k]; } }
+  return o;
+}
+const D = canonTeams(EL_DATA || await fetch('data.json').then(r=>r.json()));
 const P = D.players, M = D.meta;
 const byId = new Map(P.map(p=>[p.id,p]));
 const MODELS = [
@@ -424,7 +434,7 @@ document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{showTab(b.data
 function actualTag(p){ const a=getActual(p); if(!a) return '';
   return a.status==='live' ? ` <span class="badge live sm" title="LIVE – פנטזי בפועל עד עכשיו"><i></i>${f(a.pir,0)}</span>`
                            : ` <span class="badge final sm" title="שוחק – פנטזי בפועל">✓ ${f(a.pir,0)}</span>`; }
-const TSHORT = {'Anadolu Efes Istanbul':'Efes','Armani Olimpia Milan':'Milan','Besiktas Istanbul':'Besiktas','Crvena Zvezda Meridianbet Belgrade':'Zvezda',
+const TSHORT = {'Besiktas Fuzul Istanbul':'Besiktas','Anadolu Efes Istanbul':'Efes','Armani Olimpia Milan':'Milan','Besiktas Istanbul':'Besiktas','Crvena Zvezda Meridianbet Belgrade':'Zvezda',
   'Dubai Basketball':'Dubai','FC Barcelona':'Barcelona','FC Bayern Munich':'Bayern','Fenerbahce Tarfin Istanbul':'Fenerbahce','Hapoel IBI Tel Aviv':'Hapoel TA',
   'Kosner Baskonia Vitoria-Gasteiz':'Baskonia','LDLC ASVEL Villeurbanne':'ASVEL','Maccabi Rapyd Tel Aviv':'Maccabi TA','Olympiacos Piraeus':'Olympiacos',
   'Panathinaikos AKTOR Athens':'Panathinaikos','Paris Basketball':'Paris','Partizan Mozzart Bet Belgrade':'Partizan','Real Madrid':'Real Madrid',
@@ -485,7 +495,7 @@ async function loadLive(){
     const repo = own ? location.pathname.split('/').filter(Boolean)[0] : null;
     const [a, b] = await Promise.all([get('live.json?t='+Date.now()),
       own && repo ? get(`https://raw.githubusercontent.com/${own}/${repo}/main/docs/live.json?t=${Date.now()}`) : null]);
-    const j = [a, b].filter(x=>x && x.updated_utc).sort((x,y)=>y.updated_utc.localeCompare(x.updated_utc))[0];
+    const j = canonTeams([a, b].filter(x=>x && x.updated_utc).sort((x,y)=>y.updated_utc.localeCompare(x.updated_utc))[0]);
     if(!j) return;
     if(LIVE.data && j.updated_utc===LIVE.data.updated_utc) return;
     LIVE.data = j; rebuildLive(); renderAll();
@@ -573,7 +583,7 @@ const PREV = {data:null};
 async function loadPrev(){
   if(location.protocol==='file:') return;
   const j = await fetch('prev_round.json?t='+Date.now(), {cache:'no-store'}).then(r=>r.ok?r.json():null).catch(()=>null);
-  if(j && j.round===(M.next_round||0)-1 && (j.rows||[]).length){ PREV.data = j; renderTops(); }
+  if(j && j.round===(M.next_round||0)-1 && (j.rows||[]).length){ PREV.data = canonTeams(j); renderTops(); }
 }
 function actualTopTable(){
   // the round in progress, or (before it starts) the round that just ended with its saved predictions
@@ -1056,7 +1066,7 @@ async function loadNext(){
   const repo = own ? location.pathname.split('/').filter(Boolean)[0] : null;
   const [a, b] = await Promise.all([get('next.json?t='+Date.now()),
     own && repo ? get(`https://raw.githubusercontent.com/${own}/${repo}/main/docs/next.json?t=${Date.now()}`) : null]);
-  const j = [a, b].filter(x=>x && x.round===NR()).sort((x,y)=>(y.generated_utc||'').localeCompare(x.generated_utc||''))[0];
+  const j = canonTeams([a, b].filter(x=>x && x.round===NR()).sort((x,y)=>(y.generated_utc||'').localeCompare(x.generated_utc||''))[0]);
   if(!j || (NEXT.data && NEXT.data.generated_utc===j.generated_utc)) return;
   NEXT.data = j;
   NEXT.map = new Map((j.players||[]).map(q=>[q.raw+'||'+q.team, q]));
