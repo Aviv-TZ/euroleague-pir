@@ -404,7 +404,8 @@ function updateSubline(){
 // at the first hourly update after that (~:17); shown once the round's schedule is known
 function switchTxt(dt){
   const sch = (LIVE.data && LIVE.data.schedule) || [], r = M.next_round;
-  const tips = sch.filter(g=>g.round===r && g.utc).map(g=>Date.parse(g.utc)); if(!tips.length) return '';
+  const rg = sch.filter(g=>g.round===r), tips = rg.filter(g=>g.utc).map(g=>Date.parse(g.utc)); if(!tips.length) return '';
+  if(!rg.every(g=>g.status==='final')) return '';      // shown only once the round's last game has ended
   const t = new Date(Math.max(...tips) + 14.5*3600e3); t.setUTCMinutes(17,0,0); if(t.getTime() < Math.max(...tips) + 14.5*3600e3) t.setUTCHours(t.getUTCHours()+1);
   const late = Date.now() > t.getTime();
   return `<span title="אחרי סיום כל משחקי המחזור + 12 שעות, בעדכון השעתי הבא">מעבר למחזור ${r+1}: ${late ? 'בעדכון הקרוב' : dt(t)}</span>`;
