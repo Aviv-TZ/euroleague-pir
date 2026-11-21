@@ -1,41 +1,42 @@
 Downloading games from official EuroLeague API, season E2026
 Games returned: 380 / API total: 380
 First game fields: id, identifier, gameCode, season, group, phaseType, round, roundAlias, roundName, played, date, confirmedDate, confirmedHour, localTimeZone, localDate, utcDate, local, road, audience, audienceConfirmed, socialFeed, operationsCode, referee1, referee2, referee3, referee4, venue, isNeutralVenue, gameStatus, winner
-Candidate games: 120
+Candidate games: 130
 Roster records available: 978
 First valid box score fields: local, road
-Game 120 local: 12 players; opponent=Real Madrid; section fields=coach,players,team,total
-Game 120 road: 12 players; opponent=Besiktas Istanbul; section fields=coach,players,team,total
-Checked 10/120 games; valid player rows: 224
-Checked 20/120 games; valid player rows: 443
-Checked 30/120 games; valid player rows: 667
-Checked 40/120 games; valid player rows: 886
-Checked 50/120 games; valid player rows: 1115
-Checked 60/120 games; valid player rows: 1335
-Checked 70/120 games; valid player rows: 1563
-Checked 80/120 games; valid player rows: 1795
-Checked 90/120 games; valid player rows: 2025
-Checked 100/120 games; valid player rows: 2253
-Checked 110/120 games; valid player rows: 2480
-Checked 120/120 games; valid player rows: 2706
-Successful box scores: 120; failed game requests: 0; valid rows: 2706; skipped records sampled: 100
+Game 129 local: 12 players; opponent=Besiktas Fuzul Istanbul; section fields=coach,players,team,total
+Game 129 road: 12 players; opponent=Partizan Mozzart Bet Belgrade; section fields=coach,players,team,total
+Checked 10/130 games; valid player rows: 223
+Checked 20/130 games; valid player rows: 447
+Checked 30/130 games; valid player rows: 666
+Checked 40/130 games; valid player rows: 890
+Checked 50/130 games; valid player rows: 1109
+Checked 60/130 games; valid player rows: 1338
+Checked 70/130 games; valid player rows: 1558
+Checked 80/130 games; valid player rows: 1786
+Checked 90/130 games; valid player rows: 2018
+Checked 100/130 games; valid player rows: 2248
+Checked 110/130 games; valid player rows: 2476
+Checked 120/130 games; valid player rows: 2703
+Checked 130/130 games; valid player rows: 2929
+Successful box scores: 130; failed game requests: 0; valid rows: 2929; skipped records sampled: 100
 First skipped lines: 
-game 120 player KORKMAZ, FURKAN position 2 seconds 0 PIR 0 opponent Real Madrid
-game 120 player SHULGA, MAKSYM position 2 seconds 0 PIR 0 opponent Besiktas Istanbul
-game 118 player ALLMAN, KYLE position 1 seconds 0 PIR 0 opponent Valencia Basket
-game 116 player KONE, ABDU position 3 seconds 0 PIR 0 opponent Paris Basketball
-game 116 player NUNEZ, JUAN position 1 seconds 0 PIR 0 opponent Paris Basketball
-game 115 player TONUT, STEFANO position 1 seconds 0 PIR 0 opponent Crvena Zvezda Meridianbet Belgrade
-game 114 player JOKSIMOVIC, STEFAN position 2 seconds 0 PIR 0 opponent Hapoel IBI Tel Aviv
-game 114 player SOUZA, PEDRO position 2 seconds 0 PIR 0 opponent Hapoel IBI Tel Aviv
-game 114 player SPAGNOLO, MATTEO position 1 seconds 0 PIR 0 opponent Hapoel IBI Tel Aviv
-game 114 player GERMAN, EUGENE position 1 seconds 0 PIR 0 opponent Kosner Baskonia Vitoria-Gasteiz
-game 112 player AKOBUNDU-EHIOGU, KAODIRICHI position 3 seconds 0 PIR 0 opponent FC Bayern Munich
-game 112 player GIFFEY, NIELS position 2 seconds 0 PIR 0 opponent Zalgiris Kaunas
-Player rows by position: Guard=1110; Forward=1049; Center=547
+game 129 player NAKIC, MARIO position 2 seconds 0 PIR 0 opponent Besiktas Fuzul Istanbul
+game 129 player SILVA, CHRIS position 3 seconds 0 PIR 0 opponent Besiktas Fuzul Istanbul
+game 130 player DUNSTON, BRYANT position 3 seconds 0 PIR 0 opponent Real Madrid
+game 127 player RUSSELL, DARON position 1 seconds 0 PIR 0 opponent LDLC ASVEL Villeurbanne
+game 126 player GERMAN, EUGENE position 1 seconds 0 PIR 0 opponent Paris Basketball
+game 126 player GINAT, TOMER position 2 seconds 0 PIR 0 opponent Paris Basketball
+game 126 player TOPPIN, JACOB position 2 seconds 0 PIR 0 opponent Paris Basketball
+game 123 player TONUT, STEFANO position 1 seconds 0 PIR 0 opponent Fenerbahce Tarfin Istanbul
+game 123 player MAHMUTOGLU, MELIH position 1 seconds 0 PIR 0 opponent Armani Olimpia Milan
+game 124 player HOLLATZ, JUSTUS position 1 seconds 0 PIR 0 opponent Kosner Baskonia Vitoria-Gasteiz
+game 124 player ALVES DE SOUZA, THIERRY HENRY position 3 seconds 0 PIR 0 opponent FC Bayern Munich
+game 124 player SOUZA, PEDRO position 2 seconds 0 PIR 0 opponent FC Bayern Munich
+Player rows by position: Guard=1202; Forward=1135; Center=592
 Recent-game window: 50 unique games across 20 opponents
-Fully completed rounds with parsed box scores: 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12
-Frozen out-of-sample evaluation on E2026 rounds: 6, 7, 8, 9, 10, 11, 12
+Fully completed rounds with parsed box scores: 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13
+Frozen out-of-sample evaluation on E2026 rounds: 6, 7, 8, 9, 10, 11, 12, 13
 Distinct teams in player data: 20; in next fixtures: 20
-Upcoming games: 10; next team fixtures: 20; eligible recommendations: 238; top picks: 10
-Created /home/user/clean-pir/output/EuroLeague_2026-27_FP_real_data.xlsx with 2706 rows and 2 Top 8 rankings; position counts: Guard 1110, Forward 1049, Center 547
+Upcoming games: 10; next team fixtures: 20; eligible recommendations: 244; top picks: 10
+Created /home/runner/work/euroleague-pir/euroleague-pir/output/EuroLeague_2026-27_FP_real_data.xlsx with 2929 rows and 2 Top 8 rankings; position counts: Guard 1202, Forward 1135, Center 592
