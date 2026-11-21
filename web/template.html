@@ -1718,6 +1718,7 @@ function simRender(){
     <div class="bons" id="simChips">בונוסים למחזור ${cur.r}: ${[1,3,4,2].map(chipBtn).join('')}</div>
     ${warn.length?`<div class="warn">${warn.join(' · ')}</div>`:''}
     ${cur.done.length?`<div class="note" style="margin:8px 0">${cur.done.map(m=>`<div><span class="out">⬅ ${esc(m.o.name)} <small>(${ph[m.o.pos]}, ${f(m.o.fps[h],1)})</small></span> <span class="in">➜ ${esc(m.i.name)} <small>(${f(m.i.price,0)}M, ${f(m.i.fps[h],1)})</small></span> <button class="btn ghost sm" data-undo="${m.in}">ביטול</button></div>`).join('')}</div>`:''}
+    ${lu&&lu.manual?`<div class="note" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:8px 0">שינית ידנית את ההרכב או הקפטן במחזור ${cur.r}<button class="btn ghost sm" data-luauto="1">↺ ביטול שינויי ההרכב</button></div>`:''}
     ${lu?`<div class="court"><svg class="lines" viewBox="0 0 100 140" preserveAspectRatio="none" aria-hidden="true">
       <rect x="3" y="2" width="94" height="136" fill="none"/><rect x="34" y="2" width="32" height="30" fill="none"/>
       <path d="M34 32 A16 10 0 0 0 66 32" fill="none"/><line x1="3" y1="70" x2="97" y2="70"/>
