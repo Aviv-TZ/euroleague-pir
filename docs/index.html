@@ -394,9 +394,11 @@ const gen = new Date(M.generated_utc);
 function updateSubline(){
   const L = LIVE.data, lu = L && L.updated_utc ? new Date(L.updated_utc) : null;
   const dt = t => `${shortDate.format(t)} ${timeFmt.format(t)}`;
-  $('#subline').innerHTML =
-    (M.next_round ? `תחזית מחזור ${M.next_round}: ${dt(gen)}` : `תחזית: ${dt(gen)}`) +
-    (lu ? ` · <b>לייב: ${dt(lu)}</b>` : '') + ` · ${nextCheckTxt()}` + switchTxt(dt);
+  // one time item per line
+  $('#subline').innerHTML = [
+    M.next_round ? `תחזית מחזור ${M.next_round}: ${dt(gen)}` : `תחזית: ${dt(gen)}`,
+    lu ? `<b>לייב: ${dt(lu)}</b>` : '',
+    nextCheckTxt(), switchTxt(dt)].filter(Boolean).join('<br>');
 }
 // when the site moves to the next round's forecast: 12 h after the round's last game ends (tip-off + 2.5 h),
 // at the first hourly update after that (~:17); shown once the round's schedule is known
@@ -405,7 +407,7 @@ function switchTxt(dt){
   const tips = sch.filter(g=>g.round===r && g.utc).map(g=>Date.parse(g.utc)); if(!tips.length) return '';
   const t = new Date(Math.max(...tips) + 14.5*3600e3); t.setUTCMinutes(17,0,0); if(t.getTime() < Math.max(...tips) + 14.5*3600e3) t.setUTCHours(t.getUTCHours()+1);
   const late = Date.now() > t.getTime();
-  return ` · <span title="אחרי סיום כל משחקי המחזור + 12 שעות, בעדכון השעתי הבא">מעבר למחזור ${r+1}: ${late ? 'בעדכון הקרוב' : '~'+dt(t)}</span>`;
+  return `<span title="אחרי סיום כל משחקי המחזור + 12 שעות, בעדכון השעתי הבא">מעבר למחזור ${r+1}: ${late ? 'בעדכון הקרוב' : dt(t)}</span>`;
 }
 const shortDate = new Intl.DateTimeFormat('he-IL',{day:'numeric',month:'numeric',timeZone:'Asia/Jerusalem'});
 // when the updater looks again (the GitHub workflow schedule): every 10 minutes 15:00-23:00 UTC, otherwise hourly at :17
