@@ -398,7 +398,7 @@ function updateSubline(){
   $('#subline').innerHTML = [
     M.next_round ? `תחזית מחזור ${M.next_round}: ${dt(gen)}` : `תחזית: ${dt(gen)}`,
     lu ? `<b>לייב: ${dt(lu)}</b>` : '',
-    nextCheckTxt(), switchTxt(dt)].filter(Boolean).join('<br>');
+    switchTxt(dt)].filter(Boolean).join('<br>');
 }
 // when the site moves to the next round's forecast: 12 h after the round's last game ends (tip-off + 2.5 h),
 // at the first hourly update after that (~:17); shown once the round's schedule is known
