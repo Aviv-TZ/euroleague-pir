@@ -247,6 +247,9 @@ th.fsort{cursor:pointer;user-select:none} th.fsort.on{color:var(--accent)}
 .fdleg{display:flex;gap:4px;align-items:center;margin:8px 0}
 .fdleg span{width:26px;text-align:center;border-radius:6px;color:#fff;font-weight:700;font-size:12px;padding:2px 0}
 @media(max-width:600px){ .fdt td,.fdt th{padding-left:2px;padding-right:2px} .fdt td.fdteam{font-size:12px} .fdt td.fdc{font-size:10.5px;padding:5px 1px} .fdt td.fdc small{font-size:9.5px} .fdt th{font-size:11px;padding:4px 2px} }
+.h2h{margin:12px 0;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--panel2)}
+.h2h h3{margin:0 0 6px;font-size:15px}
+.h2h td small{font-weight:700} .h2h .up{color:var(--good)} .h2h .down{color:var(--bad)} .h2hl{margin-top:8px;font-size:12.5px;line-height:1.7}
 .cvs{font-size:12px;font-weight:600;color:#3a4660;margin-top:1px}
 .cvs:empty{display:none}
 .cnew{position:absolute;bottom:-8px;left:50%;transform:translateX(-50%);background:var(--good);color:#fff;font-size:10px;font-weight:700;border-radius:8px;padding:1px 6px}
@@ -1737,6 +1740,23 @@ function actualBanner(p){
      <span>שיחק נגד <b>${esc(a.opp)}</b> · פנטזי בפועל <b>${f(a.pir,0)}</b> · ${f(a.min,1)} דק'${rk}</span>
      <small>תוצאת אמת של המשחק במחזור ${LIVE.round} – לא חיזוי</small></div>`;
 }
+// history vs the next opponent (last 5 seasons, all competitions phases): averages vs his overall average
+const H2H_ROWS = [['fp','<b>פנטזי</b>'],['min','דקות'],['pts','נקודות'],['reb','ריבאונדים'],['ast','אסיסטים'],['stl','חטיפות'],
+  ['blk','חסימות'],['fd','עבירות שנסחטו'],['tov','איבודים'],['miss','החטאות'],['fc','עבירות']];
+function h2hBlock(p){
+  const h = p.h2h; if(!h) return '';
+  const fmtD = s => { const [y,m,d] = String(s).split('-'); return `${+d}.${+m}.${String(y).slice(2)}`; };
+  const dif = (k, a, o) => { const v = a - o, good = ['tov','miss','fc'].includes(k) ? v < 0 : v > 0;
+    return Math.abs(v) < 0.05 ? '' : `<small class="${good?'up':'down'}"><bdi dir="ltr">${v>0?'+':''}${f(v,1)}</bdi></small>`; };
+  return `<div class="h2h">
+    <h3>מול ${esc(tShort(h.opp))} ב-5 העונות האחרונות · ${h.n} ${h.n===1?'משחק':'משחקים'}</h3>
+    <div class="scroll"><table class="comp"><thead><tr><th></th><th class="num">מול ${esc(tShort(h.opp))}</th><th class="num">ממוצע כללי</th><th class="num">הפרש</th></tr></thead><tbody>
+      ${H2H_ROWS.map(([k,l])=>`<tr><td>${l}</td><td class="num">${f(h.avg[k],1)}</td><td class="num">${f(h.overall[k],1)}</td><td class="num">${dif(k,h.avg[k],h.overall[k])}</td></tr>`).join('')}
+    </tbody></table></div>
+    <div class="h2hl">${h.last.map(g=>`<div><b>${fmtD(g.date)}</b> ${g.home?'(H)':'(A)'}${g.team!==p.team?` · ב-${esc(tShort(g.team))}`:''} · ${g.fp} פנטזי · <bdi dir="ltr">${g.pts}-${g.reb}-${g.ast}</bdi> · ${f(g.min,0)} דק׳</div>`).join('')}</div>
+    <p class="note">ממוצע כללי = כל המשחקים של השחקן ב-5 העונות (${h.n_overall}). נקודות-ריבאונדים-אסיסטים בכל משחק. ${h.n<3?'מעט משחקים – להתייחס בזהירות.':''}</p>
+  </div>`;
+}
 function playerCard(p){
   const head = `<div class="phead"><div>
       <h2>${esc(p.name)}</h2>
@@ -1744,6 +1764,7 @@ function playerCard(p){
       <button class="btn" id="goCompare">⇄ השוואה</button></div>
     <div class="opp" style="margin-top:8px">יריבה במחזור: <b>${oppText(p)}</b>${p.date?` · ${fmtShortDate(p.date)}`:''}${nextAfter(p)}</div>
     ${actualBanner(p)}
+    ${h2hBlock(p)}
     <div class="chips">
       ${p.price!=null?`<span class="chip">מחיר פנטזי<b>${f(p.price,0)}M</b></span>`:''}${ownTxt(p)?`<span class="chip">אחזקה<b>${ownTxt(p)}</b></span>`:''}${p.injured?'<span class="chip warnchip">פצוע/חסר באתר הפנטזי</span>':''}
       <span class="chip">משחקים<b>${p.games}</b></span>

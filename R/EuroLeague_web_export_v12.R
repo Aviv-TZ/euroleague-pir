@@ -56,6 +56,11 @@ EL_S5_TEAMS <- c('אנדולו אפס'='IST','באסקוניה'='BAS','הכוכ�
   'ברצלונה'='BAR','באיירן מינכן'='MUN',"פנרבחצ'ה"='ULK','הפועל ת"א'='HTA','וילרבאן'='ASV',
   'מכבי ת"א'='TEL','אולימפיאקוס'='OLY','פנאתינייקוס'='PAN','פריז באסקט'='PRS','פרטיזן בלגרד'='PAR',
   'ריאל מדריד'='MAD','ולנסיה'='PAM','וירטוס בולוניה'='VIR',"ז'לגיריס קובנה"='ZAL','בשיקטש'='BES')
+`%||%` <- function(a, b) if (is.null(a) || !length(a)) b else a
+# fallback by the fantasy site's team id (stable; names can change or even come back empty, as Besiktas did)
+EL_S5_IDS <- c('216'='IST','218'='BAS','219'='RED','220'='DUB','221'='MIL','222'='BAR','223'='MUN','224'='ULK',
+  '225'='HTA','226'='ASV','227'='TEL','228'='OLY','229'='PAN','230'='PRS','231'='PAR','232'='MAD','233'='PAM',
+  '234'='VIR','235'='ZAL','295'='BES')
 el_web_prices <- function(season='E2026') {
   get1 <- function(u) { r <- tryCatch(httr::GET(u, httr::timeout(40), httr::user_agent('EuroLeague-R/2.0')), error=identity)
     if (inherits(r,'error') || httr::status_code(r) != 200) return(NULL)
@@ -76,7 +81,9 @@ el_web_prices <- function(season='E2026') {
   coach_by <- unlist(lapply(Filter(function(p) identical(p$type, 'E'), pe), function(p) setNames(p$person$name, p$club$code)))
   out <- list()
   for (t in tp$data) {
-    code <- unname(EL_S5_TEAMS[enc2utf8(t$name)]); if (!length(code) || is.na(code)) { message('Prices: unknown team ', t$name); next }
+    code <- unname(EL_S5_TEAMS[enc2utf8(t$name %||% '')])
+    if (!length(code) || is.na(code)) code <- unname(EL_S5_IDS[as.character(t$id)])
+    if (!length(code) || is.na(code)) { message('Prices: unknown team ', t$name, ' (id ', t$id, ')'); next }
     for (p in t$players) {
       coach <- identical(as.integer(p$position), 4L)
       raw <- if (coach) unname(coach_by[code]) else unname(name_by[key(code, p$shirtNumber)])
@@ -272,6 +279,7 @@ export_euroleague_web <- function(output_dir, site_dir, template_file,
     cmx <- if (!is.null(CM)) CM$players[[key]] else NULL
     p$fut <- if (!is.null(cmx)) as.numeric(unlist(cmx$fut)) else future_fp(j, a$Team, a$Position, a$AvgPIR)
     if (!is.null(cmx)) p$cm <- list(min=cmx$min, e=cmx$e, p_dd=cmx$p_dd, p_td=cmx$p_td)
+    if (!is.null(cmx) && !is.null(cmx$h2h)) p$h2h <- cmx$h2h      # history vs the next opponent (5 seasons)
     if (!is.null(prices)) {
       q <- which(prices$raw == a$Player & prices$team == a$Team)[1]
       if (is.na(q)) q <- which(prices$raw == a$Player)[1]
