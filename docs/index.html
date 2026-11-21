@@ -1642,7 +1642,7 @@ function simRender(){
       const ins = pairByPos(p.outs, p.ins);
       return `<div class="trow"><div class="tk"><span class="rank">${i+1}</span> ${p.base||!p.outs.length?'בלי חילופים':`${p.outs.length} ${p.outs.length===1?'חילוף':'חילופים'}`}</div>
         <div class="tio">${!p.outs.length?'<div class="note">להשאיר את הסגל כמו שהוא</div>':p.outs.map((o,j)=>`<div><span class="out">⬅ ${esc(o.name)} <small>(${ph[o.pos]}, ${f(o.tot,1)})</small></span> <span class="in">➜ ${esc(ins[j].name)} <small>(${ph[ins[j].pos]}, ${f(ins[j].tot,1)}, ${f(ins[j].price,0)}M)</small></span></div>`).join('')}</div>
-        <div class="tg"><b class="${gain>0.05?'up':''}">${sg(gain)}</b><small>סה"כ ${f(p.v,1)} · נשאר ${f(p.left,0)}M</small><button class="btn sm" data-apply="${i}" style="margin-top:4px">החל במחזור ${cur.r}</button></div></div>`; }).join('');
+        <div class="tg"><b class="${gain>0.05?'up':''}">${sg(gain)}</b><small>סה"כ ${f(p.v,1)} · נשאר <bdi dir="ltr">${f(p.left,0)}M</bdi></small><button class="btn sm" data-apply="${i}" style="margin-top:4px">החל במחזור ${cur.r}</button></div></div>`; }).join('');
   // the replacement list for the clicked player / coach
   let picker = '';
   const pk = SIM.pick && [...cur.sq, cur.coach].find(x=>x && x.s5id===SIM.pick);
@@ -1660,7 +1660,7 @@ function simRender(){
     cand = cand.slice(0, 30);
     picker = `<div class="card simpick" style="margin-top:12px;background:var(--panel2)">
       <div class="phead"><h3>החלפה במחזור ${cur.r}: ${esc(pk.name)} <small>(${ph[pk.pos]}, ${f(pk.price,0)}M, צפי ${f(pk.fps[h],1)})</small></h3><button class="btn ghost sm" id="simClose">סגור</button></div>
-      <div class="note">תקציב לשחקן המחליף: עד ${f(money,0)}M · ${nleft>0?`נשארו ${nleft} חילופים במחזור הזה`:'<b style="color:#c0262d">לא נשארו חילופים במחזור הזה</b>'}${undo?` · <button class="btn ghost sm" id="simUndo">להחזיר את ${esc(undo.o.name)}</button>`:''}</div>
+      <div class="note">תקציב לשחקן המחליף: עד <bdi dir="ltr">${f(money,0)}M</bdi> · ${nleft>0?`נשארו ${nleft} חילופים במחזור הזה`:'<b style="color:#c0262d">לא נשארו חילופים במחזור הזה</b>'}${undo?` · <button class="btn ghost sm" id="simUndo">להחזיר את ${esc(undo.o.name)}</button>`:''}</div>
       <div class="fctl" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:8px 0">
         <input id="simQ" type="search" placeholder="חיפוש שם / קבוצה" value="${esc(SIM.q)}" style="flex:1;min-width:150px">
         <label class="hzl"><input type="checkbox" id="simAnyPos" ${SIM.anyPos?'checked':''}> גם מעמדה אחרת</label><div class="seg" id="simSort"><button data-s="round" class="${SIM.sort==='round'?'on':''}">צפי מחזור ${cur.r}</button><button data-s="rest" class="${SIM.sort==='rest'?'on':''}">צפי ${cur.r}–${RO[RO.length-1]}</button><button data-s="price" class="${SIM.sort==='price'?'on':''}">מחיר</button></div></div>
@@ -1671,7 +1671,7 @@ function simRender(){
   }
   const warn = [
     cur.bad.length ? `${cur.bad.length} ${cur.bad.length===1?'חילוף שמור לא תקף':'חילופים שמורים לא תקפים'} (השחקן כבר לא בסגל) – לא נספרו` : '',
-    cur.bank < -1e-9 ? `חריגה מהתקציב (${f(cur.bank,0)}M)` : '',
+    cur.bank < -1e-9 ? `חריגה מהתקציב (<bdi dir="ltr">${f(cur.bank,0)}M</bdi>)` : '',
     cur.done.length > cur.limit ? `יותר חילופים (${cur.done.length}) ממה שמותר במחזור (${cur.limit})` : '',
     cur.over.length ? `יותר מ-2 שחקנים מ${cur.over.map(tName).join(', ')}` : ''].filter(Boolean);
   const bo = cur.bo || {};
@@ -1681,7 +1681,7 @@ function simRender(){
     <div class="seg simtabs" id="simTabs" style="display:flex;flex-wrap:wrap;margin:10px 0">${tabs}</div>
     <div class="kpis">
       <div class="kpi"><span>צפי מחזור ${cur.r}</span><b>${f(cur.tot,1)}</b><small>בלי חילופים במחזור הזה: ${f(cur.tot0,1)} (${sg(cur.tot-cur.tot0)})</small></div>
-      <div class="kpi"><span>חילופים במחזור</span><b>${cur.done.length}/${cur.limit}</b><small>בקופה: ${f(cur.bank,0)}M</small></div>
+      <div class="kpi"><span>חילופים במחזור</span><b>${cur.done.length}/${cur.limit}</b><small>בקופה: <bdi dir="ltr">${f(cur.bank,0)}M</bdi></small></div>
       <div class="kpi"><span>סה"כ ${RO[0]}–${RO[RO.length-1]}</span><b>${f(sumR,1)}</b><small>בלי שום חילוף: ${f(sumB,1)} (${sg(sumR-sumB)} מכל החילופים)</small></div></div>
     <div class="bons" id="simChips">בונוסים למחזור ${cur.r}: ${[1,3,4,2].map(chipBtn).join('')}</div>
     ${warn.length?`<div class="warn">${warn.join(' · ')}</div>`:''}
@@ -1750,7 +1750,7 @@ function renderMyTeam(){
           <div class="kpi"><span>ניקוד עונה / מחזור</span><b>${t.totalScore}</b><small>מחזור אחרון: ${t.roundScore}</small></div>
         </div>
         ${bonusLine()}
-        <div class="note">מאמן: ${MT.coach?`${esc(MT.coach.name)} (${f(MT.coach.price,0)}M${(()=>{const c=(D.coaches||[]).find(c=>c.s5id===MT.coach.s5id); return c?` · צפי ${f(coachFp(c),1)}${ownTxt(c)?` · ${ownTxt(c)} אחזקה`:''}`:''})()})`:'–'} · בקופה: ${f(MT.bank,0)}M · הנתונים מאתר הפנטזי מתעדכנים עד כל רבע שעה</div>
+        <div class="note">מאמן: ${MT.coach?`${esc(MT.coach.name)} (${f(MT.coach.price,0)}M${(()=>{const c=(D.coaches||[]).find(c=>c.s5id===MT.coach.s5id); return c?` · צפי ${f(coachFp(c),1)}${ownTxt(c)?` · ${ownTxt(c)} אחזקה`:''}`:''})()})`:'–'} · בקופה: <bdi dir="ltr">${f(MT.bank,0)}M</bdi> · הנתונים מאתר הפנטזי מתעדכנים עד כל רבע שעה</div>
       </div>
       ${siteSquad()}
       ${(()=>{ const ah = MT.sq ? actualHarm(MT.sq) : []; if(!ah.length) return '';
@@ -1786,7 +1786,7 @@ function renderMyTeam(){
               <div class="tk"><span class="rank">${i+1}</span> ${r.base?(r.k?`${r.k} ${r.k===1?'חילוף':'חילופים'} (כבר בוצעו)`:'בלי חילופים'):r.k===0?'0 חילופים':`${r.k} ${r.k===1?'חילוף':'חילופים'}`}</div>
               <div class="tio">${!r.outs.length?'<div class="note">להשאיר את הסגל כמו שהוא</div>':(()=>{ const ins = pairByPos(r.outs, r.ins); const ph = {Guard:'ג',Forward:'פ',Center:'ס',Coach:'מאמן'};
                 return r.outs.map((o,j)=>`<div><span class="out">⬅ ${esc(o.name)} <small>(${ph[o.pos]}, ${f(o.tot,1)})</small></span> <span class="in">➜ ${esc(ins[j].name)} <small>(${ph[ins[j].pos]}, ${f(ins[j].tot,1)}, ${f(ins[j].price,0)}M${ownTxt(ins[j].p||ins[j].c)?', '+ownTxt(ins[j].p||ins[j].c)+' אחזקה':''})</small></span></div>`).join(''); })()}</div>
-              <div class="tg"><b class="${gain>0.05?'up':''}"><bdi dir="ltr">${gain>0.05?'+':''}${f(gain,1)}</bdi></b><small>סה"כ ${f(r.v,1)} · נשאר ${f(r.left,0)}M</small></div></div>`; }).join('')}
+              <div class="tg"><b class="${gain>0.05?'up':''}"><bdi dir="ltr">${gain>0.05?'+':''}${f(gain,1)}</bdi></b><small>סה"כ ${f(r.v,1)} · נשאר <bdi dir="ltr">${f(r.left,0)}M</bdi></small></div></div>`; }).join('')}
           ${plans[MT.sel]?`<h3 style="margin-top:16px">ההרכב לפי תוכנית ${MT.sel+1} למחזור הקרוב (${rr(0)}) – קפטן מומלץ מסומן C${H>1?` · התוכנית נבחרה לפי ${H} מחזורים`:''}</h3>${mtCourt(plans[MT.sel].squad, plans[MT.sel].coach)}`:''}`}
       </div>
       <div id="simBox" style="margin-top:16px"></div>
