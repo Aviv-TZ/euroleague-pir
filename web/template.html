@@ -1256,11 +1256,12 @@ function fpsOf(p, injured, H, off=0){
   if(!a) return z;
   return Array.from({length:H}, (_,h)=>a[h]||0);
 }
-// best lineup for one round h: bench 1 G + 1 F + 1 C (50%), five = the rest (1-3 G, 1-3 F, 1-2 C), captain x2
+// best lineup for one round h: any 3 on the bench (50%; a lineup change is free and may cross positions),
+// five = the rest (1-3 G, 1-3 F, 1-2 C), captain x2
 function lineupAt(sq, h, b){
-  let best = null; const tc = b&&b.tc, dc = b&&b.dc, bf = b&&b.bench ? 1 : 0.5;
-  const G = sq.filter(x=>x.pos==='Guard'), F = sq.filter(x=>x.pos==='Forward'), C = sq.filter(x=>x.pos==='Center');
-  for(const g of G) for(const fw of F) for(const c of C){
+  let best = null; const tc = b&&b.tc, dc = b&&b.dc, bf = b&&b.bench ? 1 : 0.5, N = sq.length;
+  for(let i=0;i<N;i++) for(let j=i+1;j<N;j++) for(let k=j+1;k<N;k++){
+    const g = sq[i], fw = sq[j], c = sq[k];
     let n={Guard:0,Forward:0,Center:0}, sum=0, cap=null;
     let vc=null;
     for(const x of sq){ if(x===g||x===fw||x===c) continue; n[x.pos]++; sum+=x.fps[h];
@@ -1566,11 +1567,11 @@ function simLimitFull(r, h, C){
   return h===0 && W.open ? (extra ?? (C[2]&&C[2].fixed ? W.limit : (W.round&&W.round.subs) || 3)) : (extra ?? 3);
 }
 const simLimit = (r, h, C) => { const W = MT.win || {}; return Math.max(0, simLimitFull(r,h,C) - (h===0 && W.open ? (W.made||0) : 0)); };
-// a lineup chosen by hand for one round: ov = {bench:[3 ids, one per position], cap, vc}; null if it no longer fits the squad
+// a lineup chosen by hand for one round: ov = {bench:[3 ids], cap, vc}; null if it no longer fits the squad
 function lineupFixed(sq, h, b, ov){
   if(!ov || !Array.isArray(ov.bench) || ov.bench.length!==3) return null;
   const bench = ov.bench.map(id=>sq.find(x=>x.s5id===id));
-  if(bench.some(x=>!x) || new Set(bench.map(x=>x.pos)).size!==3) return null;
+  if(bench.some(x=>!x) || new Set(bench).size!==3) return null;
   const st = sq.filter(x=>!bench.includes(x)), n = {Guard:0,Forward:0,Center:0}; st.forEach(x=>n[x.pos]++);
   if(n.Guard<1||n.Guard>3||n.Forward<1||n.Forward>3||n.Center<1||n.Center>2) return null;
   const tc = b&&b.tc, dc = b&&b.dc, bf = b&&b.bench ? 1 : 0.5, byv = [...st].sort((a,c)=>c.fps[h]-a.fps[h]);
@@ -1679,8 +1680,11 @@ function simRender(){
     cand = cand.slice(0, 30);
     const lu = cur.lu, onBench = lu && lu.bench.includes(pk), luBtns = [];
     if(lu && !pk.isCoach){
-      if(onBench) lu.starters.filter(x=>x.pos===pk.pos).forEach(x=>luBtns.push(`<button class="btn ghost sm" data-swap="${x.s5id}">להכניס להרכב במקום ${esc(x.name)} (${f(x.fps[h],1)})</button>`));
-      else { const bp = lu.bench.find(x=>x.pos===pk.pos); if(bp) luBtns.push(`<button class="btn ghost sm" data-swap="${bp.s5id}">להוריד לספסל (נכנס ${esc(bp.name)}, ${f(bp.fps[h],1)})</button>`);
+      // a swap is offered when the five stays legal (1-3 G, 1-3 F, 1-2 C)
+      const ok = (inn, out) => { const n = {Guard:0,Forward:0,Center:0}; lu.starters.forEach(x=>{ if(x!==out) n[x.pos]++; }); n[inn.pos]++;
+        return n.Guard>=1&&n.Guard<=3&&n.Forward>=1&&n.Forward<=3&&n.Center>=1&&n.Center<=2; };
+      if(onBench) lu.starters.filter(x=>ok(pk,x)).forEach(x=>luBtns.push(`<button class="btn ghost sm" data-swap="${x.s5id}">להכניס להרכב במקום ${esc(x.name)} (${ph[x.pos]} · ${f(x.fps[h],1)})</button>`));
+      else { lu.bench.filter(x=>ok(x,pk)).forEach(bp=>luBtns.push(`<button class="btn ghost sm" data-swap="${bp.s5id}">להוריד לספסל, נכנס ${esc(bp.name)} (${ph[bp.pos]} · ${f(bp.fps[h],1)})</button>`));
         if(pk!==lu.cap) luBtns.push(`<button class="btn ghost sm" data-cap="${pk.s5id}">קפטן</button>`);
         if(cur.bo && cur.bo.dc && pk!==lu.vc && pk!==lu.cap) luBtns.push(`<button class="btn ghost sm" data-vc="${pk.s5id}">סגן קפטן</button>`); }
     }
