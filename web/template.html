@@ -1752,24 +1752,6 @@ function renderMyTeam(){
         <div class="note">מאמן: ${MT.coach?`${esc(MT.coach.name)} (${f(MT.coach.price,0)}M${(()=>{const c=(D.coaches||[]).find(c=>c.s5id===MT.coach.s5id); return c?` · צפי ${f(coachFp(c),1)}${ownTxt(c)?` · ${ownTxt(c)} אחזקה`:''}`:''})()})`:'–'} · בקופה: ${f(MT.bank,0)}M · הנתונים מאתר הפנטזי מתעדכנים עד כל רבע שעה</div>
       </div>
       ${siteSquad()}
-      <div class="card" style="margin-top:16px">
-        <div class="phead"><h2>חילופים מומלצים</h2>
-          <label class="hzl">מאמן: <select id="mtCoach"><option value="auto" ${MT.coachMode==='auto'?'selected':''}>אוטומטי (גם החלפת מאמן)</option>
-            <option value="keep" ${MT.coachMode==='keep'?'selected':''}>להשאיר את ${esc(MT.coach?MT.coach.name:'המאמן')}</option>
-            ${[...(D.coaches||[])].filter(c=>c.fut && (!MT.coach || c.s5id!==MT.coach.s5id)).sort((a,b)=>cH(b)-cH(a)).map(c=>`<option value="${c.s5id}" ${String(MT.coachMode)===String(c.s5id)?'selected':''}>להחליף ל-${esc(c.he||c.raw)} (${f(c.price,0)}M, צפי ${cLbl} ${f(cH(c),1)})</option>`).join('')}</select></label>
-          <label class="hzl">להסתכל קדימה: <select id="mtH">${hz.map(h=>`<option value="${h}" ${h===H?'selected':''}>${h===1?`מחזור ${rr(0)} בלבד`:`${h} מחזורים (${rr(0)}–${rr(h-1)})`}</option>`).join('')}</select></label></div>
-        ${MT.off?`<div class="roundnote">מחזור ${M.next_round} כבר בעיצומו – החילופים מחושבים לקראת מחזור ${NR()}${NEXT.data?` (תחזית מעודכנת ${dayFmt.format(new Date(NEXT.data.generated_utc))})`:''}</div>`:''}
-        <div class="hint">3 התוכניות עם הכי הרבה נקודות צפויות ב${rangeTxt}. לחץ על תוכנית כדי לראות את ההרכב.${MT.win&&MT.win.open?` מספר החילופים בכל תוכנית נספר כמו באתר הפנטזי – סה"כ בחלון הנוכחי, מתוך ${MT.win.limit}${MT.win.subsOn?' (בונוס חילופים מופעל)':''}${MT.win.made?`; ${MT.win.made} כבר בוצעו, ואפשר לבטל אותם בלי עלות`:''}.`:''}${MT.win&&MT.win.boost?` הבונוסים שהפעלת למחזור ${rr(0)} נלקחים בחשבון.`:''}</div>
-        ${!rec?'<div class="empty">מחשב חילופים…</div>':`<div class="note">הסגל הנוכחי בלי חילופים: <b>${f(rec.baseV,1)}</b> נקודות צפויות ב${rangeTxt}</div>
-          ${plans.map((r,i)=>{ const gain = r.v-rec.baseV;
-            return `<div class="trow pick ${i===MT.sel?'best':''}" data-plan="${i}" title="לחץ להצגת ההרכב של התוכנית">
-              <div class="tk"><span class="rank">${i+1}</span> ${r.base?(r.k?`${r.k} ${r.k===1?'חילוף':'חילופים'} (כבר בוצעו)`:'בלי חילופים'):r.k===0?'0 חילופים':`${r.k} ${r.k===1?'חילוף':'חילופים'}`}</div>
-              <div class="tio">${!r.outs.length?'<div class="note">להשאיר את הסגל כמו שהוא</div>':(()=>{ const ins = pairByPos(r.outs, r.ins); const ph = {Guard:'ג',Forward:'פ',Center:'ס',Coach:'מאמן'};
-                return r.outs.map((o,j)=>`<div><span class="out">⬅ ${esc(o.name)} <small>(${ph[o.pos]}, ${f(o.tot,1)})</small></span> <span class="in">➜ ${esc(ins[j].name)} <small>(${ph[ins[j].pos]}, ${f(ins[j].tot,1)}, ${f(ins[j].price,0)}M${ownTxt(ins[j].p||ins[j].c)?', '+ownTxt(ins[j].p||ins[j].c)+' אחזקה':''})</small></span></div>`).join(''); })()}</div>
-              <div class="tg"><b class="${gain>0.05?'up':''}"><bdi dir="ltr">${gain>0.05?'+':''}${f(gain,1)}</bdi></b><small>סה"כ ${f(r.v,1)} · נשאר ${f(r.left,0)}M</small></div></div>`; }).join('')}
-          ${plans[MT.sel]?`<h3 style="margin-top:16px">ההרכב לפי תוכנית ${MT.sel+1} למחזור הקרוב (${rr(0)}) – קפטן מומלץ מסומן C${H>1?` · התוכנית נבחרה לפי ${H} מחזורים`:''}</h3>${mtCourt(plans[MT.sel].squad, plans[MT.sel].coach)}`:''}`}
-      </div>
-      <div id="simBox" style="margin-top:16px"></div>
       ${(()=>{ const ah = MT.sq ? actualHarm(MT.sq) : []; if(!ah.length) return '';
         const sg = v => `<bdi dir="ltr">${v>0.05?'+':''}${f(v,1)}</bdi>`;
         return `<div class="card" style="margin-top:16px">
@@ -1788,7 +1770,26 @@ function renderMyTeam(){
             <td class="num"><b>${f(x.own,0)}%</b></td><td class="num">${f(x.tot,1)}</td><td class="num">${f(x.risk,1)}</td><td class="num col-price">${f(x.coach.price,0)}M</td></tr>`
             : `<tr><td class="pl" data-id="${x.p.id}"><b>${esc(x.p.he||x.p.name)}</b><small>${tName(x.p.team)} · ${x.p.pos_he}</small></td>
             <td class="num"><b>${f(x.own,0)}%</b></td><td class="num">${f(x.tot,1)}</td><td class="num">${f(x.risk,1)}</td><td class="num col-price">${f(x.p.price,0)}M</td></tr>`).join('')}</tbody></table></div>`}
-      </div>`;
+      </div>
+      <div class="card" style="margin-top:16px">
+        <div class="phead"><h2>חילופים מומלצים</h2>
+          <label class="hzl">מאמן: <select id="mtCoach"><option value="auto" ${MT.coachMode==='auto'?'selected':''}>אוטומטי (גם החלפת מאמן)</option>
+            <option value="keep" ${MT.coachMode==='keep'?'selected':''}>להשאיר את ${esc(MT.coach?MT.coach.name:'המאמן')}</option>
+            ${[...(D.coaches||[])].filter(c=>c.fut && (!MT.coach || c.s5id!==MT.coach.s5id)).sort((a,b)=>cH(b)-cH(a)).map(c=>`<option value="${c.s5id}" ${String(MT.coachMode)===String(c.s5id)?'selected':''}>להחליף ל-${esc(c.he||c.raw)} (${f(c.price,0)}M, צפי ${cLbl} ${f(cH(c),1)})</option>`).join('')}</select></label>
+          <label class="hzl">להסתכל קדימה: <select id="mtH">${hz.map(h=>`<option value="${h}" ${h===H?'selected':''}>${h===1?`מחזור ${rr(0)} בלבד`:`${h} מחזורים (${rr(0)}–${rr(h-1)})`}</option>`).join('')}</select></label></div>
+        ${MT.off?`<div class="roundnote">מחזור ${M.next_round} כבר בעיצומו – החילופים מחושבים לקראת מחזור ${NR()}${NEXT.data?` (תחזית מעודכנת ${dayFmt.format(new Date(NEXT.data.generated_utc))})`:''}</div>`:''}
+        <div class="hint">3 התוכניות עם הכי הרבה נקודות צפויות ב${rangeTxt}. לחץ על תוכנית כדי לראות את ההרכב.${MT.win&&MT.win.open?` מספר החילופים בכל תוכנית נספר כמו באתר הפנטזי – סה"כ בחלון הנוכחי, מתוך ${MT.win.limit}${MT.win.subsOn?' (בונוס חילופים מופעל)':''}${MT.win.made?`; ${MT.win.made} כבר בוצעו, ואפשר לבטל אותם בלי עלות`:''}.`:''}${MT.win&&MT.win.boost?` הבונוסים שהפעלת למחזור ${rr(0)} נלקחים בחשבון.`:''}</div>
+        ${!rec?'<div class="empty">מחשב חילופים…</div>':`<div class="note">הסגל הנוכחי בלי חילופים: <b>${f(rec.baseV,1)}</b> נקודות צפויות ב${rangeTxt}</div>
+          ${plans.map((r,i)=>{ const gain = r.v-rec.baseV;
+            return `<div class="trow pick ${i===MT.sel?'best':''}" data-plan="${i}" title="לחץ להצגת ההרכב של התוכנית">
+              <div class="tk"><span class="rank">${i+1}</span> ${r.base?(r.k?`${r.k} ${r.k===1?'חילוף':'חילופים'} (כבר בוצעו)`:'בלי חילופים'):r.k===0?'0 חילופים':`${r.k} ${r.k===1?'חילוף':'חילופים'}`}</div>
+              <div class="tio">${!r.outs.length?'<div class="note">להשאיר את הסגל כמו שהוא</div>':(()=>{ const ins = pairByPos(r.outs, r.ins); const ph = {Guard:'ג',Forward:'פ',Center:'ס',Coach:'מאמן'};
+                return r.outs.map((o,j)=>`<div><span class="out">⬅ ${esc(o.name)} <small>(${ph[o.pos]}, ${f(o.tot,1)})</small></span> <span class="in">➜ ${esc(ins[j].name)} <small>(${ph[ins[j].pos]}, ${f(ins[j].tot,1)}, ${f(ins[j].price,0)}M${ownTxt(ins[j].p||ins[j].c)?', '+ownTxt(ins[j].p||ins[j].c)+' אחזקה':''})</small></span></div>`).join(''); })()}</div>
+              <div class="tg"><b class="${gain>0.05?'up':''}"><bdi dir="ltr">${gain>0.05?'+':''}${f(gain,1)}</bdi></b><small>סה"כ ${f(r.v,1)} · נשאר ${f(r.left,0)}M</small></div></div>`; }).join('')}
+          ${plans[MT.sel]?`<h3 style="margin-top:16px">ההרכב לפי תוכנית ${MT.sel+1} למחזור הקרוב (${rr(0)}) – קפטן מומלץ מסומן C${H>1?` · התוכנית נבחרה לפי ${H} מחזורים`:''}</h3>${mtCourt(plans[MT.sel].squad, plans[MT.sel].coach)}`:''}`}
+      </div>
+      <div id="simBox" style="margin-top:16px"></div>
+`;
   }
   box.innerHTML = `<div class="card"><h2>הקבוצה שלי</h2>
       <div class="hint">הקלד את שם הקבוצה שלך בפנטזי יורוליג של ערוץ הספורט – תקבל מקום, אחוזון, חילופים מומלצים ומי השחקנים שהכי פוגעים בך</div>
