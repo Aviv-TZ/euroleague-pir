@@ -1640,9 +1640,11 @@ function simRender(){
   const plansHtml = !rec ? '<div class="empty">מחשב חילופים מומלצים…</div>' : rec.err ? `<div class="warn">${esc(rec.err)}</div>` :
     `<div class="note">בלי חילופים במחזור הזה: <b>${f(rec.baseV,1)}</b> נקודות צפויות ב${rng}</div>` + rec.plans.map((p,i)=>{ const gain = p.v - rec.baseV;
       const ins = pairByPos(p.outs, p.ins);
-      return `<div class="trow"><div class="tk"><span class="rank">${i+1}</span> ${p.base||!p.outs.length?'בלי חילופים':`${p.outs.length} ${p.outs.length===1?'חילוף':'חילופים'}`}</div>
-        <div class="tio">${!p.outs.length?'<div class="note">להשאיר את הסגל כמו שהוא</div>':p.outs.map((o,j)=>`<div><span class="out">⬅ ${esc(o.name)} <small>(${ph[o.pos]}, ${f(o.tot,1)})</small></span> <span class="in">➜ ${esc(ins[j].name)} <small>(${ph[ins[j].pos]}, ${f(ins[j].tot,1)}, ${f(ins[j].price,0)}M)</small></span></div>`).join('')}</div>
-        <div class="tg"><b class="${gain>0.05?'up':''}">${sg(gain)}</b><small>סה"כ ${f(p.v,1)} · נשאר <bdi dir="ltr">${f(p.left,0)}M</bdi></small><button class="btn sm" data-apply="${i}" style="margin-top:4px">החל במחזור ${cur.r}</button></div></div>`; }).join('');
+      const key = new Set(p.outs.map((o,j)=>o.s5id+'>'+ins[j].s5id)), now = cur.done.map(m=>m.out+'>'+m.in);
+      const on = key.size===now.length && now.every(k=>key.has(k));
+      return `<div class="trow pick" ${on?'style="border:1px solid var(--good);border-radius:10px"':''} data-apply="${i}" title="לחץ כדי להחיל את התוכנית במחזור ${cur.r}"><div class="tk"><span class="rank">${i+1}</span> ${p.base||!p.outs.length?'בלי חילופים':`${p.outs.length} ${p.outs.length===1?'חילוף':'חילופים'}`}</div>
+        <div class="tio">${!p.outs.length?'<div class="note">להשאיר את הסגל כמו שהוא</div>':p.outs.map((o,j)=>`<div><span class="out">⬅ ${esc(o.name)} <small>(${ph[o.pos]} · ${f(o.tot,1)})</small></span> <span class="in">➜ ${esc(ins[j].name)} <small>(${ph[ins[j].pos]} · ${f(ins[j].tot,1)} · <bdi dir="ltr">${f(ins[j].price,0)}M</bdi>)</small></span></div>`).join('')}</div>
+        <div class="tg"><b class="${gain>0.05?'up':''}">${sg(gain)}</b><small>סה"כ ${f(p.v,1)} · נשאר <bdi dir="ltr">${f(p.left,0)}M</bdi></small><div style="margin-top:6px">${on?`<span class="btn ghost sm">✓ מוחל במחזור ${cur.r}</span>`:`<span class="btn sm">החל במחזור ${cur.r}</span>`}</div></div></div>`; }).join('');
   // the replacement list for the clicked player / coach
   let picker = '';
   const pk = SIM.pick && [...cur.sq, cur.coach].find(x=>x && x.s5id===SIM.pick);
@@ -1707,7 +1709,7 @@ function simRender(){
   box.querySelectorAll('[data-apply]').forEach(b=>b.onclick=()=>{ const p = rec && rec.plans[+b.dataset.apply]; if(!p) return;
     const ins = pairByPos(p.outs, p.ins), s = simLoad();
     s.moves = (s.moves||[]).filter(m=>m.r!==cur.r).concat(p.outs.map((o,j)=>({r:cur.r, out:o.s5id, in:ins[j].s5id})));
-    simSave(s); SIM.pick = null; simRender(); });
+    simSave(s); SIM.pick = null; simRender(); $('#simBox').scrollIntoView({behavior:'smooth', block:'start'}); });
   const hs = $('#simH'); if(hs) hs.onchange = ()=>{ SIM.H = +hs.value; simRender(); };
   const cl = $('#simClose'); if(cl) cl.onclick = ()=>{ SIM.pick = null; simRender(); };
   const un = $('#simUndo'); if(un) un.onclick = ()=>{ const m = cur.done.find(x=>x.in===SIM.pick); if(m){ simMove(cur.r, m.in, m.out); SIM.pick = null; simRender(); } };
@@ -1785,7 +1787,7 @@ function renderMyTeam(){
             return `<div class="trow pick ${i===MT.sel?'best':''}" data-plan="${i}" title="לחץ להצגת ההרכב של התוכנית">
               <div class="tk"><span class="rank">${i+1}</span> ${r.base?(r.k?`${r.k} ${r.k===1?'חילוף':'חילופים'} (כבר בוצעו)`:'בלי חילופים'):r.k===0?'0 חילופים':`${r.k} ${r.k===1?'חילוף':'חילופים'}`}</div>
               <div class="tio">${!r.outs.length?'<div class="note">להשאיר את הסגל כמו שהוא</div>':(()=>{ const ins = pairByPos(r.outs, r.ins); const ph = {Guard:'ג',Forward:'פ',Center:'ס',Coach:'מאמן'};
-                return r.outs.map((o,j)=>`<div><span class="out">⬅ ${esc(o.name)} <small>(${ph[o.pos]}, ${f(o.tot,1)})</small></span> <span class="in">➜ ${esc(ins[j].name)} <small>(${ph[ins[j].pos]}, ${f(ins[j].tot,1)}, ${f(ins[j].price,0)}M${ownTxt(ins[j].p||ins[j].c)?', '+ownTxt(ins[j].p||ins[j].c)+' אחזקה':''})</small></span></div>`).join(''); })()}</div>
+                return r.outs.map((o,j)=>`<div><span class="out">⬅ ${esc(o.name)} <small>(${ph[o.pos]} · ${f(o.tot,1)})</small></span> <span class="in">➜ ${esc(ins[j].name)} <small>(${ph[ins[j].pos]} · ${f(ins[j].tot,1)} · <bdi dir="ltr">${f(ins[j].price,0)}M</bdi>${ownTxt(ins[j].p||ins[j].c)?', '+ownTxt(ins[j].p||ins[j].c)+' אחזקה':''})</small></span></div>`).join(''); })()}</div>
               <div class="tg"><b class="${gain>0.05?'up':''}"><bdi dir="ltr">${gain>0.05?'+':''}${f(gain,1)}</bdi></b><small>סה"כ ${f(r.v,1)} · נשאר <bdi dir="ltr">${f(r.left,0)}M</bdi></small></div></div>`; }).join('')}
           ${plans[MT.sel]?`<h3 style="margin-top:16px">ההרכב לפי תוכנית ${MT.sel+1} למחזור הקרוב (${rr(0)}) – קפטן מומלץ מסומן C${H>1?` · התוכנית נבחרה לפי ${H} מחזורים`:''}</h3>${mtCourt(plans[MT.sel].squad, plans[MT.sel].coach)}`:''}`}
       </div>
