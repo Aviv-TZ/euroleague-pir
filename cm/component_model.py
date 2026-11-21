@@ -48,8 +48,16 @@ def schedule(season):
 
 def season_rows(season, sch):
     """Box-score lines (>0 minutes) of the season's played regular-season games."""
+    cache = os.environ.get('EL_BOX_CACHE', os.path.join(HERE, '.box_cache')); os.makedirs(cache, exist_ok=True)
     def one(g):
-        j = get(API.format(s=season) + f'/games/{g.game}/stats')
+        # a finished game's box score never changes: kept on disk, so a run only downloads new games
+        f = os.path.join(cache, f'{season}_{g.game}.json')
+        if os.path.exists(f):
+            with open(f) as fh: j = json.load(fh)
+        else:
+            j = get(API.format(s=season) + f'/games/{g.game}/stats')
+            if (j.get('local') or {}).get('players'):
+                with open(f, 'w') as fh: json.dump(j, fh)
         out = []
         for side, team, opp, home, tc, oc in (('local', g.home_team, g.away_team, 1, g.home_code, g.away_code),
                                               ('road', g.away_team, g.home_team, 0, g.away_code, g.home_code)):

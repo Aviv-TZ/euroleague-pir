@@ -89,6 +89,13 @@ jobs:
             }
             stopifnot(all(sapply(c("httr","jsonlite","openxlsx"), requireNamespace, quietly = TRUE)))'
 
+      - name: Cache EuroLeague box scores (component model)
+        uses: actions/cache@v4
+        with:
+          path: cm/.box_cache
+          key: boxcache-${{ github.run_id }}
+          restore-keys: boxcache-
+
       - name: Install Python packages (component model)
         continue-on-error: true
         timeout-minutes: 10
