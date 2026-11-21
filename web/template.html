@@ -884,7 +884,7 @@ function courtCard(x, isCap){
       <span class="cfp">${f(x.fp,1)}</span>${isCap?'<span class="ccap" title="קפטן – ניקוד כפול">C</span>':''}
       ${ph}
       <div class="cname">${esc(nm)}</div>
-      <div class="cvs">${x.ot!=null?x.ot:oppShort(p)}</div><div class="cmeta">${f(x.price,0)}M${ownTxt(p)?` · ${ownTxt(p)}`:''}</div>${liveFoot(x)}
+      <div class="cvs">${x.ot!=null?x.ot:oppShort(p)}</div><div class="cmeta">${f(x.price,0)}M${ownTxt(p)?` · ${ownTxt(p)}`:''}</div>${x.hn?`<div class="cmeta">${x.hn} מפגשים${x.fc!=null?` · צפי ${f(x.fc,1)}`:''}</div>`:''}${liveFoot(x)}
     </div>`;
 }
 const oppShort = p => p.opp ? vsTxt(p.venue, p.opp) : '';
@@ -906,7 +906,7 @@ function courtView(r){
       <div class="crow">${row('Guard')}</div>
     </div>
     <div class="csum">
-      <div><span>צפי לחמישייה (כולל קפטן ×2)</span><b>${f(r.total,1)}</b></div>
+      <div><span>${h2hOn()?'ממוצע היסטורי מול היריבות (כולל קפטן ×2)':'צפי לחמישייה (כולל קפטן ×2)'}</span><b>${f(r.total,1)}</b></div>
       ${(()=>{ if(BUILD.nx) return ''; const act = x => { const a = getActual(x.p); return a ? a.pir : null; };
         const got = r.five.filter(x=>act(x)!=null); if(!got.length) return '';
         const v = got.reduce((s,x)=>s+act(x),0) + (act(cap)||0);
@@ -919,7 +919,7 @@ function courtView(r){
 }
 
 // ---------- F. Ideal five (sport5 rules: 5 starters, 1-3 G / 1-3 F / 1-2 C, max 2 per club, captain x2) ----------
-const BUILD = {budget:null, model:1, injured:true, excluded:new Set(), nx:false};   // model index 1 = Model 2
+const BUILD = {budget:null, model:1, injured:true, excluded:new Set(), nx:false, src:'fc'};   // src: 'fc' forecast | 'h2h' history vs the opponent   // model index 1 = Model 2
 const POS3 = ['Guard','Forward','Center'];
 const LIM = {Guard:[1,3], Forward:[1,3], Center:[1,2]};
 // the shown round: BUILD.nx = false -> the round being played / next; true -> the round after it
@@ -928,7 +928,12 @@ const bItem = p => BUILD.nx ? {p, fp:fpsOf(p,false,1,1)[0], price:p.price, pos:p
                             : {p, fp:p.m[BUILD.model].pir, price:p.price, pos:p.s5pos, team:p.team};
 const bCoachFp = c => coachFpN(c, 0, BUILD.nx?1:0);
 const bRound = () => BUILD.nx ? NR() : M.next_round;
+// history view: only players with >= 3 past games vs this round's opponent; value = their fantasy average in those games
+const H2H_MIN = 3;
+const h2hOn = () => BUILD.src==='h2h' && !BUILD.nx;
 function buildPool(){
+  if(h2hOn()) return P.filter(p=>p.h2h && p.h2h.n>=H2H_MIN && p.price!=null && p.s5pos && POS3.includes(p.s5pos) && !(BUILD.injured && (p.injured || p.out3)) && !BUILD.excluded.has(p.id))
+          .map(p=>({p, fp:p.h2h.avg.fp, price:p.price, pos:p.s5pos, team:p.team, hn:p.h2h.n, fc:p.ranked?p.m[1].pir:null}));
   return P.filter(p=>(BUILD.nx?rankedN(p):p.ranked) && p.price!=null && p.s5pos && POS3.includes(p.s5pos) && !(BUILD.injured && (p.injured || bOut3(p))) && !BUILD.excluded.has(p.id))
           .map(bItem).filter(x=>x.fp!=null);
 }
@@ -975,7 +980,9 @@ function renderBuilder(){
   let body = '<div class="empty">אין הרכב חוקי בתקציב הזה</div>';
   if(r) body = courtView(r);
   $('#builderView').innerHTML = `<div class="card">
-    <h2>חמישייה אידיאלית למחזור ${bRound()??''}</h2>
+    <h2>חמישייה אידיאלית למחזור ${bRound()??''}${h2hOn()?' · לפי היסטוריה':''}</h2>
+    ${!BUILD.nx && P.some(p=>p.h2h)?`<div class="seg" id="bSrc" style="margin:6px 0 8px"><button data-src="fc" class="${BUILD.src==='fc'?'on':''}">לפי התחזית</button><button data-src="h2h" class="${BUILD.src==='h2h'?'on':''}">לפי היסטוריה מול היריבה</button></div>`:''}
+    ${h2hOn()?`<div class="hint">רק שחקנים עם ${H2H_MIN}+ משחקים מול היריבה של המחזור ב-5 העונות האחרונות · הערך = ממוצע הפנטזי שלהם באותם משחקים</div>`:''}
     ${roundStarted()?`<div class="seg" id="bRound" style="margin:6px 0 8px"><button data-nx="0" class="${BUILD.nx?'':'on'}">מחזור ${M.next_round} (נוכחי · לייב)</button><button data-nx="1" class="${BUILD.nx?'on':''}">מחזור ${NR()} (הבא)</button></div>`:''}
     <div class="hint">הקפטן המומלץ מסומן C · ✕ = בלי השחקן · H/A = בית/חוץ${BUILD.nx?` · התחזית למחזור ${NR()} ${NEXT.data?`עודכנה ${dayFmt.format(new Date(NEXT.data.generated_utc))} ${timeFmt.format(new Date(NEXT.data.generated_utc))}, כולל משחקי מחזור ${M.next_round} ששוחקו`:`מחושבת מהנתונים שלפני מחזור ${M.next_round}; מתעדכנת כל בוקר אחרי יום משחקים`}`:roundStarted()?' · ✓/LIVE = ניקוד בפועל, פער = בפועל פחות הצפי':''}</div>
     <div class="bctl">
@@ -993,6 +1000,7 @@ function renderBuilder(){
   slider.onchange = ()=>{ BUILD.budget = +slider.value; renderBuilder(); };
   $('#bInj').onchange = e=>{ BUILD.injured = e.target.checked; renderBuilder(); renderSquad(); };
   v.querySelectorAll('#bRound button').forEach(b=>b.onclick=()=>{ BUILD.nx = b.dataset.nx==='1'; renderBuilder(); renderSquad(); });
+  v.querySelectorAll('#bSrc button').forEach(b=>b.onclick=()=>{ BUILD.src = b.dataset.src; renderBuilder(); });
   v.querySelectorAll('[data-ex]').forEach(b=>b.onclick=e=>{ e.stopPropagation(); BUILD.excluded.add(+b.dataset.ex); renderBuilder(); });
   const rs = $('#bReset'); if(rs) rs.onclick = ()=>{ BUILD.excluded.clear(); renderBuilder(); };
   v.querySelectorAll('.pl').forEach(el=>el.onclick=()=>openPlayer(+el.dataset.id));
