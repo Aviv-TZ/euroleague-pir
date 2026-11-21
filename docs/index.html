@@ -1566,6 +1566,19 @@ function simLimitFull(r, h, C){
   return h===0 && W.open ? (extra ?? (C[2]&&C[2].fixed ? W.limit : (W.round&&W.round.subs) || 3)) : (extra ?? 3);
 }
 const simLimit = (r, h, C) => { const W = MT.win || {}; return Math.max(0, simLimitFull(r,h,C) - (h===0 && W.open ? (W.made||0) : 0)); };
+// a lineup chosen by hand for one round: ov = {bench:[3 ids, one per position], cap, vc}; null if it no longer fits the squad
+function lineupFixed(sq, h, b, ov){
+  if(!ov || !Array.isArray(ov.bench) || ov.bench.length!==3) return null;
+  const bench = ov.bench.map(id=>sq.find(x=>x.s5id===id));
+  if(bench.some(x=>!x) || new Set(bench.map(x=>x.pos)).size!==3) return null;
+  const st = sq.filter(x=>!bench.includes(x)), n = {Guard:0,Forward:0,Center:0}; st.forEach(x=>n[x.pos]++);
+  if(n.Guard<1||n.Guard>3||n.Forward<1||n.Forward>3||n.Center<1||n.Center>2) return null;
+  const tc = b&&b.tc, dc = b&&b.dc, bf = b&&b.bench ? 1 : 0.5, byv = [...st].sort((a,c)=>c.fps[h]-a.fps[h]);
+  const cap = (ov.cap!=null && st.find(x=>x.s5id===ov.cap)) || byv[0];
+  const vc = (ov.vc!=null && st.find(x=>x.s5id===ov.vc && x!==cap)) || byv.find(x=>x!==cap);
+  const v = st.reduce((s,x)=>s+x.fps[h],0) + cap.fps[h]*(tc?2:1) + (dc&&vc?vc.fps[h]:0) + bench.reduce((s,x)=>s+x.fps[h],0)*bf;
+  return {v, bench, cap, vc:dc?vc:null, starters:st, manual:true};
+}
 // squads round by round; moves that no longer fit (player not in the squad / already in it) are skipped and flagged;
 // the budget and the lineup are checked on the squad after all the round's transfers (as on the fantasy site)
 function simBuild(useMoves=true){
@@ -1582,9 +1595,13 @@ function simBuild(useMoves=true){
       bank += o.price - i.price; done.push({...m, o, i});
     }
     const club = {}; [...sq, coach].filter(Boolean).forEach(x=>club[x.team]=(club[x.team]||0)+1);
-    const bo = simBoost(C, r), lu = lineupAt(sq, h, bo), cv = coach ? coach.fps[h] : 0, lu0 = lineupAt(sq0, h, bo);
+    // a hand-picked lineup follows the round's transfers (the player brought in takes the place of the one who left)
+    const ov0 = (st.lu||{})[r], mp = id => { const m = done.find(m=>m.out===id); return m ? m.in : id; };
+    const ov = ov0 ? {bench:(ov0.bench||[]).map(mp), cap:ov0.cap!=null?mp(ov0.cap):null, vc:ov0.vc!=null?mp(ov0.vc):null} : null;
+    const bo = simBoost(C, r), cv = coach ? coach.fps[h] : 0;
+    const lu = lineupFixed(sq, h, bo, ov) || lineupAt(sq, h, bo), lu0 = lineupFixed(sq0, h, bo, ov0) || lineupAt(sq0, h, bo);
     const tot0 = (lu0?lu0.v:0) + (coach0 ? coach0.fps[h] : 0);   // the same round without this round's transfers
-    return {r, h, sq:[...sq], coach, bank, sq0, coach0, bank0, done, bad, limit:simLimit(r,h,C), bo, lu, tot:(lu?lu.v:0)+cv, tot0,
+    return {r, h, sq:[...sq], coach, bank, sq0, coach0, bank0, done, bad, limit:simLimit(r,h,C), bo, lu, luStale:!!ov0 && !(lu&&lu.manual), tot:(lu?lu.v:0)+cv, tot0,
             over:Object.entries(club).filter(([t,n])=>n>2).map(([t])=>t)};
   });
 }
@@ -1660,7 +1677,16 @@ function simRender(){
       .filter(x=>x && !has.has(x.s5id) && x.price<=money+1e-9 && (club[x.team]||0)<2 && (!q || norm(x.name+' '+(x.p?x.p.name+' '+x.p.raw:x.c.raw)+' '+x.team).includes(q)));
     cand.sort((a,b)=> SIM.sort==='rest' ? rest(b)-rest(a) : SIM.sort==='price' ? b.price-a.price || b.fps[h]-a.fps[h] : b.fps[h]-a.fps[h]);
     cand = cand.slice(0, 30);
+    const lu = cur.lu, onBench = lu && lu.bench.includes(pk), luBtns = [];
+    if(lu && !pk.isCoach){
+      if(onBench) lu.starters.filter(x=>x.pos===pk.pos).forEach(x=>luBtns.push(`<button class="btn ghost sm" data-swap="${x.s5id}">להכניס להרכב במקום ${esc(x.name)} (${f(x.fps[h],1)})</button>`));
+      else { const bp = lu.bench.find(x=>x.pos===pk.pos); if(bp) luBtns.push(`<button class="btn ghost sm" data-swap="${bp.s5id}">להוריד לספסל (נכנס ${esc(bp.name)}, ${f(bp.fps[h],1)})</button>`);
+        if(pk!==lu.cap) luBtns.push(`<button class="btn ghost sm" data-cap="${pk.s5id}">קפטן</button>`);
+        if(cur.bo && cur.bo.dc && pk!==lu.vc && pk!==lu.cap) luBtns.push(`<button class="btn ghost sm" data-vc="${pk.s5id}">סגן קפטן</button>`); }
+    }
+    if(lu && lu.manual) luBtns.push(`<button class="btn ghost sm" data-luauto="1">הרכב אוטומטי</button>`);
     picker = `<div class="card simpick" style="margin-top:12px;background:var(--panel2)">
+      ${luBtns.length?`<div class="phead"><h3>הרכב במחזור ${cur.r}: ${esc(pk.name)} ${onBench?'(בספסל)':pk.isCoach?'':'(בחמישייה)'}</h3></div><div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px">${luBtns.join('')}</div>`:''}
       <div class="phead"><h3>החלפה במחזור ${cur.r}: ${esc(pk.name)} <small>(${ph[pk.pos]}, ${f(pk.price,0)}M, צפי ${f(pk.fps[h],1)})</small></h3><button class="btn ghost sm" id="simClose">סגור</button></div>
       <div class="note">תקציב לשחקן המחליף: עד <bdi dir="ltr">${f(money,0)}M</bdi> · ${nleft>0?`נשארו ${nleft} חילופים במחזור הזה`:'<b style="color:#c0262d">לא נשארו חילופים במחזור הזה</b>'}${undo?` · <button class="btn ghost sm" id="simUndo">להחזיר את ${esc(undo.o.name)}</button>`:''}</div>
       <div class="fctl" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:8px 0">
@@ -1675,11 +1701,12 @@ function simRender(){
     cur.bad.length ? `${cur.bad.length} ${cur.bad.length===1?'חילוף שמור לא תקף':'חילופים שמורים לא תקפים'} (השחקן כבר לא בסגל) – לא נספרו` : '',
     cur.bank < -1e-9 ? `חריגה מהתקציב (<bdi dir="ltr">${f(cur.bank,0)}M</bdi>)` : '',
     cur.done.length > cur.limit ? `יותר חילופים (${cur.done.length}) ממה שמותר במחזור (${cur.limit})` : '',
+    cur.luStale ? 'ההרכב שבחרת ידנית כבר לא מתאים לסגל – נבחר הרכב אוטומטי' : '',
     cur.over.length ? `יותר מ-2 שחקנים מ${cur.over.map(tName).join(', ')}` : ''].filter(Boolean);
   const bo = cur.bo || {};
   box.innerHTML = `<div class="card">
     <div class="phead"><h2>סימולטור מחזורים</h2>${(st.moves||[]).length||Object.keys(st.chips||{}).length?'<button class="btn ghost sm" id="simReset">איפוס</button>':''}</div>
-    <div class="hint">לחץ על שחקן או על המאמן כדי להחליף אותו במחזור שנבחר, או החל אחת מהתוכניות המומלצות. החילופים נשמרים במכשיר הזה לקבוצה שלך וממשיכים למחזורים הבאים, עד ${RO.length} מחזורים קדימה (כמה שיש תחזית). ההרכב והקפטן נבחרים אוטומטית לפי הצפי. המחירים = המחירים הנוכחיים.</div>
+    <div class="hint">לחץ על שחקן או על המאמן כדי להחליף אותו במחזור שנבחר, או החל אחת מהתוכניות המומלצות. החילופים נשמרים במכשיר הזה לקבוצה שלך וממשיכים למחזורים הבאים, עד ${RO.length} מחזורים קדימה (כמה שיש תחזית). ההרכב והקפטן נבחרים אוטומטית לפי הצפי, ואפשר לשנות אותם בלחיצה על שחקן (להכניס מהספסל, להוריד לספסל, לבחור קפטן). המחירים = המחירים הנוכחיים.</div>
     <div class="seg simtabs" id="simTabs" style="display:flex;flex-wrap:wrap;margin:10px 0">${tabs}</div>
     <div class="kpis">
       <div class="kpi"><span>צפי מחזור ${cur.r}</span><b>${f(cur.tot,1)}</b><small>בלי חילופים במחזור הזה: ${f(cur.tot0,1)} (${sg(cur.tot-cur.tot0)})</small></div>
@@ -1693,7 +1720,7 @@ function simRender(){
       <path d="M34 32 A16 10 0 0 0 66 32" fill="none"/><line x1="3" y1="70" x2="97" y2="70"/>
       <circle cx="50" cy="70" r="11" fill="none"/><path d="M10 138 L10 120 A40 32 0 0 1 90 120 L90 138" fill="none"/></svg>
       <div class="crow">${row('Center')}</div><div class="crow">${row('Forward')}</div><div class="crow">${row('Guard')}</div></div>
-    ${benchRow(`ספסל · ${bo.bench?'100% (בונוס)':'50%'} · מחזור ${cur.r}`, lu.bench.map(x=>card(x).replace('class="ccard ','class="ccard bcard ')).join(''), co)}`:'<div class="warn">הסגל לא מאפשר הרכב חוקי</div>'}
+    ${benchRow(`ספסל · ${bo.bench?'100% (בונוס)':'50%'} · מחזור ${cur.r}${lu.manual?' · הרכב ידני':''}`, lu.bench.map(x=>card(x).replace('class="ccard ','class="ccard bcard ')).join(''), co)}`:'<div class="warn">הסגל לא מאפשר הרכב חוקי</div>'}
     ${picker}
     <div class="phead" style="margin-top:16px"><h3>חילופים מומלצים למחזור ${cur.r}</h3>
       ${left>1?`<label class="hzl">להסתכל קדימה: <select id="simH">${Array.from({length:left},(_,i)=>i+1).map(k=>`<option value="${k}" ${k===Hs?'selected':''}>${k===1?`מחזור ${cur.r} בלבד`:`${k} מחזורים (${cur.r}–${RO[h+k-1]})`}</option>`).join('')}</select></label>`:''}</div>
@@ -1710,6 +1737,17 @@ function simRender(){
     const ins = pairByPos(p.outs, p.ins), s = simLoad();
     s.moves = (s.moves||[]).filter(m=>m.r!==cur.r).concat(p.outs.map((o,j)=>({r:cur.r, out:o.s5id, in:ins[j].s5id})));
     simSave(s); SIM.pick = null; simRender(); $('#simBox').scrollIntoView({behavior:'smooth', block:'start'}); });
+  // lineup by hand for this round: swap a bench player with a starter of the same position, captain / vice-captain
+  const setLu = fn => { const s = simLoad(), L = cur.lu; s.lu = s.lu || {};
+    const o = s.lu[cur.r] && L.manual ? {...s.lu[cur.r], bench:L.bench.map(x=>x.s5id)} : {bench:L.bench.map(x=>x.s5id), cap:null, vc:null};
+    fn(o); s.lu[cur.r] = o; simSave(s); SIM.pick = null; simRender(); };
+  box.querySelectorAll('[data-swap]').forEach(b=>b.onclick=()=>setLu(o=>{ const other = +b.dataset.swap;
+    o.bench = o.bench.map(id => id===SIM.pick ? other : id===other ? SIM.pick : id);
+    if(o.cap===SIM.pick || o.cap===other) o.cap = o.bench.includes(o.cap) ? null : o.cap;
+    if(o.vc!=null && o.bench.includes(o.vc)) o.vc = null; }));
+  box.querySelectorAll('[data-cap]').forEach(b=>b.onclick=()=>setLu(o=>{ o.cap = +b.dataset.cap; if(o.vc===o.cap) o.vc = null; }));
+  box.querySelectorAll('[data-vc]').forEach(b=>b.onclick=()=>setLu(o=>{ o.vc = +b.dataset.vc; }));
+  box.querySelectorAll('[data-luauto]').forEach(b=>b.onclick=()=>{ const s = simLoad(); if(s.lu) delete s.lu[cur.r]; simSave(s); SIM.pick = null; simRender(); });
   const hs = $('#simH'); if(hs) hs.onchange = ()=>{ SIM.H = +hs.value; simRender(); };
   const cl = $('#simClose'); if(cl) cl.onclick = ()=>{ SIM.pick = null; simRender(); };
   const un = $('#simUndo'); if(un) un.onclick = ()=>{ const m = cur.done.find(x=>x.in===SIM.pick); if(m){ simMove(cur.r, m.in, m.out); SIM.pick = null; simRender(); } };
