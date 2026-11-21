@@ -43,26 +43,29 @@ def schedule(season):
     d = get(API.format(s=season) + '/games?limit=1000'); d = d.get('data', d)
     return pd.DataFrame([dict(game=g['gameCode'], round=g['round'], phase=(g.get('phaseType') or {}).get('code', ''),
                               played=bool(g.get('played')), home_team=g['local']['club']['name'],
-                              away_team=g['road']['club']['name']) for g in d])
+                              away_team=g['road']['club']['name'], home_code=g['local']['club'].get('code', ''),
+                              away_code=g['road']['club'].get('code', ''), date=(g.get('utcDate') or '')[:10]) for g in d])
 
 def season_rows(season, sch):
     """Box-score lines (>0 minutes) of the season's played regular-season games."""
     def one(g):
         j = get(API.format(s=season) + f'/games/{g.game}/stats')
         out = []
-        for side, team, opp, home in (('local', g.home_team, g.away_team, 1), ('road', g.away_team, g.home_team, 0)):
+        for side, team, opp, home, tc, oc in (('local', g.home_team, g.away_team, 1, g.home_code, g.away_code),
+                                              ('road', g.away_team, g.home_team, 0, g.away_code, g.home_code)):
             for p in (j.get(side) or {}).get('players') or []:
                 st = p.get('stats') or {}; pl = p.get('player') or {}
                 if not st.get('timePlayed'): continue
                 r = dict(season=season, game=g.game, round=g['round'], phase=g.phase, team=team, opp=opp, home=home,
-                         player=(pl.get('person') or {}).get('name', ''), pos=pl.get('positionName', ''))
+                         player=(pl.get('person') or {}).get('name', ''), pos=pl.get('positionName', ''),
+                         pcode=((pl.get('person') or {}).get('code') or '').strip(), team_code=tc, opp_code=oc, date=g.date)
                 for k in ['timePlayed', 'points', 'fieldGoalsMade2', 'fieldGoalsAttempted2', 'fieldGoalsMade3',
                           'fieldGoalsAttempted3', 'freeThrowsMade', 'freeThrowsAttempted', 'totalRebounds',
                           'assistances', 'steals', 'turnovers', 'blocksFavour', 'foulsCommited', 'foulsReceived']:
                     r[k] = st.get(k) or 0
                 out.append(r)
         return out
-    played = sch[sch.played & (sch.phase == 'RS')]
+    played = sch[sch.played]
     rows = []
     with cf.ThreadPoolExecutor(3) as ex:
         for r in ex.map(one, [g for _, g in played.iterrows()]): rows += r
@@ -166,13 +169,48 @@ def rank_metrics(x):
                 top30=len(set(np.argsort(pred, kind='stable')[:k30]) & set(np.argsort(act, kind='stable')[:k30])),
                 ndcg=float((gain[tp] / disc).sum() / (gain[ta] / disc).sum()))
 
+def head_to_head(cur_all, sch, R0, players):
+    """Each player vs his next opponent (round R0), 5 seasons: 2022/23-2025/26 (cm/data) + this season.
+    Matched by EuroLeague player code and club code (transfers and club renames do not break it)."""
+    past = pd.read_csv(os.path.join(HERE, 'data', 'h2h_rows_2022_2026.csv.gz'), dtype={'pcode': str})
+    c = cur_all.copy()
+    c['min'] = c.timePlayed / 60.0; c['pts'] = c.points; c['reb'] = c.totalRebounds; c['ast'] = c.assistances
+    c['stl'] = c.steals; c['blk'] = c.blocksFavour; c['fd'] = c.foulsReceived; c['tov'] = c.turnovers; c['fc'] = c.foulsCommited
+    c['miss'] = (c.fieldGoalsAttempted2 - c.fieldGoalsMade2) + (c.fieldGoalsAttempted3 - c.fieldGoalsMade3) + (c.freeThrowsAttempted - c.freeThrowsMade)
+    c = c.rename(columns={'team': 'team_name', 'opp': 'opp_name'}).rename(columns={'team_code': 'team', 'opp_code': 'opp'})
+    cols = ['season', 'phase', 'round', 'date', 'team', 'opp', 'team_name', 'home', 'pcode', 'player', 'min'] + K
+    h = pd.concat([past[cols], c[cols]], ignore_index=True)
+    tens = sum((h[k] >= 10).astype(int) for k in DDK)
+    h['fp'] = sum(W[k] * h[k] for k in K) + np.where(tens >= 3, 20, np.where(tens == 2, 10, 0))
+    code_of = {}
+    for _, g in sch.iterrows(): code_of[g.home_team] = g.home_code; code_of[g.away_team] = g.away_code
+    g0 = sch[sch['round'] == R0]; nxt = {}
+    for _, g in g0.iterrows(): nxt[g.home_code] = (g.away_code, g.away_team, 1); nxt[g.away_code] = (g.home_code, g.home_team, 0)
+    pc = cur_all.sort_values(['round']).groupby(['player', 'team']).pcode.last().to_dict()
+    by_p = {k: v for k, v in h.groupby('pcode')}
+    out = 0
+    for key, rec in players.items():
+        pl, team = key.split('||'); code = pc.get((pl, team)); tc = code_of.get(team)
+        if not code or not tc or tc not in nxt or code not in by_p: continue
+        oc, oname, home = nxt[tc]; mine = by_p[code]; vs = mine[mine.opp == oc].sort_values('date', ascending=False)
+        if not len(vs): continue
+        avg = lambda d, k: round(float(d[k].mean()), 1)
+        rec['h2h'] = dict(opp=oname, n=int(len(vs)), seasons=int(vs.season.nunique()),
+                          avg={k: avg(vs, k) for k in ['min', 'fp'] + K}, overall={k: avg(mine, k) for k in ['min', 'fp'] + K},
+                          n_overall=int(len(mine)),
+                          last=[dict(date=r.date, season=r.season, team=r.team_name, home=int(r.home), min=round(float(r['min']), 1),
+                                     fp=int(r.fp), pts=int(r.pts), reb=int(r.reb), ast=int(r.ast)) for _, r in vs.head(5).iterrows()])
+        out += 1
+    return out
+
 def main(out_dir, target_round=None):
     t0 = time.time()
     train = prep(pd.read_csv(os.path.join(HERE, 'data', 'train_rows_2024_2026.csv.gz')))
     train = train[train.phase == 'RS']
     HF = home_factors(train)
     sch = schedule(SEASON)
-    cur = prep(season_rows(SEASON, sch)); cur = cur[cur.phase == 'RS']
+    cur_all = season_rows(SEASON, sch)
+    cur = prep(cur_all); cur = cur[cur.phase == 'RS']
     prev = train[train.season == PREV]
     open_rounds = sorted(sch[(~sch.played) & (sch.phase == 'RS')]['round'].unique())
     R0 = int(target_round) if target_round else int(open_rounds[0])
@@ -218,6 +256,8 @@ def main(out_dir, target_round=None):
         print(f'  backtest round {r}: {len(E)} players, top10 hits {hits_rows[-1]["m2"]["t10"]}', flush=True)
     resid = np.array(resid) if len(resid) else np.array([-12.0, 14.0])
     bt = pd.DataFrame(bt_rows)
+    try: print(f'head-to-head: {head_to_head(cur_all, sch, R0, players)} players with past games vs their next opponent', flush=True)
+    except Exception as e: print('head-to-head failed:', e, flush=True)
     out = dict(model='component', generated=time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()), rounds=rounds,
                resid=dict(lo=round(float(np.quantile(resid, .10)), 2), hi=round(float(np.quantile(resid, .90)), 2)),
                players=players, round_hits=hits_rows,
