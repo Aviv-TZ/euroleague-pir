@@ -1345,10 +1345,9 @@ function recommend(sq, coach, bank, H, mode='auto', ctx={}){
       if(money < 0) continue;
       const club = {}; [...keep, keepCoach].filter(Boolean).forEach(x=>club[x.team]=(club[x.team]||0)+1);
       const nPl = k - (coachOut?1:0);
-      // a transfer is position for position (a guard out -> a guard in), as on the fantasy site
-      const need = {}; outs.forEach(x=>{ if(!x.isCoach) need[x.pos]=(need[x.pos]||0)+1; });
+      // an incoming player may be of another position, as long as the squad still has a legal lineup (checked below)
       const cand = [];
-      for(const q of POS3) if(need[q]) cand.push(...pool.filter(x=>x.pos===q && x.price<=money && (club[x.team]||0)<2).sort((a,b)=>b.tot-a.tot).slice(0,8));
+      for(const q of POS3) cand.push(...pool.filter(x=>x.pos===q && x.price<=money && (club[x.team]||0)<2).sort((a,b)=>b.tot-a.tot).slice(0,8));
       const coachCand = coachOut ? coachPool.filter(c=>c.price<=money && (club[c.team]||0)<2).sort((a,b)=>b.tot-a.tot).slice(0,6) : [null];
       const keepTot = keep.reduce((s,x)=>s+x.tot,0);
       for(const nc of coachCand){
@@ -1356,8 +1355,6 @@ function recommend(sq, coach, bank, H, mode='auto', ctx={}){
         const m2 = money - (nc?nc.price:0); if(m2 < 0) continue;
         const coachV = (nc || keepCoach) ? (nc || keepCoach).tot : 0;
         for(const ins of combos(cand.filter(x=>x.price<=m2), nPl)){
-          const got = {}; for(const x of ins) got[x.pos]=(got[x.pos]||0)+1;
-          if(POS3.some(q=>(got[q]||0)!==(need[q]||0))) continue;
           const tk = costOf(keep, nc?null:keepCoach, nc?[...ins, nc]:(forced?[...ins, forced]:ins));
           if(tk > limit) continue;
           let cost=0; for(const x of ins) cost+=x.price; if(cost>m2) continue;
@@ -1594,7 +1591,7 @@ function simBuild(useMoves=true){
       const o = coach && coach.s5id===m.out ? coach : sq.find(x=>x.s5id===m.out);
       const i = simItem(m.in);
       const has = id => sq.some(x=>x.s5id===id) || (coach && coach.s5id===id);
-      if(!o || !i || has(m.in) || i.pos!==o.pos){ bad.push(m); continue; }
+      if(!o || !i || has(m.in) || (!!o.isCoach !== !!i.isCoach)){ bad.push(m); continue; }
       if(o.isCoach) coach = i; else sq = sq.map(x=>x===o?i:x);
       bank += o.price - i.price; done.push({...m, o, i});
     }
@@ -1677,8 +1674,9 @@ function simRender(){
     const rest = x => x.fps.slice(h).reduce((a,b)=>a+b,0);
     const q = norm(SIM.q).trim();
     let cand = (pk.isCoach ? (D.coaches||[]).filter(c=>c.fut && c.price!=null).map(c=>simItem(c.s5id))
-                           : P.filter(p=>p.s5id!=null && p.price!=null && p.s5pos===pk.pos && (p.ranked || (p.fut&&p.fut.some(v=>v)))).map(p=>simItem(p.s5id)))
+                           : P.filter(p=>p.s5id!=null && p.price!=null && (p.s5pos===pk.pos || (SIM.anyPos && POS3.includes(p.s5pos))) && (p.ranked || (p.fut&&p.fut.some(v=>v)))).map(p=>simItem(p.s5id)))
       .filter(x=>x && !has.has(x.s5id) && x.price<=money+1e-9 && (club[x.team]||0)<2 && (!q || norm(x.name+' '+(x.p?x.p.name+' '+x.p.raw:x.c.raw)+' '+x.team).includes(q)));
+    if(SIM.anyPos && !pk.isCoach) cand = cand.filter(x=> x.pos===pk.pos || lineupAt(cur.sq.map(y=>y===pk?x:y), h, null));
     cand.sort((a,b)=> SIM.sort==='rest' ? rest(b)-rest(a) : SIM.sort==='price' ? b.price-a.price || b.fps[h]-a.fps[h] : b.fps[h]-a.fps[h]);
     cand = cand.slice(0, 30);
     const lu = cur.lu, onBench = lu && lu.bench.includes(pk), luBtns = [];
@@ -1695,14 +1693,14 @@ function simRender(){
       <div class="note">תקציב לשחקן המחליף: עד <bdi dir="ltr">${f(money,0)}M</bdi> · ${nleft>0?`נשארו ${nleft} חילופים במחזור הזה`:'<b style="color:#c0262d">לא נשארו חילופים במחזור הזה</b>'}${undo?` · <button class="btn ghost sm" id="simUndo">להחזיר את ${esc(undo.o.name)}</button>`:''}</div>
       <div class="fctl" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:8px 0">
         <input id="simQ" type="search" placeholder="חיפוש שם / קבוצה" value="${esc(SIM.q)}" style="flex:1;min-width:150px">
-        <div class="seg" id="simSort"><button data-s="round" class="${SIM.sort==='round'?'on':''}">צפי מחזור ${cur.r}</button><button data-s="rest" class="${SIM.sort==='rest'?'on':''}">צפי ${cur.r}–${RO[RO.length-1]}</button><button data-s="price" class="${SIM.sort==='price'?'on':''}">מחיר</button></div></div>
+        <label class="hzl"><input type="checkbox" id="simAnyPos" ${SIM.anyPos?'checked':''}> גם מעמדה אחרת</label><div class="seg" id="simSort"><button data-s="round" class="${SIM.sort==='round'?'on':''}">צפי מחזור ${cur.r}</button><button data-s="rest" class="${SIM.sort==='rest'?'on':''}">צפי ${cur.r}–${RO[RO.length-1]}</button><button data-s="price" class="${SIM.sort==='price'?'on':''}">מחיר</button></div></div>
       ${cand.length ? `<div class="scroll"><table><thead><tr><th>שחקן</th><th class="col-mh">יריבה</th><th class="num">מחיר</th><th class="num">צפי ${cur.r}</th><th class="num">צפי ${cur.r}–${RO[RO.length-1]}</th></tr></thead><tbody>
-        ${cand.map(x=>`<tr class="simc ${nleft>0?'':'dis'}" data-in="${x.s5id}" style="cursor:${nleft>0?'pointer':'not-allowed'}"><td class="pl"><b>${esc(x.name)}</b><small>${tName(x.team)}${x.p&&(x.p.injured||x.p.out3)?' · <b style="color:#c0262d">פצוע/לא משחק</b>':''}</small></td>
+        ${cand.map(x=>`<tr class="simc ${nleft>0?'':'dis'}" data-in="${x.s5id}" style="cursor:${nleft>0?'pointer':'not-allowed'}"><td class="pl"><b>${esc(x.name)}</b><small>${tName(x.team)}${SIM.anyPos&&!x.isCoach?' · '+ph[x.pos]:''}${x.p&&(x.p.injured||x.p.out3)?' · <b style="color:#c0262d">פצוע/לא משחק</b>':''}</small></td>
           <td class="col-mh">${oT(x)}</td><td class="num">${f(x.price,0)}M</td><td class="num"><b>${f(x.fps[h],1)}</b></td><td class="num">${f(rest(x),1)}</td></tr>`).join('')}</tbody></table></div>`
         : '<div class="empty">אין מחליף מתאים בתקציב (או שכבר יש 2 מאותה קבוצה)</div>'}</div>`;
   }
   const warn = [
-    cur.bad.length ? `${cur.bad.length} ${cur.bad.length===1?'חילוף שמור לא תקף':'חילופים שמורים לא תקפים'} (השחקן כבר לא בסגל / עמדה אחרת) – לא נספרו` : '',
+    cur.bad.length ? `${cur.bad.length} ${cur.bad.length===1?'חילוף שמור לא תקף':'חילופים שמורים לא תקפים'} (השחקן כבר לא בסגל) – לא נספרו` : '',
     cur.bank < -1e-9 ? `חריגה מהתקציב (<bdi dir="ltr">${f(cur.bank,0)}M</bdi>)` : '',
     cur.done.length > cur.limit ? `יותר חילופים (${cur.done.length}) ממה שמותר במחזור (${cur.limit})` : '',
     cur.luStale ? 'ההרכב שבחרת ידנית כבר לא מתאים לסגל – נבחר הרכב אוטומטי' : '',
@@ -1757,6 +1755,7 @@ function simRender(){
   const un = $('#simUndo'); if(un) un.onclick = ()=>{ const m = cur.done.find(x=>x.in===SIM.pick); if(m){ simMove(cur.r, m.in, m.out); SIM.pick = null; simRender(); } };
   const rs = $('#simReset'); if(rs) rs.onclick = ()=>{ if(confirm('למחוק את כל החילופים והבונוסים בסימולטור?')){ simSave({}); SIM.pick = null; simRender(); } };
   box.querySelectorAll('#simSort button').forEach(b=>b.onclick=()=>{ SIM.sort = b.dataset.s; simRender(); });
+  const ap = $('#simAnyPos'); if(ap) ap.onchange = ()=>{ SIM.anyPos = ap.checked; simRender(); };
   const qi = $('#simQ'); if(qi) qi.oninput = ()=>{ SIM.q = qi.value; const pos = qi.selectionStart; simRender(); const n = $('#simQ'); n.focus(); n.setSelectionRange(pos,pos); };
   box.querySelectorAll('tr.simc[data-in]').forEach(tr=>tr.onclick=()=>{ if(tr.classList.contains('dis')) return;
     simMove(cur.r, SIM.pick, +tr.dataset.in); SIM.pick = null; simRender(); });
