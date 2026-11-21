@@ -1567,6 +1567,12 @@ function simLimitFull(r, h, C){
   return h===0 && W.open ? (extra ?? (C[2]&&C[2].fixed ? W.limit : (W.round&&W.round.subs) || 3)) : (extra ?? 3);
 }
 const simLimit = (r, h, C) => { const W = MT.win || {}; return Math.max(0, simLimitFull(r,h,C) - (h===0 && W.open ? (W.made||0) : 0)); };
+// lineup edits by hand (o = the round's saved lineup, edited in place)
+function luBase(cur){ const L = cur.lu; return cur.ov && L.manual ? {...cur.ov, bench:L.bench.map(x=>x.s5id)} : {bench:L.bench.map(x=>x.s5id), cap:null, vc:null}; }
+function luSwap(o, a, b){ o.bench = o.bench.map(id => id===a ? b : id===b ? a : id);
+  if(o.cap!=null && o.bench.includes(o.cap)) o.cap = null; if(o.vc!=null && o.bench.includes(o.vc)) o.vc = null; return o; }
+// points this round after an edit, minus the points now
+function luEffect(cur, fn){ const o = fn(luBase(cur)), l = lineupFixed(cur.sq, cur.h, cur.bo, o); return l && cur.lu ? l.v - cur.lu.v : null; }
 // a lineup chosen by hand for one round: ov = {bench:[3 ids, one per position], cap, vc}; null if it no longer fits the squad
 function lineupFixed(sq, h, b, ov){
   if(!ov || !Array.isArray(ov.bench) || ov.bench.length!==3) return null;
@@ -1602,7 +1608,7 @@ function simBuild(useMoves=true){
     const bo = simBoost(C, r), cv = coach ? coach.fps[h] : 0;
     const lu = lineupFixed(sq, h, bo, ov) || lineupAt(sq, h, bo), lu0 = lineupFixed(sq0, h, bo, ov0) || lineupAt(sq0, h, bo);
     const tot0 = (lu0?lu0.v:0) + (coach0 ? coach0.fps[h] : 0);   // the same round without this round's transfers
-    return {r, h, sq:[...sq], coach, bank, sq0, coach0, bank0, done, bad, limit:simLimit(r,h,C), bo, lu, luStale:!!ov0 && !(lu&&lu.manual), tot:(lu?lu.v:0)+cv, tot0,
+    return {r, h, sq:[...sq], coach, bank, sq0, coach0, bank0, done, bad, limit:simLimit(r,h,C), bo, lu, ov, luStale:!!ov0 && !(lu&&lu.manual), tot:(lu?lu.v:0)+cv, tot0,
             over:Object.entries(club).filter(([t,n])=>n>2).map(([t])=>t)};
   });
 }
@@ -1682,10 +1688,11 @@ function simRender(){
     cand = cand.slice(0, 30);
     const lu = cur.lu, onBench = lu && lu.bench.includes(pk), luBtns = [];
     if(lu && !pk.isCoach){
-      if(onBench) lu.starters.filter(x=>x.pos===pk.pos).forEach(x=>luBtns.push(`<button class="btn ghost sm" data-swap="${x.s5id}">להכניס להרכב במקום ${esc(x.name)} (${f(x.fps[h],1)})</button>`));
-      else { const bp = lu.bench.find(x=>x.pos===pk.pos); if(bp) luBtns.push(`<button class="btn ghost sm" data-swap="${bp.s5id}">להוריד לספסל (נכנס ${esc(bp.name)}, ${f(bp.fps[h],1)})</button>`);
-        if(pk!==lu.cap) luBtns.push(`<button class="btn ghost sm" data-cap="${pk.s5id}">קפטן</button>`);
-        if(cur.bo && cur.bo.dc && pk!==lu.vc && pk!==lu.cap) luBtns.push(`<button class="btn ghost sm" data-vc="${pk.s5id}">סגן קפטן</button>`); }
+      const eff = fn => { const d = luEffect(cur, fn); return d==null ? '' : ` · <b class="${d>0.05?'up':d<-0.05?'down':''}">${sg(d)}</b>`; };
+      if(onBench) lu.starters.filter(x=>x.pos===pk.pos).forEach(x=>luBtns.push(`<button class="btn ghost sm" data-swap="${x.s5id}">להכניס להרכב במקום ${esc(x.name)} (${f(x.fps[h],1)})${eff(o=>luSwap(o, pk.s5id, x.s5id))}</button>`));
+      else { const bp = lu.bench.find(x=>x.pos===pk.pos); if(bp) luBtns.push(`<button class="btn ghost sm" data-swap="${bp.s5id}">להוריד לספסל (נכנס ${esc(bp.name)}, ${f(bp.fps[h],1)})${eff(o=>luSwap(o, pk.s5id, bp.s5id))}</button>`);
+        if(pk!==lu.cap) luBtns.push(`<button class="btn ghost sm" data-cap="${pk.s5id}">קפטן${eff(o=>{ o.cap = pk.s5id; if(o.vc===o.cap) o.vc = null; return o; })}</button>`);
+        if(cur.bo && cur.bo.dc && pk!==lu.vc && pk!==lu.cap) luBtns.push(`<button class="btn ghost sm" data-vc="${pk.s5id}">סגן קפטן${eff(o=>{ o.vc = pk.s5id; return o; })}</button>`); }
     }
     if(lu && lu.manual) luBtns.push(`<button class="btn ghost sm" data-luauto="1">הרכב אוטומטי</button>`);
     picker = `<div class="card simpick" style="margin-top:12px;background:var(--panel2)">
@@ -1718,7 +1725,8 @@ function simRender(){
     <div class="bons" id="simChips">בונוסים למחזור ${cur.r}: ${[1,3,4,2].map(chipBtn).join('')}</div>
     ${warn.length?`<div class="warn">${warn.join(' · ')}</div>`:''}
     ${cur.done.length?`<div class="note" style="margin:8px 0">${cur.done.map(m=>`<div><span class="out">⬅ ${esc(m.o.name)} <small>(${ph[m.o.pos]}, ${f(m.o.fps[h],1)})</small></span> <span class="in">➜ ${esc(m.i.name)} <small>(${f(m.i.price,0)}M, ${f(m.i.fps[h],1)})</small></span> <button class="btn ghost sm" data-undo="${m.in}">ביטול</button></div>`).join('')}</div>`:''}
-    ${lu&&lu.manual?`<div class="note" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:8px 0">שינית ידנית את ההרכב או הקפטן במחזור ${cur.r}<button class="btn ghost sm" data-luauto="1">↺ ביטול שינויי ההרכב</button></div>`:''}
+    ${lu&&lu.manual?`<div class="note" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:8px 0">שינית ידנית את ההרכב או הקפטן במחזור ${cur.r}: ${(()=>{ const a = lineupAt(cur.sq, h, cur.bo), d = a ? lu.v - a.v : 0;
+      return `<b class="${d>0.05?'up':d<-0.05?'down':''}">${sg(d)}</b> נקודות לעומת ההרכב האוטומטי (${f(a?a.v+(cur.coach?cur.coach.fps[h]:0):0,1)})`; })()}<button class="btn ghost sm" data-luauto="1">↺ ביטול שינויי ההרכב</button></div>`:''}
     ${lu?`<div class="court"><svg class="lines" viewBox="0 0 100 140" preserveAspectRatio="none" aria-hidden="true">
       <rect x="3" y="2" width="94" height="136" fill="none"/><rect x="34" y="2" width="32" height="30" fill="none"/>
       <path d="M34 32 A16 10 0 0 0 66 32" fill="none"/><line x1="3" y1="70" x2="97" y2="70"/>
@@ -1742,15 +1750,10 @@ function simRender(){
     s.moves = (s.moves||[]).filter(m=>m.r!==cur.r).concat(p.outs.map((o,j)=>({r:cur.r, out:o.s5id, in:ins[j].s5id})));
     simSave(s); SIM.pick = null; simRender(); $('#simBox').scrollIntoView({behavior:'smooth', block:'start'}); });
   // lineup by hand for this round: swap a bench player with a starter of the same position, captain / vice-captain
-  const setLu = fn => { const s = simLoad(), L = cur.lu; s.lu = s.lu || {};
-    const o = s.lu[cur.r] && L.manual ? {...s.lu[cur.r], bench:L.bench.map(x=>x.s5id)} : {bench:L.bench.map(x=>x.s5id), cap:null, vc:null};
-    fn(o); s.lu[cur.r] = o; simSave(s); SIM.pick = null; simRender(); };
-  box.querySelectorAll('[data-swap]').forEach(b=>b.onclick=()=>setLu(o=>{ const other = +b.dataset.swap;
-    o.bench = o.bench.map(id => id===SIM.pick ? other : id===other ? SIM.pick : id);
-    if(o.cap===SIM.pick || o.cap===other) o.cap = o.bench.includes(o.cap) ? null : o.cap;
-    if(o.vc!=null && o.bench.includes(o.vc)) o.vc = null; }));
-  box.querySelectorAll('[data-cap]').forEach(b=>b.onclick=()=>setLu(o=>{ o.cap = +b.dataset.cap; if(o.vc===o.cap) o.vc = null; }));
-  box.querySelectorAll('[data-vc]').forEach(b=>b.onclick=()=>setLu(o=>{ o.vc = +b.dataset.vc; }));
+  const setLu = fn => { const s = simLoad(); s.lu = s.lu || {}; s.lu[cur.r] = fn(luBase(cur)); simSave(s); SIM.pick = null; simRender(); };
+  box.querySelectorAll('[data-swap]').forEach(b=>b.onclick=()=>setLu(o=>luSwap(o, SIM.pick, +b.dataset.swap)));
+  box.querySelectorAll('[data-cap]').forEach(b=>b.onclick=()=>setLu(o=>{ o.cap = +b.dataset.cap; if(o.vc===o.cap) o.vc = null; return o; }));
+  box.querySelectorAll('[data-vc]').forEach(b=>b.onclick=()=>setLu(o=>{ o.vc = +b.dataset.vc; return o; }));
   box.querySelectorAll('[data-luauto]').forEach(b=>b.onclick=()=>{ const s = simLoad(); if(s.lu) delete s.lu[cur.r]; simSave(s); SIM.pick = null; simRender(); });
   const hs = $('#simH'); if(hs) hs.onchange = ()=>{ SIM.H = +hs.value; simRender(); };
   const cl = $('#simClose'); if(cl) cl.onclick = ()=>{ SIM.pick = null; simRender(); };
