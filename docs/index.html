@@ -1761,7 +1761,7 @@ function h2hBlock(p){
     <div class="scroll"><table class="comp"><thead><tr><th></th><th class="num">מול ${esc(tShort(h.opp))}</th><th class="num">ממוצע כללי</th><th class="num">הפרש</th></tr></thead><tbody>
       ${H2H_ROWS.map(([k,l])=>`<tr><td>${l}</td><td class="num">${f(h.avg[k],1)}</td><td class="num">${f(h.overall[k],1)}</td><td class="num">${dif(k,h.avg[k],h.overall[k])}</td></tr>`).join('')}
     </tbody></table></div>
-    <div class="h2hl">${h.last.map(g=>`<div><b>${fmtD(g.date)}</b> ${g.home?'(H)':'(A)'}${g.team!==p.team?` · ב-${esc(tShort(g.team))}`:''} · ${g.fp} פנטזי · <bdi dir="ltr">${g.pts}-${g.reb}-${g.ast}</bdi> · ${f(g.min,0)} דק׳</div>`).join('')}</div>
+    <div class="h2hl">${h.last.map(g=>`<div><b>${fmtD(g.date)}</b> ${g.home?'(H)':'(A)'}${g.team!==p.team?` · ב-<bdi>${esc(tShort(g.team))}</bdi>`:''} · ${g.fp} פנטזי · <bdi dir="ltr">${g.pts}-${g.reb}-${g.ast}</bdi> · ${f(g.min,0)} דק׳</div>`).join('')}</div>
     <p class="note">ממוצע כללי = כל המשחקים של השחקן ב-5 העונות (${h.n_overall}). נקודות-ריבאונדים-אסיסטים בכל משחק. ${h.n<3?'מעט משחקים – להתייחס בזהירות.':''}</p>
   </div>`;
 }
