@@ -140,6 +140,10 @@ el_run_component <- function(out_dir, code_dir, target=NULL) {
   py <- Sys.getenv('EL_PYTHON', 'python3')
   args <- c(file.path(code_dir, '..', 'cm', 'component_model.py'), out_dir, if (!is.null(target)) c('--target-round', target))
   rc <- tryCatch(system2(py, shQuote(args)), error=function(e) 1L)
+  if (!identical(as.integer(rc), 0L)) {   # usually an API rate limit right after the R download: wait and retry once
+    message('Component model failed - retrying in 2 minutes'); Sys.sleep(120)
+    rc <- tryCatch(system2(py, shQuote(args)), error=function(e) 1L)
+  }
   if (!identical(as.integer(rc), 0L) || !file.exists(f)) { message('Component model failed - weights model used'); return(invisible(FALSE)) }
   invisible(TRUE)
 }
