@@ -207,8 +207,7 @@ def head_to_head(cur_all, sch, R0, players):
                           avg={k: avg(vs, k) for k in ['min', 'fp'] + K}, overall={k: avg(mine, k) for k in ['min', 'fp'] + K},
                           n_overall=int(len(mine)),
                           last=[dict(date=r.date, season=r.season, team=r.team_name, home=int(r.home), min=round(float(r['min']), 1),
-                                     fp=int(r.fp), pts=int(r.pts), reb=int(r.reb), ast=int(r.ast),
-                                     **({'ph': r.phase} if isinstance(r.phase, str) and r.phase not in ('', 'RS') else {})) for _, r in vs.head(5).iterrows()])
+                                     fp=int(r.fp), pts=int(r.pts), reb=int(r.reb), ast=int(r.ast)) for _, r in vs.head(5).iterrows()])
         out += 1
     return out
 
