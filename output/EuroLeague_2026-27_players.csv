@@ -1,26 +1,249 @@
 "Game","Team","Player","Position","Opponent","Minutes","PIR","PIR_x_Minutes","EL_PIR"
-"120","Besiktas Istanbul","BIRSEN, METECAN","Center","Real Madrid",13.2,0,0,-2
-"120","Besiktas Istanbul","BROWN, ANTHONY","Forward","Real Madrid",8.13333333333333,1,8.13333333333333,-1
-"120","Besiktas Istanbul","DEJULIUS, DAVID","Guard","Real Madrid",10.7,5,53.5,3
-"120","Besiktas Istanbul","DOTSON, DEVON","Guard","Real Madrid",25.2833333333333,13,328.683333333333,3
-"120","Besiktas Istanbul","GABRIEL, WENYEN","Center","Real Madrid",19.1,25,477.5,15
-"120","Besiktas Istanbul","JEFFRIES, DAQUAN","Forward","Real Madrid",24.4166666666667,32,781.333333333333,24
-"120","Besiktas Istanbul","MORGAN, CONOR","Center","Real Madrid",13.2333333333333,18,238.2,10
-"120","Besiktas Istanbul","OMORUYI, EUGENE","Center","Real Madrid",24.2833333333333,13,315.683333333333,2
-"120","Besiktas Istanbul","WALKER IV, LONNIE","Guard","Real Madrid",24.0333333333333,25,600.833333333333,16
-"120","Besiktas Istanbul","WILBEKIN, SCOTTIE","Guard","Real Madrid",27.4333333333333,23,630.966666666667,14
-"120","Besiktas Istanbul","ZIZIC, ANTE","Center","Real Madrid",10.1833333333333,8,81.4666666666667,4
-"120","Real Madrid","ABALDE, ALBERTO","Forward","Besiktas Istanbul",24.8,13,322.4,8
-"120","Real Madrid","FELIZ, ANDRES","Guard","Besiktas Istanbul",24.9166666666667,19,473.416666666667,15
-"120","Real Madrid","JONES, DAMIAN","Center","Besiktas Istanbul",10.05,10,100.5,7
-"120","Real Madrid","LUWAWU-CABARROT, TIMOTHE","Forward","Besiktas Istanbul",21.4833333333333,4,85.9333333333333,-1
-"120","Real Madrid","MALEDON, THEO","Guard","Besiktas Istanbul",24.65,30,739.5,26
-"120","Real Madrid","OKEKE, CHUMA","Center","Besiktas Istanbul",15.1166666666667,5,75.5833333333333,2
-"120","Real Madrid","PRADILLA, JAIME","Forward","Besiktas Istanbul",19.35,13,251.55,4
-"120","Real Madrid","PROCIDA, GABRIELE","Forward","Besiktas Istanbul",7.91666666666667,-1,-7.91666666666667,-1
-"120","Real Madrid","SARR, OLIVIER","Center","Besiktas Istanbul",8.6,1,8.6,-1
-"120","Real Madrid","SMITH JR, NICK","Forward","Besiktas Istanbul",16.2333333333333,16,259.733333333333,13
-"120","Real Madrid","TAVARES, WALTER","Center","Besiktas Istanbul",26.8833333333333,23,618.316666666667,8
+"129","Partizan Mozzart Bet Belgrade","ALLMAN, KYLE","Guard","Besiktas Fuzul Istanbul",28.1,36,1011.6,24
+"129","Partizan Mozzart Bet Belgrade","FRANKS, ROBERT","Forward","Besiktas Fuzul Istanbul",28.8,12,345.6,4
+"129","Partizan Mozzart Bet Belgrade","HAYES, KEVARRIUS","Center","Besiktas Fuzul Istanbul",24.5833333333333,29,712.916666666667,20
+"129","Partizan Mozzart Bet Belgrade","JEKIRI, TONYE","Center","Besiktas Fuzul Istanbul",20.4166666666667,16,326.666666666667,10
+"129","Partizan Mozzart Bet Belgrade","JONES, CARLIK","Guard","Besiktas Fuzul Istanbul",32.1,31,995.1,23
+"129","Partizan Mozzart Bet Belgrade","LAKIC, ARIJAN","Forward","Besiktas Fuzul Istanbul",5.28333333333333,-2,-10.5666666666667,-2
+"129","Partizan Mozzart Bet Belgrade","MARINKOVIC, VANJA","Forward","Besiktas Fuzul Istanbul",22.9166666666667,10,229.166666666667,6
+"129","Partizan Mozzart Bet Belgrade","PAJOLA, ALESSANDRO","Guard","Besiktas Fuzul Istanbul",29.15,29,845.35,17
+"129","Partizan Mozzart Bet Belgrade","REEVES, ANTONIO","Guard","Besiktas Fuzul Istanbul",18.9666666666667,1,18.9666666666667,3
+"129","Partizan Mozzart Bet Belgrade","TANASKOVIC, NIKOLA","Center","Besiktas Fuzul Istanbul",14.6833333333333,0,0,-2
+"129","Besiktas Fuzul Istanbul","BIRSEN, METECAN","Center","Partizan Mozzart Bet Belgrade",9.36666666666667,10,93.6666666666667,7
+"129","Besiktas Fuzul Istanbul","BROWN, ANTHONY","Forward","Partizan Mozzart Bet Belgrade",16.2833333333333,10,162.833333333333,6
+"129","Besiktas Fuzul Istanbul","DEJULIUS, DAVID","Guard","Partizan Mozzart Bet Belgrade",14.5333333333333,2,29.0666666666667,2
+"129","Besiktas Fuzul Istanbul","DOTSON, DEVON","Guard","Partizan Mozzart Bet Belgrade",17.95,10,179.5,4
+"129","Besiktas Fuzul Istanbul","GABRIEL, WENYEN","Center","Partizan Mozzart Bet Belgrade",26.2,6,157.2,4
+"129","Besiktas Fuzul Istanbul","JEFFRIES, DAQUAN","Forward","Partizan Mozzart Bet Belgrade",27.0166666666667,17,459.283333333333,8
+"129","Besiktas Fuzul Istanbul","KORKMAZ, FURKAN","Forward","Partizan Mozzart Bet Belgrade",5.05,-1,-5.05,-1
+"129","Besiktas Fuzul Istanbul","MORGAN, CONOR","Center","Partizan Mozzart Bet Belgrade",18.0833333333333,11,198.916666666667,8
+"129","Besiktas Fuzul Istanbul","OMORUYI, EUGENE","Center","Partizan Mozzart Bet Belgrade",22.9333333333333,24,550.4,13
+"129","Besiktas Fuzul Istanbul","WALKER IV, LONNIE","Guard","Partizan Mozzart Bet Belgrade",27.2166666666667,22,598.766666666667,18
+"129","Besiktas Fuzul Istanbul","WILBEKIN, SCOTTIE","Guard","Partizan Mozzart Bet Belgrade",33.85,56,1895.6,25
+"129","Besiktas Fuzul Istanbul","ZIZIC, ANTE","Center","Partizan Mozzart Bet Belgrade",6.51666666666667,-5,-32.5833333333333,-4
+"128","FC Barcelona","BALCEROWSKI, OLEK","Center","Crvena Zvezda Meridianbet Belgrade",20.8166666666667,24,499.6,15
+"128","FC Barcelona","BRIZUELA, DARIO","Guard","Crvena Zvezda Meridianbet Belgrade",30.1166666666667,42,1264.9,31
+"128","FC Barcelona","KONE, ABDU","Center","Crvena Zvezda Meridianbet Belgrade",0.0666666666666667,0,0,0
+"128","FC Barcelona","MARTIN, TYRESE","Forward","Crvena Zvezda Meridianbet Belgrade",25.1333333333333,6,150.8,1
+"128","FC Barcelona","MINAYA, JUSTIN","Guard","Crvena Zvezda Meridianbet Belgrade",26.2666666666667,17,446.533333333333,8
+"128","FC Barcelona","NEBO, JOSH","Center","Crvena Zvezda Meridianbet Belgrade",24.1833333333333,13,314.383333333333,9
+"128","FC Barcelona","NKAMHOUA, OLIVIER","Forward","Crvena Zvezda Meridianbet Belgrade",12.6333333333333,5,63.1666666666667,0
+"128","FC Barcelona","NUNEZ, JUAN","Guard","Crvena Zvezda Meridianbet Belgrade",10.65,5,53.25,1
+"128","FC Barcelona","PARRA, JOEL","Forward","Crvena Zvezda Meridianbet Belgrade",30.1166666666667,35,1054.08333333333,24
+"128","FC Barcelona","ROBINSON, JUSTIN","Guard","Crvena Zvezda Meridianbet Belgrade",29.5333333333333,22,649.733333333333,12
+"128","FC Barcelona","UBAL, AGUSTIN","Guard","Crvena Zvezda Meridianbet Belgrade",6.35,1,6.35,1
+"128","FC Barcelona","UMUDE, STANLEY","Forward","Crvena Zvezda Meridianbet Belgrade",9.13333333333333,-2,-18.2666666666667,-2
+"128","Crvena Zvezda Meridianbet Belgrade","BALDWIN, PATRICK","Forward","FC Barcelona",3.58333333333333,3,10.75,2
+"128","Crvena Zvezda Meridianbet Belgrade","BUTLER, JARED","Guard","FC Barcelona",17.8833333333333,23,411.316666666667,17
+"128","Crvena Zvezda Meridianbet Belgrade","CARTER, TYSON","Guard","FC Barcelona",29.0333333333333,37,1074.23333333333,30
+"128","Crvena Zvezda Meridianbet Belgrade","DAVIDOVAC, DEJAN","Forward","FC Barcelona",16.9,25,422.5,16
+"128","Crvena Zvezda Meridianbet Belgrade","DOBRIC, OGNJEN","Forward","FC Barcelona",4.95,6,29.7,4
+"128","Crvena Zvezda Meridianbet Belgrade","IZUNDU, EBUKA","Center","FC Barcelona",5.71666666666667,4,22.8666666666667,3
+"128","Crvena Zvezda Meridianbet Belgrade","JONES, CHRIS","Guard","FC Barcelona",17.0166666666667,6,102.1,1
+"128","Crvena Zvezda Meridianbet Belgrade","KOLOKO, CHRISTIAN","Center","FC Barcelona",30.05,29,871.45,17
+"128","Crvena Zvezda Meridianbet Belgrade","KRAMER, DAVID","Guard","FC Barcelona",17.0333333333333,-4,-68.1333333333333,-4
+"128","Crvena Zvezda Meridianbet Belgrade","NWORA, JORDAN","Forward","FC Barcelona",26.7833333333333,19,508.883333333333,14
+"128","Crvena Zvezda Meridianbet Belgrade","OJELEYE, SEMI","Forward","FC Barcelona",31.5166666666667,3,94.55,3
+"128","Crvena Zvezda Meridianbet Belgrade","WEILER-BABB, NICK","Guard","FC Barcelona",24.5333333333333,13,318.933333333333,7
+"130","Olympiacos Piraeus","FOURNIER, EVAN","Forward","Real Madrid",29.3,28,820.4,17
+"130","Olympiacos Piraeus","HALL, DONTA","Center","Real Madrid",18.0333333333333,17,306.566666666667,12
+"130","Olympiacos Piraeus","JONES, TYRIQUE","Center","Real Madrid",21.9666666666667,43,944.566666666667,30
+"130","Olympiacos Piraeus","JOSEPH, CORY","Guard","Real Madrid",15.1166666666667,11,166.283333333333,4
+"130","Olympiacos Piraeus","MILLER-MCINTYRE, CODI","Guard","Real Madrid",25.6333333333333,13,333.233333333333,6
+"130","Olympiacos Piraeus","NDIAYE, MBAYE","Forward","Real Madrid",16.2166666666667,10,162.166666666667,6
+"130","Olympiacos Piraeus","NETZIPOGLOU, OMIROS","Guard","Real Madrid",7.23333333333333,7,50.6333333333333,4
+"130","Olympiacos Piraeus","PAPANIKOLAOU, KOSTAS","Forward","Real Madrid",17.55,14,245.7,6
+"130","Olympiacos Piraeus","PLOTAS, NIKOLAOS","Guard","Real Madrid",1.56666666666667,0,0,0
+"130","Olympiacos Piraeus","VEZENKOV, SASHA","Forward","Real Madrid",25.7,24,616.8,15
+"130","Olympiacos Piraeus","WARD, TYSON","Forward","Real Madrid",21.6833333333333,20,433.666666666667,13
+"130","Real Madrid","ABALDE, ALBERTO","Forward","Olympiacos Piraeus",16.2666666666667,3,48.8,0
+"130","Real Madrid","FELIZ, ANDRES","Guard","Olympiacos Piraeus",19.9166666666667,12,239,3
+"130","Real Madrid","JONES, DAMIAN","Center","Olympiacos Piraeus",24.2333333333333,40,969.333333333333,16
+"130","Real Madrid","LLULL, SERGIO","Guard","Olympiacos Piraeus",12.9,5,64.5,3
+"130","Real Madrid","LUWAWU-CABARROT, TIMOTHE","Forward","Olympiacos Piraeus",23.2666666666667,11,255.933333333333,7
+"130","Real Madrid","MALEDON, THEO","Guard","Olympiacos Piraeus",23.5666666666667,32,754.133333333333,24
+"130","Real Madrid","NDIAYE, ELI","Forward","Olympiacos Piraeus",11.1333333333333,4,44.5333333333333,1
+"130","Real Madrid","OKEKE, CHUMA","Center","Olympiacos Piraeus",15.4333333333333,19,293.233333333333,13
+"130","Real Madrid","PRADILLA, JAIME","Forward","Olympiacos Piraeus",14.35,10,143.5,5
+"130","Real Madrid","PROCIDA, GABRIELE","Forward","Olympiacos Piraeus",15.5666666666667,2,31.1333333333333,0
+"130","Real Madrid","SMITH JR, NICK","Forward","Olympiacos Piraeus",8.51666666666667,-1,-8.51666666666667,-1
+"130","Real Madrid","TAVARES, WALTER","Center","Olympiacos Piraeus",14.85,3,44.55,2
+"127","Anadolu Efes Istanbul","DOZIER, PJ","Guard","LDLC ASVEL Villeurbanne",3.91666666666667,-3,-11.75,-2
+"127","Anadolu Efes Istanbul","JONES, KAI","Center","LDLC ASVEL Villeurbanne",26.95,36,970.2,21
+"127","Anadolu Efes Istanbul","LOYD, JORDAN","Guard","LDLC ASVEL Villeurbanne",26.4166666666667,28,739.666666666667,21
+"127","Anadolu Efes Istanbul","MALCOLM, COLLIN","Forward","LDLC ASVEL Villeurbanne",20.85,19,396.15,12
+"127","Anadolu Efes Istanbul","OSMANI, ERCAN","Forward","LDLC ASVEL Villeurbanne",21.3,6,127.8,5
+"127","Anadolu Efes Istanbul","PAPAGIANNIS, GEORGIOS","Center","LDLC ASVEL Villeurbanne",12.7166666666667,9,114.45,4
+"127","Anadolu Efes Istanbul","PAYNE, CAMERON","Guard","LDLC ASVEL Villeurbanne",28,25,700,14
+"127","Anadolu Efes Istanbul","SARIC, DARIO","Forward","LDLC ASVEL Villeurbanne",19.0333333333333,27,513.9,18
+"127","Anadolu Efes Istanbul","STRAZEL, MATTHEW","Guard","LDLC ASVEL Villeurbanne",23.3166666666667,30,699.5,25
+"127","Anadolu Efes Istanbul","YILMAZ, ERKAN","Forward","LDLC ASVEL Villeurbanne",2.93333333333333,2,5.86666666666667,1
+"127","Anadolu Efes Istanbul","YUSTA, SANTI","Forward","LDLC ASVEL Villeurbanne",14.5666666666667,25,364.166666666667,20
+"127","LDLC ASVEL Villeurbanne","BASSOUMBA, YOHAN","Forward","Anadolu Efes Istanbul",3.86666666666667,-1,-3.86666666666667,-1
+"127","LDLC ASVEL Villeurbanne","CROWDER, JAE","Forward","Anadolu Efes Istanbul",25.4666666666667,12,305.6,7
+"127","LDLC ASVEL Villeurbanne","DOSSOU-YOVO, MATHIS","Center","Anadolu Efes Istanbul",16.6333333333333,8,133.066666666667,4
+"127","LDLC ASVEL Villeurbanne","FODZO DADA, MARC-OWEN","Guard","Anadolu Efes Istanbul",24.6833333333333,26,641.766666666667,17
+"127","LDLC ASVEL Villeurbanne","GACH, BOTH","Forward","Anadolu Efes Istanbul",23.3,22,512.6,13
+"127","LDLC ASVEL Villeurbanne","JACKSON, EDWIN","Forward","Anadolu Efes Istanbul",12.9833333333333,-3,-38.95,-4
+"127","LDLC ASVEL Villeurbanne","LIGHTY, DAVID","Forward","Anadolu Efes Istanbul",4,1,4,1
+"127","LDLC ASVEL Villeurbanne","MASSA, BODIAN","Forward","Anadolu Efes Istanbul",17.2833333333333,8,138.266666666667,2
+"127","LDLC ASVEL Villeurbanne","MILLS, PATTY","Guard","Anadolu Efes Istanbul",25.2833333333333,22,556.233333333333,16
+"127","LDLC ASVEL Villeurbanne","SESTINA, NATHAN","Forward","Anadolu Efes Istanbul",16.75,22,368.5,16
+"127","LDLC ASVEL Villeurbanne","WASHINGTON JR, TYTY","Guard","Anadolu Efes Istanbul",15.0666666666667,3,45.2,-1
+"127","LDLC ASVEL Villeurbanne","WATERS, TREMONT","Guard","Anadolu Efes Istanbul",14.6833333333333,4,58.7333333333333,1
+"125","Valencia Basket","BROOKS, ARMONI","Guard","Virtus Bologna",23.8,21,499.8,10
+"125","Valencia Basket","CARDENAS, ALVARO","Guard","Virtus Bologna",15.7166666666667,10,157.166666666667,6
+"125","Valencia Basket","CORBALAN, GONZALO","Forward","Virtus Bologna",13.3833333333333,4,53.5333333333333,0
+"125","Valencia Basket","GUEYE, MOUHAMADOU","Forward","Virtus Bologna",3.15,-1,-3.15,-2
+"125","Valencia Basket","MIROTIC, NIKOLA","Forward","Virtus Bologna",15.3333333333333,11,168.666666666667,7
+"125","Valencia Basket","OSETKOWSKI, DYLAN","Forward","Virtus Bologna",22.6333333333333,14,316.866666666667,0
+"125","Valencia Basket","PUERTO, JOSEP","Guard","Virtus Bologna",12.3,6,73.8,5
+"125","Valencia Basket","RIVERO, JASIEL","Forward","Virtus Bologna",6.11666666666667,5,30.5833333333333,1
+"125","Valencia Basket","SAINT-SUPERY, MARIO","Guard","Virtus Bologna",15.0833333333333,1,15.0833333333333,0
+"125","Valencia Basket","SAKO, NEAL","Center","Virtus Bologna",21.4,50,1070,26
+"125","Valencia Basket","SHORTS, TJ","Guard","Virtus Bologna",24.2833333333333,35,849.916666666667,23
+"125","Valencia Basket","TAYLOR, KAMERON","Forward","Virtus Bologna",26.8,24,643.2,15
+"125","Virtus Bologna","ALSTON JR. , DERRICK","Forward","Valencia Basket",10.3,6,61.8,6
+"125","Virtus Bologna","BALDASSO, TOMMASO","Guard","Valencia Basket",3.73333333333333,0,0,0
+"125","Virtus Bologna","BELLO, RASHEED","Guard","Valencia Basket",16.8833333333333,19,320.783333333333,15
+"125","Virtus Bologna","CARR, MARCUS","Guard","Valencia Basket",25.5666666666667,12,306.8,9
+"125","Virtus Bologna","DIARRA, ALIOU","Center","Valencia Basket",17.6166666666667,29,510.883333333333,15
+"125","Virtus Bologna","DIOUF, MOUHAMET","Center","Valencia Basket",15.9,9,143.1,5
+"125","Virtus Bologna","EDWARDS, KESSLER","Forward","Valencia Basket",19.05,20,381,11
+"125","Virtus Bologna","FRAZIER, TRENT","Guard","Valencia Basket",25.2833333333333,13,328.683333333333,7
+"125","Virtus Bologna","HACKETT, DANIEL","Guard","Valencia Basket",20.4833333333333,11,225.316666666667,7
+"125","Virtus Bologna","KLINTMAN, BO","Forward","Valencia Basket",17.3833333333333,30,521.5,19
+"125","Virtus Bologna","KOKILA, KEVIN","Center","Valencia Basket",10.5,-5,-52.5,-4
+"125","Virtus Bologna","MOORE, WENDELL","Guard","Valencia Basket",17.3,12,207.6,0
+"126","Paris Basketball","AYAYI, JOEL","Guard","Hapoel IBI Tel Aviv",12.9666666666667,17,220.433333333333,8
+"126","Paris Basketball","CAVALIERE, LEOPOLD","Forward","Hapoel IBI Tel Aviv",17.1666666666667,18,309,13
+"126","Paris Basketball","DOKOSSI, ALLAN","Center","Hapoel IBI Tel Aviv",19.85,14,277.9,8
+"126","Paris Basketball","ETIENNE, TYSON","Guard","Hapoel IBI Tel Aviv",15,-1,-15,-3
+"126","Paris Basketball","FAYE, MOUHAMED","Center","Hapoel IBI Tel Aviv",20.1166666666667,17,341.983333333333,9
+"126","Paris Basketball","HERRERA, SEBASTIAN","Guard","Hapoel IBI Tel Aviv",15.8833333333333,9,142.95,6
+"126","Paris Basketball","HIFI, NADIR","Guard","Hapoel IBI Tel Aviv",25.3833333333333,31,786.883333333333,23
+"126","Paris Basketball","JOHNSON, ALIZE","Forward","Hapoel IBI Tel Aviv",8.91666666666667,7,62.4166666666667,6
+"126","Paris Basketball","MORGAN, JEREMY","Forward","Hapoel IBI Tel Aviv",9.76666666666667,13,126.966666666667,7
+"126","Paris Basketball","NTILIKINA, FRANK","Guard","Hapoel IBI Tel Aviv",22.4333333333333,18,403.8,10
+"126","Paris Basketball","RHODEN, JARED","Guard","Hapoel IBI Tel Aviv",18.9833333333333,19,360.683333333333,11
+"126","Paris Basketball","WARREN, TJ","Forward","Hapoel IBI Tel Aviv",13.5333333333333,2,27.0666666666667,0
+"126","Hapoel IBI Tel Aviv","BLAKENEY, ANTONIO","Guard","Paris Basketball",29.2666666666667,22,643.866666666667,24
+"126","Hapoel IBI Tel Aviv","BRYANT, ELIJAH","Guard","Paris Basketball",31.4333333333333,17,534.366666666667,13
+"126","Hapoel IBI Tel Aviv","COFFEY, AMIR","Guard","Paris Basketball",18.0333333333333,5,90.1666666666667,3
+"126","Hapoel IBI Tel Aviv","LEDAY, ZACH","Forward","Paris Basketball",18.7333333333333,26,487.066666666667,15
+"126","Hapoel IBI Tel Aviv","MICIC, VASILIJE","Guard","Paris Basketball",23.2,13,301.6,5
+"126","Hapoel IBI Tel Aviv","ODIASE, TAI","Center","Paris Basketball",17.3,16,276.8,10
+"126","Hapoel IBI Tel Aviv","OTURU, DAN","Center","Paris Basketball",20.7166666666667,8,165.733333333333,6
+"126","Hapoel IBI Tel Aviv","SATORANSKY, TOMAS","Guard","Paris Basketball",18.0666666666667,29,523.933333333333,19
+"126","Hapoel IBI Tel Aviv","WAINRIGHT, ISH","Forward","Paris Basketball",23.25,30,697.5,18
+"123","Armani Olimpia Milan","BOLMARO, LEANDRO","Guard","Fenerbahce Tarfin Istanbul",28.6666666666667,31,888.666666666667,21
+"123","Armani Olimpia Milan","BURNELL, JASON","Forward","Fenerbahce Tarfin Istanbul",6.66666666666667,5,33.3333333333333,4
+"123","Armani Olimpia Milan","COLE, RJ","Guard","Fenerbahce Tarfin Istanbul",7.45,2,14.9,0
+"123","Armani Olimpia Milan","DIOP, OUSMANE","Center","Fenerbahce Tarfin Istanbul",10.8666666666667,13,141.266666666667,10
+"123","Armani Olimpia Milan","GUDURIC, MARKO","Guard","Fenerbahce Tarfin Istanbul",32.2333333333333,21,676.9,15
+"123","Armani Olimpia Milan","HALL, DEVON","Guard","Fenerbahce Tarfin Istanbul",21.8833333333333,14,306.366666666667,7
+"123","Armani Olimpia Milan","MATHEWS, GARRISON","Guard","Fenerbahce Tarfin Istanbul",10.25,1,10.25,0
+"123","Armani Olimpia Milan","PETERS, ALEC","Forward","Fenerbahce Tarfin Istanbul",20.3166666666667,9,182.85,4
+"123","Armani Olimpia Milan","RICCI, GIAMPAOLO","Forward","Fenerbahce Tarfin Istanbul",18.1666666666667,5,90.8333333333333,0
+"123","Armani Olimpia Milan","THOMPSON, DARIUS","Guard","Fenerbahce Tarfin Istanbul",14.7333333333333,-1,-14.7333333333333,-1
+"123","Armani Olimpia Milan","WRIGHT, MOSES","Center","Fenerbahce Tarfin Istanbul",28.7666666666667,60,1726,36
+"123","Fenerbahce Tarfin Istanbul","BALDWIN IV, WADE","Guard","Armani Olimpia Milan",29.35,17,498.95,10
+"123","Fenerbahce Tarfin Istanbul","BINGHAM, MARCUS","Center","Armani Olimpia Milan",14.5666666666667,4,58.2666666666667,2
+"123","Fenerbahce Tarfin Istanbul","CLYBURN, WILL","Forward","Armani Olimpia Milan",19.0666666666667,6,114.4,3
+"123","Fenerbahce Tarfin Istanbul","FORREST, TRENT","Guard","Armani Olimpia Milan",12.35,10,123.5,7
+"123","Fenerbahce Tarfin Istanbul","HORTON TUCKER, TALEN","Guard","Armani Olimpia Milan",24.8666666666667,21,522.2,16
+"123","Fenerbahce Tarfin Istanbul","JUZANG, JOHNNY","Forward","Armani Olimpia Milan",27.4,17,465.8,8
+"123","Fenerbahce Tarfin Istanbul","LARKIN, SHANE","Guard","Armani Olimpia Milan",21.4333333333333,10,214.333333333333,6
+"123","Fenerbahce Tarfin Istanbul","POWELL, DWIGHT","Center","Armani Olimpia Milan",18.3666666666667,18,330.6,8
+"123","Fenerbahce Tarfin Istanbul","SANLI, SERTAC","Center","Armani Olimpia Milan",5.41666666666667,-1,-5.41666666666667,-3
+"123","Fenerbahce Tarfin Istanbul","SARGIUNAS, IGNAS","Guard","Armani Olimpia Milan",8.36666666666667,0,0,0
+"123","Fenerbahce Tarfin Istanbul","SHIELDS, SHAVON","Forward","Armani Olimpia Milan",18.8166666666667,6,112.9,2
+"124","FC Bayern Munich","BEAUCHAMP, MARJON","Forward","Kosner Baskonia Vitoria-Gasteiz",25.9333333333333,26,674.266666666667,17
+"124","FC Bayern Munich","DA SILVA, OSCAR","Forward","Kosner Baskonia Vitoria-Gasteiz",15.0333333333333,25,375.833333333333,14
+"124","FC Bayern Munich","GIFFEY, NIELS","Forward","Kosner Baskonia Vitoria-Gasteiz",11.4,1,11.4,1
+"124","FC Bayern Munich","JENSEN, TOBIAS","Guard","Kosner Baskonia Vitoria-Gasteiz",4.28333333333333,1,4.28333333333333,0
+"124","FC Bayern Munich","JESSUP, JUSTINIAN","Guard","Kosner Baskonia Vitoria-Gasteiz",19.0833333333333,14,267.166666666667,10
+"124","FC Bayern Munich","JOKUBAITIS, ROKAS","Guard","Kosner Baskonia Vitoria-Gasteiz",17.3,7,121.1,4
+"124","FC Bayern Munich","LUCIC, VLADIMIR","Forward","Kosner Baskonia Vitoria-Gasteiz",15.1166666666667,6,90.7,1
+"124","FC Bayern Munich","OBST, ANDREAS","Guard","Kosner Baskonia Vitoria-Gasteiz",28.0166666666667,10,280.166666666667,4
+"124","FC Bayern Munich","THIEMANN, JOHANNES","Center","Kosner Baskonia Vitoria-Gasteiz",22,20,440,13
+"124","FC Bayern Munich","VOIGTMANN, JOHANNES","Center","Kosner Baskonia Vitoria-Gasteiz",19.6833333333333,14,275.566666666667,9
+"124","FC Bayern Munich","WASHINGTON, DUANE","Guard","Kosner Baskonia Vitoria-Gasteiz",22.15,42,930.3,33
+"124","Kosner Baskonia Vitoria-Gasteiz","BAUGH, DAMION","Guard","FC Bayern Munich",12.4666666666667,4,49.8666666666667,1
+"124","Kosner Baskonia Vitoria-Gasteiz","DUARTE, CHRIS","Forward","FC Bayern Munich",13.95,14,195.3,8
+"124","Kosner Baskonia Vitoria-Gasteiz","FRISCH, CLEMENT","Forward","FC Bayern Munich",16.5,7,115.5,3
+"124","Kosner Baskonia Vitoria-Gasteiz","JOKSIMOVIC, STEFAN","Forward","FC Bayern Munich",11.1833333333333,3,33.55,-1
+"124","Kosner Baskonia Vitoria-Gasteiz","KAMENJAS, KENAN","Center","FC Bayern Munich",30.1833333333333,55,1660.08333333333,25
+"124","Kosner Baskonia Vitoria-Gasteiz","KURUCS, RODIONS","Forward","FC Bayern Munich",30.3333333333333,13,394.333333333333,8
+"124","Kosner Baskonia Vitoria-Gasteiz","LAWSON, A.J.","Forward","FC Bayern Munich",30.1666666666667,2,60.3333333333333,-1
+"124","Kosner Baskonia Vitoria-Gasteiz","SIMMONS, KOBI","Guard","FC Bayern Munich",25.3666666666667,34,862.466666666667,25
+"124","Kosner Baskonia Vitoria-Gasteiz","SPAGNOLO, MATTEO","Guard","FC Bayern Munich",2.23333333333333,-1,-2.23333333333333,-1
+"124","Kosner Baskonia Vitoria-Gasteiz","STEWART, DJ","Forward","FC Bayern Munich",27.6166666666667,30,828.5,20
+"121","Zalgiris Kaunas","BROWN, STERLING","Guard","Panathinaikos AKTOR Athens",11.95,4,47.8,3
+"121","Zalgiris Kaunas","BUTKEVICIUS, ARNAS","Forward","Panathinaikos AKTOR Athens",23.2666666666667,3,69.8,-1
+"121","Zalgiris Kaunas","EDWARDS, CARSEN","Guard","Panathinaikos AKTOR Athens",26.7666666666667,21,562.1,15
+"121","Zalgiris Kaunas","EVANS, KEENAN","Guard","Panathinaikos AKTOR Athens",20.9833333333333,16,335.733333333333,8
+"121","Zalgiris Kaunas","GRIGONIS, MARIUS","Guard","Panathinaikos AKTOR Athens",20.5333333333333,6,123.2,4
+"121","Zalgiris Kaunas","LEE, SABEN","Guard","Panathinaikos AKTOR Athens",16.5,8,132,3
+"121","Zalgiris Kaunas","SLEVA, DUSTIN","Forward","Panathinaikos AKTOR Athens",18.9833333333333,7,132.883333333333,5
+"121","Zalgiris Kaunas","TUBELIS, AZUOLAS","Forward","Panathinaikos AKTOR Athens",24.45,31,757.95,21
+"121","Zalgiris Kaunas","ULANOVAS, EDGARAS","Forward","Panathinaikos AKTOR Athens",10.4,6,62.4,2
+"121","Zalgiris Kaunas","VALANCIUNAS, JONAS","Center","Panathinaikos AKTOR Athens",26.1666666666667,20,523.333333333333,8
+"121","Panathinaikos AKTOR Athens","BONGA, ISAAC","Forward","Zalgiris Kaunas",17.6,19,334.4,10
+"121","Panathinaikos AKTOR Athens","FALL, MOUSTAPHA","Center","Zalgiris Kaunas",14.8166666666667,7,103.716666666667,3
+"121","Panathinaikos AKTOR Athens","FRANCISCO, SYLVAIN","Guard","Zalgiris Kaunas",18.0666666666667,4,72.2666666666667,2
+"121","Panathinaikos AKTOR Athens","GRANT, JERIAN","Guard","Zalgiris Kaunas",13.5,-1,-13.5,-1
+"121","Panathinaikos AKTOR Athens","HAYES-DAVIS, NIGEL","Forward","Zalgiris Kaunas",32.7833333333333,32,1049.06666666667,22
+"121","Panathinaikos AKTOR Athens","HERNANGOMEZ, JUANCHO","Forward","Zalgiris Kaunas",11.5666666666667,14,161.933333333333,7
+"121","Panathinaikos AKTOR Athens","LESSORT, MATHIAS","Center","Zalgiris Kaunas",18.3166666666667,9,164.85,5
+"121","Panathinaikos AKTOR Athens","MITOGLOU, KONSTANTINOS","Forward","Zalgiris Kaunas",6.86666666666667,8,54.9333333333333,5
+"121","Panathinaikos AKTOR Athens","NUNN, KENDRICK","Guard","Zalgiris Kaunas",22.7,29,658.3,24
+"121","Panathinaikos AKTOR Athens","SLOUKAS, KOSTAS","Guard","Zalgiris Kaunas",19.1166666666667,14,267.633333333333,10
+"121","Panathinaikos AKTOR Athens","YABUSELE, GUERSCHON","Forward","Zalgiris Kaunas",24.6666666666667,20,493.333333333333,11
+"122","Maccabi Rapyd Tel Aviv","BACOT JR., ARMANDO","Center","Dubai Basketball",15.5,11,170.5,4
+"122","Maccabi Rapyd Tel Aviv","BALDWIN, KAMAR","Guard","Dubai Basketball",21.9333333333333,10,219.333333333333,8
+"122","Maccabi Rapyd Tel Aviv","BRISSETT, O'SHAE J","Forward","Dubai Basketball",25.15,24,603.6,14
+"122","Maccabi Rapyd Tel Aviv","CLARK III, JIMMY","Guard","Dubai Basketball",19.3666666666667,6,116.2,2
+"122","Maccabi Rapyd Tel Aviv","COLSON, BONZIE","Forward","Dubai Basketball",15.3,6,91.8,1
+"122","Maccabi Rapyd Tel Aviv","HOARD, JAYLEN","Forward","Dubai Basketball",25.65,10,256.5,5
+"122","Maccabi Rapyd Tel Aviv","MADAR, YAM","Guard","Dubai Basketball",25.15,31,779.65,22
+"122","Maccabi Rapyd Tel Aviv","SORKIN, ROMAN","Forward","Dubai Basketball",15.2333333333333,5,76.1666666666667,6
+"122","Maccabi Rapyd Tel Aviv","THEIS, DANIEL","Center","Dubai Basketball",22.7333333333333,13,295.533333333333,7
+"122","Maccabi Rapyd Tel Aviv","WALLACE, KEATON","Guard","Dubai Basketball",13.9833333333333,2,27.9666666666667,1
+"122","Dubai Basketball","BACON, DWAYNE","Forward","Maccabi Rapyd Tel Aviv",27.7666666666667,19,527.566666666667,16
+"122","Dubai Basketball","BLOSSOMGAME, JARON","Forward","Maccabi Rapyd Tel Aviv",25.65,12,307.8,10
+"122","Dubai Basketball","DANGUBIC, NEMANJA","Forward","Maccabi Rapyd Tel Aviv",15.0833333333333,10,150.833333333333,7
+"122","Dubai Basketball","DIAKITE, MAMADI","Center","Maccabi Rapyd Tel Aviv",2.58333333333333,-2,-5.16666666666667,-2
+"122","Dubai Basketball","HUERTAS, MARCELINHO","Guard","Maccabi Rapyd Tel Aviv",2.36666666666667,5,11.8333333333333,5
+"122","Dubai Basketball","KABENGELE, MFIONDU","Center","Maccabi Rapyd Tel Aviv",26.4333333333333,29,766.566666666667,15
+"122","Dubai Basketball","MUSA, DZANAN","Guard","Maccabi Rapyd Tel Aviv",13.1,6,78.6,2
+"122","Dubai Basketball","OKOBO, ELIE","Guard","Maccabi Rapyd Tel Aviv",22.7333333333333,30,682,15
+"122","Dubai Basketball","PETRUSEV, FILIP","Center","Maccabi Rapyd Tel Aviv",13.2666666666667,7,92.8666666666667,5
+"122","Dubai Basketball","SHENGELIA, TORNIKE","Forward","Maccabi Rapyd Tel Aviv",11.95,2,23.9,-1
+"122","Dubai Basketball","WALKUP, THOMAS","Guard","Maccabi Rapyd Tel Aviv",18.5833333333333,20,371.666666666667,13
+"122","Dubai Basketball","WRIGHT IV, MCKINLEY","Guard","Maccabi Rapyd Tel Aviv",20.4833333333333,-1,-20.4833333333333,-3
+"120","Besiktas Fuzul Istanbul","BIRSEN, METECAN","Center","Real Madrid",13.2,0,0,-2
+"120","Besiktas Fuzul Istanbul","BROWN, ANTHONY","Forward","Real Madrid",8.13333333333333,1,8.13333333333333,-1
+"120","Besiktas Fuzul Istanbul","DEJULIUS, DAVID","Guard","Real Madrid",10.7,5,53.5,3
+"120","Besiktas Fuzul Istanbul","DOTSON, DEVON","Guard","Real Madrid",25.2833333333333,13,328.683333333333,3
+"120","Besiktas Fuzul Istanbul","GABRIEL, WENYEN","Center","Real Madrid",19.1,25,477.5,15
+"120","Besiktas Fuzul Istanbul","JEFFRIES, DAQUAN","Forward","Real Madrid",24.4166666666667,32,781.333333333333,24
+"120","Besiktas Fuzul Istanbul","MORGAN, CONOR","Center","Real Madrid",13.2333333333333,18,238.2,10
+"120","Besiktas Fuzul Istanbul","OMORUYI, EUGENE","Center","Real Madrid",24.2833333333333,13,315.683333333333,2
+"120","Besiktas Fuzul Istanbul","WALKER IV, LONNIE","Guard","Real Madrid",24.0333333333333,25,600.833333333333,16
+"120","Besiktas Fuzul Istanbul","WILBEKIN, SCOTTIE","Guard","Real Madrid",27.4333333333333,23,630.966666666667,14
+"120","Besiktas Fuzul Istanbul","ZIZIC, ANTE","Center","Real Madrid",10.1833333333333,8,81.4666666666667,4
+"120","Real Madrid","ABALDE, ALBERTO","Forward","Besiktas Fuzul Istanbul",24.8,13,322.4,8
+"120","Real Madrid","FELIZ, ANDRES","Guard","Besiktas Fuzul Istanbul",24.9166666666667,19,473.416666666667,15
+"120","Real Madrid","JONES, DAMIAN","Center","Besiktas Fuzul Istanbul",10.05,10,100.5,7
+"120","Real Madrid","LUWAWU-CABARROT, TIMOTHE","Forward","Besiktas Fuzul Istanbul",21.4833333333333,4,85.9333333333333,-1
+"120","Real Madrid","MALEDON, THEO","Guard","Besiktas Fuzul Istanbul",24.65,30,739.5,26
+"120","Real Madrid","OKEKE, CHUMA","Center","Besiktas Fuzul Istanbul",15.1166666666667,5,75.5833333333333,2
+"120","Real Madrid","PRADILLA, JAIME","Forward","Besiktas Fuzul Istanbul",19.35,13,251.55,4
+"120","Real Madrid","PROCIDA, GABRIELE","Forward","Besiktas Fuzul Istanbul",7.91666666666667,-1,-7.91666666666667,-1
+"120","Real Madrid","SARR, OLIVIER","Center","Besiktas Fuzul Istanbul",8.6,1,8.6,-1
+"120","Real Madrid","SMITH JR, NICK","Forward","Besiktas Fuzul Istanbul",16.2333333333333,16,259.733333333333,13
+"120","Real Madrid","TAVARES, WALTER","Center","Besiktas Fuzul Istanbul",26.8833333333333,23,618.316666666667,8
 "119","Virtus Bologna","ALSTON JR. , DERRICK","Forward","Panathinaikos AKTOR Athens",16.9333333333333,-4,-67.7333333333333,-5
 "119","Virtus Bologna","BALDASSO, TOMMASO","Guard","Panathinaikos AKTOR Athens",1.3,1,1.3,0
 "119","Virtus Bologna","BELLO, RASHEED","Guard","Panathinaikos AKTOR Athens",19.1166666666667,10,191.166666666667,6
@@ -223,29 +446,29 @@
 "111","Anadolu Efes Istanbul","SARIC, DARIO","Forward","Dubai Basketball",28.1833333333333,23,648.216666666667,15
 "111","Anadolu Efes Istanbul","STRAZEL, MATTHEW","Guard","Dubai Basketball",20.7666666666667,26,539.933333333333,20
 "111","Anadolu Efes Istanbul","YUSTA, SANTI","Forward","Dubai Basketball",17.1833333333333,4,68.7333333333333,1
-"108","LDLC ASVEL Villeurbanne","BESSON, HUGO","Guard","Besiktas Istanbul",16.45,10,164.5,6
-"108","LDLC ASVEL Villeurbanne","BOLOMBOY, JOEL","Center","Besiktas Istanbul",13.7333333333333,17,233.466666666667,11
-"108","LDLC ASVEL Villeurbanne","CROWDER, JAE","Forward","Besiktas Istanbul",27.5333333333333,7,192.733333333333,3
-"108","LDLC ASVEL Villeurbanne","DOSSOU-YOVO, MATHIS","Center","Besiktas Istanbul",11.8666666666667,9,106.8,6
-"108","LDLC ASVEL Villeurbanne","FODZO DADA, MARC-OWEN","Guard","Besiktas Istanbul",2.66666666666667,-1,-2.66666666666667,-1
-"108","LDLC ASVEL Villeurbanne","GACH, BOTH","Forward","Besiktas Istanbul",21.9833333333333,17,373.716666666667,11
-"108","LDLC ASVEL Villeurbanne","LIGHTY, DAVID","Forward","Besiktas Istanbul",15.6666666666667,7,109.666666666667,5
-"108","LDLC ASVEL Villeurbanne","MASSA, BODIAN","Forward","Besiktas Istanbul",19.75,12,237,7
-"108","LDLC ASVEL Villeurbanne","MILLS, PATTY","Guard","Besiktas Istanbul",20.9833333333333,12,251.8,8
-"108","LDLC ASVEL Villeurbanne","SESTINA, NATHAN","Forward","Besiktas Istanbul",5.21666666666667,6,31.3,4
-"108","LDLC ASVEL Villeurbanne","WASHINGTON JR, TYTY","Guard","Besiktas Istanbul",18.2333333333333,17,309.966666666667,8
-"108","LDLC ASVEL Villeurbanne","WATERS, TREMONT","Guard","Besiktas Istanbul",25.9166666666667,40,1036.66666666667,30
-"108","Besiktas Istanbul","BROWN, ANTHONY","Forward","LDLC ASVEL Villeurbanne",8.46666666666667,-1,-8.46666666666667,-2
-"108","Besiktas Istanbul","DEJULIUS, DAVID","Guard","LDLC ASVEL Villeurbanne",22.2833333333333,24,534.8,17
-"108","Besiktas Istanbul","DOTSON, DEVON","Guard","LDLC ASVEL Villeurbanne",17.7166666666667,7,124.016666666667,4
-"108","Besiktas Istanbul","GABRIEL, WENYEN","Center","LDLC ASVEL Villeurbanne",23.2833333333333,23,535.516666666667,18
-"108","Besiktas Istanbul","JEFFRIES, DAQUAN","Forward","LDLC ASVEL Villeurbanne",10.3,6,61.8,2
-"108","Besiktas Istanbul","KORKMAZ, FURKAN","Forward","LDLC ASVEL Villeurbanne",14.35,8,114.8,4
-"108","Besiktas Istanbul","MORGAN, CONOR","Center","LDLC ASVEL Villeurbanne",19.4833333333333,16,311.733333333333,9
-"108","Besiktas Istanbul","OMORUYI, EUGENE","Center","LDLC ASVEL Villeurbanne",23.4833333333333,42,986.3,23
-"108","Besiktas Istanbul","WALKER IV, LONNIE","Guard","LDLC ASVEL Villeurbanne",19.3833333333333,5,96.9166666666667,5
-"108","Besiktas Istanbul","WILBEKIN, SCOTTIE","Guard","LDLC ASVEL Villeurbanne",27.5,17,467.5,12
-"108","Besiktas Istanbul","ZIZIC, ANTE","Center","LDLC ASVEL Villeurbanne",13.75,6,82.5,3
+"108","LDLC ASVEL Villeurbanne","BESSON, HUGO","Guard","Besiktas Fuzul Istanbul",16.45,10,164.5,6
+"108","LDLC ASVEL Villeurbanne","BOLOMBOY, JOEL","Center","Besiktas Fuzul Istanbul",13.7333333333333,17,233.466666666667,11
+"108","LDLC ASVEL Villeurbanne","CROWDER, JAE","Forward","Besiktas Fuzul Istanbul",27.5333333333333,7,192.733333333333,3
+"108","LDLC ASVEL Villeurbanne","DOSSOU-YOVO, MATHIS","Center","Besiktas Fuzul Istanbul",11.8666666666667,9,106.8,6
+"108","LDLC ASVEL Villeurbanne","FODZO DADA, MARC-OWEN","Guard","Besiktas Fuzul Istanbul",2.66666666666667,-1,-2.66666666666667,-1
+"108","LDLC ASVEL Villeurbanne","GACH, BOTH","Forward","Besiktas Fuzul Istanbul",21.9833333333333,17,373.716666666667,11
+"108","LDLC ASVEL Villeurbanne","LIGHTY, DAVID","Forward","Besiktas Fuzul Istanbul",15.6666666666667,7,109.666666666667,5
+"108","LDLC ASVEL Villeurbanne","MASSA, BODIAN","Forward","Besiktas Fuzul Istanbul",19.75,12,237,7
+"108","LDLC ASVEL Villeurbanne","MILLS, PATTY","Guard","Besiktas Fuzul Istanbul",20.9833333333333,12,251.8,8
+"108","LDLC ASVEL Villeurbanne","SESTINA, NATHAN","Forward","Besiktas Fuzul Istanbul",5.21666666666667,6,31.3,4
+"108","LDLC ASVEL Villeurbanne","WASHINGTON JR, TYTY","Guard","Besiktas Fuzul Istanbul",18.2333333333333,17,309.966666666667,8
+"108","LDLC ASVEL Villeurbanne","WATERS, TREMONT","Guard","Besiktas Fuzul Istanbul",25.9166666666667,40,1036.66666666667,30
+"108","Besiktas Fuzul Istanbul","BROWN, ANTHONY","Forward","LDLC ASVEL Villeurbanne",8.46666666666667,-1,-8.46666666666667,-2
+"108","Besiktas Fuzul Istanbul","DEJULIUS, DAVID","Guard","LDLC ASVEL Villeurbanne",22.2833333333333,24,534.8,17
+"108","Besiktas Fuzul Istanbul","DOTSON, DEVON","Guard","LDLC ASVEL Villeurbanne",17.7166666666667,7,124.016666666667,4
+"108","Besiktas Fuzul Istanbul","GABRIEL, WENYEN","Center","LDLC ASVEL Villeurbanne",23.2833333333333,23,535.516666666667,18
+"108","Besiktas Fuzul Istanbul","JEFFRIES, DAQUAN","Forward","LDLC ASVEL Villeurbanne",10.3,6,61.8,2
+"108","Besiktas Fuzul Istanbul","KORKMAZ, FURKAN","Forward","LDLC ASVEL Villeurbanne",14.35,8,114.8,4
+"108","Besiktas Fuzul Istanbul","MORGAN, CONOR","Center","LDLC ASVEL Villeurbanne",19.4833333333333,16,311.733333333333,9
+"108","Besiktas Fuzul Istanbul","OMORUYI, EUGENE","Center","LDLC ASVEL Villeurbanne",23.4833333333333,42,986.3,23
+"108","Besiktas Fuzul Istanbul","WALKER IV, LONNIE","Guard","LDLC ASVEL Villeurbanne",19.3833333333333,5,96.9166666666667,5
+"108","Besiktas Fuzul Istanbul","WILBEKIN, SCOTTIE","Guard","LDLC ASVEL Villeurbanne",27.5,17,467.5,12
+"108","Besiktas Fuzul Istanbul","ZIZIC, ANTE","Center","LDLC ASVEL Villeurbanne",13.75,6,82.5,3
 "110","Panathinaikos AKTOR Athens","BADIO, BRANCOU","Guard","FC Barcelona",10.8666666666667,2,21.7333333333333,-4
 "110","Panathinaikos AKTOR Athens","BONGA, ISAAC","Forward","FC Barcelona",20.2666666666667,20,405.333333333333,10
 "110","Panathinaikos AKTOR Athens","FRANCISCO, SYLVAIN","Guard","FC Barcelona",21.2333333333333,16,339.733333333333,12
@@ -511,28 +734,28 @@
 "100","Crvena Zvezda Meridianbet Belgrade","NWORA, JORDAN","Forward","Olympiacos Piraeus",26.25,50,1312.5,23
 "100","Crvena Zvezda Meridianbet Belgrade","OJELEYE, SEMI","Forward","Olympiacos Piraeus",15.75,-2,-31.5,-2
 "100","Crvena Zvezda Meridianbet Belgrade","WEILER-BABB, NICK","Guard","Olympiacos Piraeus",17.4166666666667,11,191.583333333333,6
-"97","Besiktas Istanbul","BIRSEN, METECAN","Center","Zalgiris Kaunas",18.2166666666667,2,36.4333333333333,-1
-"97","Besiktas Istanbul","BROWN, ANTHONY","Forward","Zalgiris Kaunas",25.4833333333333,28,713.533333333333,17
-"97","Besiktas Istanbul","DEJULIUS, DAVID","Guard","Zalgiris Kaunas",18.5,12,222,6
-"97","Besiktas Istanbul","DOTSON, DEVON","Guard","Zalgiris Kaunas",24.5333333333333,23,564.266666666667,14
-"97","Besiktas Istanbul","GABRIEL, WENYEN","Center","Zalgiris Kaunas",23.9166666666667,26,621.833333333333,14
-"97","Besiktas Istanbul","MORGAN, CONOR","Center","Zalgiris Kaunas",9.86666666666667,3,29.6,0
-"97","Besiktas Istanbul","NOWELL, JAYLEN","Guard","Zalgiris Kaunas",19.3833333333333,2,38.7666666666667,-3
-"97","Besiktas Istanbul","OMORUYI, EUGENE","Center","Zalgiris Kaunas",24.7166666666667,30,741.5,20
-"97","Besiktas Istanbul","WALKER IV, LONNIE","Guard","Zalgiris Kaunas",22.9166666666667,7,160.416666666667,5
-"97","Besiktas Istanbul","WILBEKIN, SCOTTIE","Guard","Zalgiris Kaunas",9.3,-3,-27.9,-5
-"97","Besiktas Istanbul","ZIZIC, ANTE","Center","Zalgiris Kaunas",3.16666666666667,-4,-12.6666666666667,-4
-"97","Zalgiris Kaunas","AKOBUNDU-EHIOGU, KAODIRICHI","Center","Besiktas Istanbul",1.31666666666667,0,0,0
-"97","Zalgiris Kaunas","BROWN, STERLING","Guard","Besiktas Istanbul",20.0666666666667,11,220.733333333333,6
-"97","Zalgiris Kaunas","BUTKEVICIUS, ARNAS","Forward","Besiktas Istanbul",21.3666666666667,30,641,13
-"97","Zalgiris Kaunas","EDWARDS, CARSEN","Guard","Besiktas Istanbul",20.9333333333333,12,251.2,8
-"97","Zalgiris Kaunas","EVANS, KEENAN","Guard","Besiktas Istanbul",18.4166666666667,2,36.8333333333333,1
-"97","Zalgiris Kaunas","GRIGONIS, MARIUS","Guard","Besiktas Istanbul",18.4666666666667,17,313.933333333333,14
-"97","Zalgiris Kaunas","LEE, SABEN","Guard","Besiktas Istanbul",21.3666666666667,12,256.4,9
-"97","Zalgiris Kaunas","SLEVA, DUSTIN","Forward","Besiktas Istanbul",21.8333333333333,9,196.5,4
-"97","Zalgiris Kaunas","TUBELIS, AZUOLAS","Forward","Besiktas Istanbul",18.3666666666667,25,459.166666666667,19
-"97","Zalgiris Kaunas","ULANOVAS, EDGARAS","Forward","Besiktas Istanbul",18.05,7,126.35,3
-"97","Zalgiris Kaunas","VALANCIUNAS, JONAS","Center","Besiktas Istanbul",19.8166666666667,49,971.016666666667,23
+"97","Besiktas Fuzul Istanbul","BIRSEN, METECAN","Center","Zalgiris Kaunas",18.2166666666667,2,36.4333333333333,-1
+"97","Besiktas Fuzul Istanbul","BROWN, ANTHONY","Forward","Zalgiris Kaunas",25.4833333333333,28,713.533333333333,17
+"97","Besiktas Fuzul Istanbul","DEJULIUS, DAVID","Guard","Zalgiris Kaunas",18.5,12,222,6
+"97","Besiktas Fuzul Istanbul","DOTSON, DEVON","Guard","Zalgiris Kaunas",24.5333333333333,23,564.266666666667,14
+"97","Besiktas Fuzul Istanbul","GABRIEL, WENYEN","Center","Zalgiris Kaunas",23.9166666666667,26,621.833333333333,14
+"97","Besiktas Fuzul Istanbul","MORGAN, CONOR","Center","Zalgiris Kaunas",9.86666666666667,3,29.6,0
+"97","Besiktas Fuzul Istanbul","NOWELL, JAYLEN","Guard","Zalgiris Kaunas",19.3833333333333,2,38.7666666666667,-3
+"97","Besiktas Fuzul Istanbul","OMORUYI, EUGENE","Center","Zalgiris Kaunas",24.7166666666667,30,741.5,20
+"97","Besiktas Fuzul Istanbul","WALKER IV, LONNIE","Guard","Zalgiris Kaunas",22.9166666666667,7,160.416666666667,5
+"97","Besiktas Fuzul Istanbul","WILBEKIN, SCOTTIE","Guard","Zalgiris Kaunas",9.3,-3,-27.9,-5
+"97","Besiktas Fuzul Istanbul","ZIZIC, ANTE","Center","Zalgiris Kaunas",3.16666666666667,-4,-12.6666666666667,-4
+"97","Zalgiris Kaunas","AKOBUNDU-EHIOGU, KAODIRICHI","Center","Besiktas Fuzul Istanbul",1.31666666666667,0,0,0
+"97","Zalgiris Kaunas","BROWN, STERLING","Guard","Besiktas Fuzul Istanbul",20.0666666666667,11,220.733333333333,6
+"97","Zalgiris Kaunas","BUTKEVICIUS, ARNAS","Forward","Besiktas Fuzul Istanbul",21.3666666666667,30,641,13
+"97","Zalgiris Kaunas","EDWARDS, CARSEN","Guard","Besiktas Fuzul Istanbul",20.9333333333333,12,251.2,8
+"97","Zalgiris Kaunas","EVANS, KEENAN","Guard","Besiktas Fuzul Istanbul",18.4166666666667,2,36.8333333333333,1
+"97","Zalgiris Kaunas","GRIGONIS, MARIUS","Guard","Besiktas Fuzul Istanbul",18.4666666666667,17,313.933333333333,14
+"97","Zalgiris Kaunas","LEE, SABEN","Guard","Besiktas Fuzul Istanbul",21.3666666666667,12,256.4,9
+"97","Zalgiris Kaunas","SLEVA, DUSTIN","Forward","Besiktas Fuzul Istanbul",21.8333333333333,9,196.5,4
+"97","Zalgiris Kaunas","TUBELIS, AZUOLAS","Forward","Besiktas Fuzul Istanbul",18.3666666666667,25,459.166666666667,19
+"97","Zalgiris Kaunas","ULANOVAS, EDGARAS","Forward","Besiktas Fuzul Istanbul",18.05,7,126.35,3
+"97","Zalgiris Kaunas","VALANCIUNAS, JONAS","Center","Besiktas Fuzul Istanbul",19.8166666666667,49,971.016666666667,23
 "96","Armani Olimpia Milan","BOLMARO, LEANDRO","Guard","Valencia Basket",20.8833333333333,24,501.2,16
 "96","Armani Olimpia Milan","BURNELL, JASON","Forward","Valencia Basket",13.4333333333333,3,40.3,1
 "96","Armani Olimpia Milan","COLE, RJ","Guard","Valencia Basket",27.8166666666667,18,500.7,10
@@ -666,27 +889,27 @@
 "91","Panathinaikos AKTOR Athens","NUNN, KENDRICK","Guard","Real Madrid",23.7,28,663.6,31
 "91","Panathinaikos AKTOR Athens","SLOUKAS, KOSTAS","Guard","Real Madrid",15,11,165,8
 "91","Panathinaikos AKTOR Athens","YABUSELE, GUERSCHON","Forward","Real Madrid",21.5833333333333,9,194.25,6
-"89","Virtus Bologna","ALSTON JR. , DERRICK","Forward","Besiktas Istanbul",25,22,550,19
-"89","Virtus Bologna","BELLO, RASHEED","Guard","Besiktas Istanbul",14.3833333333333,18,258.9,11
-"89","Virtus Bologna","CARR, MARCUS","Guard","Besiktas Istanbul",22.6833333333333,22,499.033333333333,10
-"89","Virtus Bologna","DIARRA, ALIOU","Center","Besiktas Istanbul",17.2166666666667,20,344.333333333333,12
-"89","Virtus Bologna","DIOUF, MOUHAMET","Center","Besiktas Istanbul",9.01666666666667,6,54.1,3
-"89","Virtus Bologna","EDWARDS, KESSLER","Forward","Besiktas Istanbul",25.9,17,440.3,8
-"89","Virtus Bologna","FRAZIER, TRENT","Guard","Besiktas Istanbul",22.8,10,228,10
-"89","Virtus Bologna","HACKETT, DANIEL","Guard","Besiktas Istanbul",13.7166666666667,16,219.466666666667,11
-"89","Virtus Bologna","KLINTMAN, BO","Forward","Besiktas Istanbul",13.2,12,158.4,6
-"89","Virtus Bologna","KOKILA, KEVIN","Center","Besiktas Istanbul",13.7666666666667,16,220.266666666667,13
-"89","Virtus Bologna","MOORE, WENDELL","Guard","Besiktas Istanbul",22.3166666666667,14,312.433333333333,11
-"89","Besiktas Istanbul","BIRSEN, METECAN","Center","Virtus Bologna",17.75,10,177.5,4
-"89","Besiktas Istanbul","BROWN, ANTHONY","Forward","Virtus Bologna",13.55,-1,-13.55,-2
-"89","Besiktas Istanbul","DEJULIUS, DAVID","Guard","Virtus Bologna",28.5,12,342,9
-"89","Besiktas Istanbul","GABRIEL, WENYEN","Center","Virtus Bologna",26.0333333333333,34,885.133333333333,18
-"89","Besiktas Istanbul","MORGAN, CONOR","Center","Virtus Bologna",19.6333333333333,20,392.666666666667,13
-"89","Besiktas Istanbul","NOWELL, JAYLEN","Guard","Virtus Bologna",18.8166666666667,14,263.433333333333,8
-"89","Besiktas Istanbul","OMORUYI, EUGENE","Center","Virtus Bologna",14.8166666666667,6,88.9,4
-"89","Besiktas Istanbul","UGURLU, BERK","Guard","Virtus Bologna",8.35,3,25.05,1
-"89","Besiktas Istanbul","WALKER IV, LONNIE","Guard","Virtus Bologna",28.3833333333333,47,1334.01666666667,36
-"89","Besiktas Istanbul","WILBEKIN, SCOTTIE","Guard","Virtus Bologna",24.1666666666667,22,531.666666666667,16
+"89","Virtus Bologna","ALSTON JR. , DERRICK","Forward","Besiktas Fuzul Istanbul",25,22,550,19
+"89","Virtus Bologna","BELLO, RASHEED","Guard","Besiktas Fuzul Istanbul",14.3833333333333,18,258.9,11
+"89","Virtus Bologna","CARR, MARCUS","Guard","Besiktas Fuzul Istanbul",22.6833333333333,22,499.033333333333,10
+"89","Virtus Bologna","DIARRA, ALIOU","Center","Besiktas Fuzul Istanbul",17.2166666666667,20,344.333333333333,12
+"89","Virtus Bologna","DIOUF, MOUHAMET","Center","Besiktas Fuzul Istanbul",9.01666666666667,6,54.1,3
+"89","Virtus Bologna","EDWARDS, KESSLER","Forward","Besiktas Fuzul Istanbul",25.9,17,440.3,8
+"89","Virtus Bologna","FRAZIER, TRENT","Guard","Besiktas Fuzul Istanbul",22.8,10,228,10
+"89","Virtus Bologna","HACKETT, DANIEL","Guard","Besiktas Fuzul Istanbul",13.7166666666667,16,219.466666666667,11
+"89","Virtus Bologna","KLINTMAN, BO","Forward","Besiktas Fuzul Istanbul",13.2,12,158.4,6
+"89","Virtus Bologna","KOKILA, KEVIN","Center","Besiktas Fuzul Istanbul",13.7666666666667,16,220.266666666667,13
+"89","Virtus Bologna","MOORE, WENDELL","Guard","Besiktas Fuzul Istanbul",22.3166666666667,14,312.433333333333,11
+"89","Besiktas Fuzul Istanbul","BIRSEN, METECAN","Center","Virtus Bologna",17.75,10,177.5,4
+"89","Besiktas Fuzul Istanbul","BROWN, ANTHONY","Forward","Virtus Bologna",13.55,-1,-13.55,-2
+"89","Besiktas Fuzul Istanbul","DEJULIUS, DAVID","Guard","Virtus Bologna",28.5,12,342,9
+"89","Besiktas Fuzul Istanbul","GABRIEL, WENYEN","Center","Virtus Bologna",26.0333333333333,34,885.133333333333,18
+"89","Besiktas Fuzul Istanbul","MORGAN, CONOR","Center","Virtus Bologna",19.6333333333333,20,392.666666666667,13
+"89","Besiktas Fuzul Istanbul","NOWELL, JAYLEN","Guard","Virtus Bologna",18.8166666666667,14,263.433333333333,8
+"89","Besiktas Fuzul Istanbul","OMORUYI, EUGENE","Center","Virtus Bologna",14.8166666666667,6,88.9,4
+"89","Besiktas Fuzul Istanbul","UGURLU, BERK","Guard","Virtus Bologna",8.35,3,25.05,1
+"89","Besiktas Fuzul Istanbul","WALKER IV, LONNIE","Guard","Virtus Bologna",28.3833333333333,47,1334.01666666667,36
+"89","Besiktas Fuzul Istanbul","WILBEKIN, SCOTTIE","Guard","Virtus Bologna",24.1666666666667,22,531.666666666667,16
 "87","FC Barcelona","BALCEROWSKI, OLEK","Center","Valencia Basket",5.68333333333333,7,39.7833333333333,6
 "87","FC Barcelona","BRIZUELA, DARIO","Guard","Valencia Basket",21.25,16,340,12
 "87","FC Barcelona","EVBUOMWAN, TOSAN","Forward","Valencia Basket",13.9,16,222.4,7
@@ -954,26 +1177,26 @@
 "77","Anadolu Efes Istanbul","STRAZEL, MATTHEW","Guard","Hapoel IBI Tel Aviv",20.3333333333333,22,447.333333333333,17
 "77","Anadolu Efes Istanbul","YILMAZ, ERKAN","Forward","Hapoel IBI Tel Aviv",10,19,190,9
 "77","Anadolu Efes Istanbul","YUSTA, SANTI","Forward","Hapoel IBI Tel Aviv",18.5833333333333,16,297.333333333333,14
-"79","Besiktas Istanbul","BIRSEN, METECAN","Center","Olympiacos Piraeus",24.7833333333333,18,446.1,11
-"79","Besiktas Istanbul","BROWN, ANTHONY","Forward","Olympiacos Piraeus",24.5166666666667,17,416.783333333333,10
-"79","Besiktas Istanbul","DEJULIUS, DAVID","Guard","Olympiacos Piraeus",27.9833333333333,18,503.7,16
-"79","Besiktas Istanbul","GABRIEL, WENYEN","Center","Olympiacos Piraeus",14.0166666666667,6,84.1,2
-"79","Besiktas Istanbul","MORGAN, CONOR","Center","Olympiacos Piraeus",25.8,18,464.4,12
-"79","Besiktas Istanbul","NOWELL, JAYLEN","Guard","Olympiacos Piraeus",25.2,18,453.6,11
-"79","Besiktas Istanbul","OMORUYI, EUGENE","Center","Olympiacos Piraeus",18.2833333333333,13,237.683333333333,5
-"79","Besiktas Istanbul","UGURLU, BERK","Guard","Olympiacos Piraeus",12.0166666666667,1,12.0166666666667,0
-"79","Besiktas Istanbul","WILBEKIN, SCOTTIE","Guard","Olympiacos Piraeus",17.8,-1,-17.8,-1
-"79","Besiktas Istanbul","ZIZIC, ANTE","Center","Olympiacos Piraeus",9.6,7,67.2,2
-"79","Olympiacos Piraeus","HALL, DONTA","Center","Besiktas Istanbul",20,32,640,23
-"79","Olympiacos Piraeus","JONES, TYRIQUE","Center","Besiktas Istanbul",20,30,600,22
-"79","Olympiacos Piraeus","JOSEPH, CORY","Guard","Besiktas Istanbul",24.1833333333333,14,338.566666666667,8
-"79","Olympiacos Piraeus","MILLER-MCINTYRE, CODI","Guard","Besiktas Istanbul",22.5,20,450,11
-"79","Olympiacos Piraeus","NDIAYE, MBAYE","Forward","Besiktas Istanbul",21.3166666666667,11,234.483333333333,6
-"79","Olympiacos Piraeus","NETZIPOGLOU, OMIROS","Guard","Besiktas Istanbul",2.96666666666667,-2,-5.93333333333333,-2
-"79","Olympiacos Piraeus","PAPANIKOLAOU, KOSTAS","Forward","Besiktas Istanbul",23.4,9,210.6,3
-"79","Olympiacos Piraeus","PLOTAS, NIKOLAOS","Guard","Besiktas Istanbul",11.35,-1,-11.35,-4
-"79","Olympiacos Piraeus","VEZENKOV, SASHA","Forward","Besiktas Istanbul",24,25,600,19
-"79","Olympiacos Piraeus","WARD, TYSON","Forward","Besiktas Istanbul",30.2833333333333,28,847.933333333333,16
+"79","Besiktas Fuzul Istanbul","BIRSEN, METECAN","Center","Olympiacos Piraeus",24.7833333333333,18,446.1,11
+"79","Besiktas Fuzul Istanbul","BROWN, ANTHONY","Forward","Olympiacos Piraeus",24.5166666666667,17,416.783333333333,10
+"79","Besiktas Fuzul Istanbul","DEJULIUS, DAVID","Guard","Olympiacos Piraeus",27.9833333333333,18,503.7,16
+"79","Besiktas Fuzul Istanbul","GABRIEL, WENYEN","Center","Olympiacos Piraeus",14.0166666666667,6,84.1,2
+"79","Besiktas Fuzul Istanbul","MORGAN, CONOR","Center","Olympiacos Piraeus",25.8,18,464.4,12
+"79","Besiktas Fuzul Istanbul","NOWELL, JAYLEN","Guard","Olympiacos Piraeus",25.2,18,453.6,11
+"79","Besiktas Fuzul Istanbul","OMORUYI, EUGENE","Center","Olympiacos Piraeus",18.2833333333333,13,237.683333333333,5
+"79","Besiktas Fuzul Istanbul","UGURLU, BERK","Guard","Olympiacos Piraeus",12.0166666666667,1,12.0166666666667,0
+"79","Besiktas Fuzul Istanbul","WILBEKIN, SCOTTIE","Guard","Olympiacos Piraeus",17.8,-1,-17.8,-1
+"79","Besiktas Fuzul Istanbul","ZIZIC, ANTE","Center","Olympiacos Piraeus",9.6,7,67.2,2
+"79","Olympiacos Piraeus","HALL, DONTA","Center","Besiktas Fuzul Istanbul",20,32,640,23
+"79","Olympiacos Piraeus","JONES, TYRIQUE","Center","Besiktas Fuzul Istanbul",20,30,600,22
+"79","Olympiacos Piraeus","JOSEPH, CORY","Guard","Besiktas Fuzul Istanbul",24.1833333333333,14,338.566666666667,8
+"79","Olympiacos Piraeus","MILLER-MCINTYRE, CODI","Guard","Besiktas Fuzul Istanbul",22.5,20,450,11
+"79","Olympiacos Piraeus","NDIAYE, MBAYE","Forward","Besiktas Fuzul Istanbul",21.3166666666667,11,234.483333333333,6
+"79","Olympiacos Piraeus","NETZIPOGLOU, OMIROS","Guard","Besiktas Fuzul Istanbul",2.96666666666667,-2,-5.93333333333333,-2
+"79","Olympiacos Piraeus","PAPANIKOLAOU, KOSTAS","Forward","Besiktas Fuzul Istanbul",23.4,9,210.6,3
+"79","Olympiacos Piraeus","PLOTAS, NIKOLAOS","Guard","Besiktas Fuzul Istanbul",11.35,-1,-11.35,-4
+"79","Olympiacos Piraeus","VEZENKOV, SASHA","Forward","Besiktas Fuzul Istanbul",24,25,600,19
+"79","Olympiacos Piraeus","WARD, TYSON","Forward","Besiktas Fuzul Istanbul",30.2833333333333,28,847.933333333333,16
 "73","Kosner Baskonia Vitoria-Gasteiz","BAUGH, DAMION","Guard","Real Madrid",24.9666666666667,19,474.366666666667,12
 "73","Kosner Baskonia Vitoria-Gasteiz","FARIED, KENNETH","Center","Real Madrid",24.8,26,644.8,12
 "73","Kosner Baskonia Vitoria-Gasteiz","FRISCH, CLEMENT","Forward","Real Madrid",14.4666666666667,10,144.666666666667,2
@@ -1290,26 +1513,26 @@
 "65","Dubai Basketball","OKOBO, ELIE","Guard","FC Bayern Munich",25.3666666666667,43,1090.76666666667,28
 "65","Dubai Basketball","PETRUSEV, FILIP","Center","FC Bayern Munich",16.15,18,290.7,11
 "65","Dubai Basketball","WRIGHT IV, MCKINLEY","Guard","FC Bayern Munich",23.1166666666667,27,624.15,19
-"64","Anadolu Efes Istanbul","FERNANDO, BRUNO","Center","Besiktas Istanbul",13.4666666666667,6,80.8,3
-"64","Anadolu Efes Istanbul","JONES, KAI","Center","Besiktas Istanbul",25.4666666666667,31,789.466666666667,13
-"64","Anadolu Efes Istanbul","LOYD, JORDAN","Guard","Besiktas Istanbul",37.2833333333333,14,521.966666666667,7
-"64","Anadolu Efes Istanbul","MALCOLM, COLLIN","Forward","Besiktas Istanbul",30.8833333333333,15,463.25,11
-"64","Anadolu Efes Istanbul","OSMANI, ERCAN","Forward","Besiktas Istanbul",18.95,22,416.9,14
-"64","Anadolu Efes Istanbul","PAYNE, CAMERON","Guard","Besiktas Istanbul",23.1666666666667,19,440.166666666667,19
-"64","Anadolu Efes Istanbul","SARIC, DARIO","Forward","Besiktas Istanbul",22.1166666666667,24,530.8,17
-"64","Anadolu Efes Istanbul","STRAZEL, MATTHEW","Guard","Besiktas Istanbul",14.9333333333333,17,253.866666666667,11
-"64","Anadolu Efes Istanbul","YUSTA, SANTI","Forward","Besiktas Istanbul",13.7333333333333,11,151.066666666667,11
-"64","Besiktas Istanbul","BIRSEN, METECAN","Center","Anadolu Efes Istanbul",12.15,8,97.2,6
-"64","Besiktas Istanbul","BROWN, ANTHONY","Forward","Anadolu Efes Istanbul",25.1666666666667,15,377.5,10
-"64","Besiktas Istanbul","DOTSON, DEVON","Guard","Anadolu Efes Istanbul",16.3833333333333,15,245.75,11
-"64","Besiktas Istanbul","GABRIEL, WENYEN","Center","Anadolu Efes Istanbul",13.3,-4,-53.2,-7
-"64","Besiktas Istanbul","MORGAN, CONOR","Center","Anadolu Efes Istanbul",10.5,0,0,-1
-"64","Besiktas Istanbul","NOWELL, JAYLEN","Guard","Anadolu Efes Istanbul",22.4333333333333,8,179.466666666667,8
-"64","Besiktas Istanbul","OMORUYI, EUGENE","Center","Anadolu Efes Istanbul",23.2166666666667,27,626.85,17
-"64","Besiktas Istanbul","UGURLU, BERK","Guard","Anadolu Efes Istanbul",19.2,4,76.8,-1
-"64","Besiktas Istanbul","WALKER IV, LONNIE","Guard","Anadolu Efes Istanbul",11,11,121,4
-"64","Besiktas Istanbul","WILBEKIN, SCOTTIE","Guard","Anadolu Efes Istanbul",25.8166666666667,26,671.233333333333,14
-"64","Besiktas Istanbul","ZIZIC, ANTE","Center","Anadolu Efes Istanbul",20.8333333333333,14,291.666666666667,8
+"64","Anadolu Efes Istanbul","FERNANDO, BRUNO","Center","Besiktas Fuzul Istanbul",13.4666666666667,6,80.8,3
+"64","Anadolu Efes Istanbul","JONES, KAI","Center","Besiktas Fuzul Istanbul",25.4666666666667,31,789.466666666667,13
+"64","Anadolu Efes Istanbul","LOYD, JORDAN","Guard","Besiktas Fuzul Istanbul",37.2833333333333,14,521.966666666667,7
+"64","Anadolu Efes Istanbul","MALCOLM, COLLIN","Forward","Besiktas Fuzul Istanbul",30.8833333333333,15,463.25,11
+"64","Anadolu Efes Istanbul","OSMANI, ERCAN","Forward","Besiktas Fuzul Istanbul",18.95,22,416.9,14
+"64","Anadolu Efes Istanbul","PAYNE, CAMERON","Guard","Besiktas Fuzul Istanbul",23.1666666666667,19,440.166666666667,19
+"64","Anadolu Efes Istanbul","SARIC, DARIO","Forward","Besiktas Fuzul Istanbul",22.1166666666667,24,530.8,17
+"64","Anadolu Efes Istanbul","STRAZEL, MATTHEW","Guard","Besiktas Fuzul Istanbul",14.9333333333333,17,253.866666666667,11
+"64","Anadolu Efes Istanbul","YUSTA, SANTI","Forward","Besiktas Fuzul Istanbul",13.7333333333333,11,151.066666666667,11
+"64","Besiktas Fuzul Istanbul","BIRSEN, METECAN","Center","Anadolu Efes Istanbul",12.15,8,97.2,6
+"64","Besiktas Fuzul Istanbul","BROWN, ANTHONY","Forward","Anadolu Efes Istanbul",25.1666666666667,15,377.5,10
+"64","Besiktas Fuzul Istanbul","DOTSON, DEVON","Guard","Anadolu Efes Istanbul",16.3833333333333,15,245.75,11
+"64","Besiktas Fuzul Istanbul","GABRIEL, WENYEN","Center","Anadolu Efes Istanbul",13.3,-4,-53.2,-7
+"64","Besiktas Fuzul Istanbul","MORGAN, CONOR","Center","Anadolu Efes Istanbul",10.5,0,0,-1
+"64","Besiktas Fuzul Istanbul","NOWELL, JAYLEN","Guard","Anadolu Efes Istanbul",22.4333333333333,8,179.466666666667,8
+"64","Besiktas Fuzul Istanbul","OMORUYI, EUGENE","Center","Anadolu Efes Istanbul",23.2166666666667,27,626.85,17
+"64","Besiktas Fuzul Istanbul","UGURLU, BERK","Guard","Anadolu Efes Istanbul",19.2,4,76.8,-1
+"64","Besiktas Fuzul Istanbul","WALKER IV, LONNIE","Guard","Anadolu Efes Istanbul",11,11,121,4
+"64","Besiktas Fuzul Istanbul","WILBEKIN, SCOTTIE","Guard","Anadolu Efes Istanbul",25.8166666666667,26,671.233333333333,14
+"64","Besiktas Fuzul Istanbul","ZIZIC, ANTE","Center","Anadolu Efes Istanbul",20.8333333333333,14,291.666666666667,8
 "61","Hapoel IBI Tel Aviv","BLAKENEY, ANTONIO","Guard","Virtus Bologna",7.01666666666667,-3,-21.05,-4
 "61","Hapoel IBI Tel Aviv","BRYANT, ELIJAH","Guard","Virtus Bologna",24.3666666666667,23,560.433333333333,13
 "61","Hapoel IBI Tel Aviv","CABOCLO, BRUNO","Center","Virtus Bologna",3.46666666666667,-2,-6.93333333333333,-2
@@ -1447,29 +1670,29 @@
 "57","Anadolu Efes Istanbul","PAYNE, CAMERON","Guard","Zalgiris Kaunas",20.85,17,354.45,13
 "57","Anadolu Efes Istanbul","SARIC, DARIO","Forward","Zalgiris Kaunas",27.65,40,1106,19
 "57","Anadolu Efes Istanbul","STRAZEL, MATTHEW","Guard","Zalgiris Kaunas",24.0833333333333,28,674.333333333333,22
-"55","Besiktas Istanbul","BIRSEN, METECAN","Center","FC Bayern Munich",0.966666666666667,-2,-1.93333333333333,-1
-"55","Besiktas Istanbul","BROWN, ANTHONY","Forward","FC Bayern Munich",29.7166666666667,15,445.75,6
-"55","Besiktas Istanbul","DOTSON, DEVON","Guard","FC Bayern Munich",10.5666666666667,7,73.9666666666667,4
-"55","Besiktas Istanbul","GABRIEL, WENYEN","Center","FC Bayern Munich",8.46666666666667,12,101.6,3
-"55","Besiktas Istanbul","KORKMAZ, FURKAN","Forward","FC Bayern Munich",9.2,0,0,1
-"55","Besiktas Istanbul","MORGAN, CONOR","Center","FC Bayern Munich",29.1333333333333,14,407.866666666667,9
-"55","Besiktas Istanbul","NOWELL, JAYLEN","Guard","FC Bayern Munich",24.85,33,820.05,23
-"55","Besiktas Istanbul","OMORUYI, EUGENE","Center","FC Bayern Munich",12.45,6,74.7,5
-"55","Besiktas Istanbul","UGURLU, BERK","Guard","FC Bayern Munich",21.3,14,298.2,9
-"55","Besiktas Istanbul","WILBEKIN, SCOTTIE","Guard","FC Bayern Munich",24.3666666666667,22,536.066666666667,17
-"55","Besiktas Istanbul","ZIZIC, ANTE","Center","FC Bayern Munich",28.9833333333333,26,753.566666666667,18
-"55","FC Bayern Munich","BALDWIN, KAMAR","Guard","Besiktas Istanbul",22.65,23,520.95,17
-"55","FC Bayern Munich","BEAUCHAMP, MARJON","Forward","Besiktas Istanbul",16.6166666666667,-2,-33.2333333333333,-1
-"55","FC Bayern Munich","DA SILVA, OSCAR","Forward","Besiktas Istanbul",24.1833333333333,22,532.033333333333,15
-"55","FC Bayern Munich","GIFFEY, NIELS","Forward","Besiktas Istanbul",1.71666666666667,0,0,0
-"55","FC Bayern Munich","HOLLATZ, JUSTUS","Guard","Besiktas Istanbul",5.13333333333333,-1,-5.13333333333333,-1
-"55","FC Bayern Munich","JESSUP, JUSTINIAN","Guard","Besiktas Istanbul",21.9166666666667,9,197.25,6
-"55","FC Bayern Munich","LUCIC, VLADIMIR","Forward","Besiktas Istanbul",21.7,38,824.6,28
-"55","FC Bayern Munich","NORRIS, MILES","Forward","Besiktas Istanbul",12.45,2,24.9,-1
-"55","FC Bayern Munich","OBST, ANDREAS","Guard","Besiktas Istanbul",18.95,12,227.4,7
-"55","FC Bayern Munich","THIEMANN, JOHANNES","Center","Besiktas Istanbul",22.3,20,446,12
-"55","FC Bayern Munich","WASHINGTON, DUANE","Guard","Besiktas Istanbul",14.6833333333333,7,102.783333333333,5
-"55","FC Bayern Munich","WILEY, AUSTIN","Center","Besiktas Istanbul",17.7,29,513.3,17
+"55","Besiktas Fuzul Istanbul","BIRSEN, METECAN","Center","FC Bayern Munich",0.966666666666667,-2,-1.93333333333333,-1
+"55","Besiktas Fuzul Istanbul","BROWN, ANTHONY","Forward","FC Bayern Munich",29.7166666666667,15,445.75,6
+"55","Besiktas Fuzul Istanbul","DOTSON, DEVON","Guard","FC Bayern Munich",10.5666666666667,7,73.9666666666667,4
+"55","Besiktas Fuzul Istanbul","GABRIEL, WENYEN","Center","FC Bayern Munich",8.46666666666667,12,101.6,3
+"55","Besiktas Fuzul Istanbul","KORKMAZ, FURKAN","Forward","FC Bayern Munich",9.2,0,0,1
+"55","Besiktas Fuzul Istanbul","MORGAN, CONOR","Center","FC Bayern Munich",29.1333333333333,14,407.866666666667,9
+"55","Besiktas Fuzul Istanbul","NOWELL, JAYLEN","Guard","FC Bayern Munich",24.85,33,820.05,23
+"55","Besiktas Fuzul Istanbul","OMORUYI, EUGENE","Center","FC Bayern Munich",12.45,6,74.7,5
+"55","Besiktas Fuzul Istanbul","UGURLU, BERK","Guard","FC Bayern Munich",21.3,14,298.2,9
+"55","Besiktas Fuzul Istanbul","WILBEKIN, SCOTTIE","Guard","FC Bayern Munich",24.3666666666667,22,536.066666666667,17
+"55","Besiktas Fuzul Istanbul","ZIZIC, ANTE","Center","FC Bayern Munich",28.9833333333333,26,753.566666666667,18
+"55","FC Bayern Munich","BALDWIN, KAMAR","Guard","Besiktas Fuzul Istanbul",22.65,23,520.95,17
+"55","FC Bayern Munich","BEAUCHAMP, MARJON","Forward","Besiktas Fuzul Istanbul",16.6166666666667,-2,-33.2333333333333,-1
+"55","FC Bayern Munich","DA SILVA, OSCAR","Forward","Besiktas Fuzul Istanbul",24.1833333333333,22,532.033333333333,15
+"55","FC Bayern Munich","GIFFEY, NIELS","Forward","Besiktas Fuzul Istanbul",1.71666666666667,0,0,0
+"55","FC Bayern Munich","HOLLATZ, JUSTUS","Guard","Besiktas Fuzul Istanbul",5.13333333333333,-1,-5.13333333333333,-1
+"55","FC Bayern Munich","JESSUP, JUSTINIAN","Guard","Besiktas Fuzul Istanbul",21.9166666666667,9,197.25,6
+"55","FC Bayern Munich","LUCIC, VLADIMIR","Forward","Besiktas Fuzul Istanbul",21.7,38,824.6,28
+"55","FC Bayern Munich","NORRIS, MILES","Forward","Besiktas Fuzul Istanbul",12.45,2,24.9,-1
+"55","FC Bayern Munich","OBST, ANDREAS","Guard","Besiktas Fuzul Istanbul",18.95,12,227.4,7
+"55","FC Bayern Munich","THIEMANN, JOHANNES","Center","Besiktas Fuzul Istanbul",22.3,20,446,12
+"55","FC Bayern Munich","WASHINGTON, DUANE","Guard","Besiktas Fuzul Istanbul",14.6833333333333,7,102.783333333333,5
+"55","FC Bayern Munich","WILEY, AUSTIN","Center","Besiktas Fuzul Istanbul",17.7,29,513.3,17
 "53","Real Madrid","ABALDE, ALBERTO","Forward","LDLC ASVEL Villeurbanne",20.9333333333333,9,188.4,3
 "53","Real Madrid","CAMPAZZO, FACUNDO","Guard","LDLC ASVEL Villeurbanne",17.5833333333333,9,158.25,2
 "53","Real Madrid","FELIZ, ANDRES","Guard","LDLC ASVEL Villeurbanne",25.15,38,955.7,30
@@ -1608,27 +1831,27 @@
 "49","FC Bayern Munich","VOIGTMANN, JOHANNES","Center","Anadolu Efes Istanbul",18.0666666666667,18,325.2,6
 "49","FC Bayern Munich","WASHINGTON, DUANE","Guard","Anadolu Efes Istanbul",20.3666666666667,20,407.333333333333,19
 "49","FC Bayern Munich","WILEY, AUSTIN","Center","Anadolu Efes Istanbul",11.9333333333333,1,11.9333333333333,1
-"48","Hapoel IBI Tel Aviv","BLAKENEY, ANTONIO","Guard","Besiktas Istanbul",22.9166666666667,23,527.083333333333,15
-"48","Hapoel IBI Tel Aviv","BRYANT, ELIJAH","Guard","Besiktas Istanbul",25.45,15,381.75,15
-"48","Hapoel IBI Tel Aviv","CABOCLO, BRUNO","Center","Besiktas Istanbul",1.01666666666667,0,0,0
-"48","Hapoel IBI Tel Aviv","COFFEY, AMIR","Guard","Besiktas Istanbul",25.7,29,745.3,18
-"48","Hapoel IBI Tel Aviv","LEDAY, ZACH","Forward","Besiktas Istanbul",20.55,29,595.95,22
-"48","Hapoel IBI Tel Aviv","MICIC, VASILIJE","Guard","Besiktas Istanbul",24.65,19,468.35,16
-"48","Hapoel IBI Tel Aviv","ODIASE, TAI","Center","Besiktas Istanbul",20.35,11,223.85,5
-"48","Hapoel IBI Tel Aviv","OTURU, DAN","Center","Besiktas Istanbul",18.6333333333333,12,223.6,7
-"48","Hapoel IBI Tel Aviv","SATORANSKY, TOMAS","Guard","Besiktas Istanbul",21.2833333333333,15,319.25,9
-"48","Hapoel IBI Tel Aviv","WAINRIGHT, ISH","Forward","Besiktas Istanbul",19.45,12,233.4,6
-"48","Besiktas Istanbul","BROWN, ANTHONY","Forward","Hapoel IBI Tel Aviv",19.6,11,215.6,8
-"48","Besiktas Istanbul","DEJULIUS, DAVID","Guard","Hapoel IBI Tel Aviv",3.96666666666667,0,0,-2
-"48","Besiktas Istanbul","DOTSON, DEVON","Guard","Hapoel IBI Tel Aviv",21.25,19,403.75,10
-"48","Besiktas Istanbul","GABRIEL, WENYEN","Center","Hapoel IBI Tel Aviv",19.8,14,277.2,6
-"48","Besiktas Istanbul","KORKMAZ, FURKAN","Forward","Hapoel IBI Tel Aviv",20.85,15,312.75,6
-"48","Besiktas Istanbul","MORGAN, CONOR","Center","Hapoel IBI Tel Aviv",22.6333333333333,8,181.066666666667,5
-"48","Besiktas Istanbul","NOWELL, JAYLEN","Guard","Hapoel IBI Tel Aviv",17.5833333333333,-1,-17.5833333333333,-4
-"48","Besiktas Istanbul","OMORUYI, EUGENE","Center","Hapoel IBI Tel Aviv",17.3666666666667,9,156.3,9
-"48","Besiktas Istanbul","UGURLU, BERK","Guard","Hapoel IBI Tel Aviv",16.4833333333333,0,0,-1
-"48","Besiktas Istanbul","WILBEKIN, SCOTTIE","Guard","Hapoel IBI Tel Aviv",20.2666666666667,6,121.6,4
-"48","Besiktas Istanbul","ZIZIC, ANTE","Center","Hapoel IBI Tel Aviv",20.2,40,808,28
+"48","Hapoel IBI Tel Aviv","BLAKENEY, ANTONIO","Guard","Besiktas Fuzul Istanbul",22.9166666666667,23,527.083333333333,15
+"48","Hapoel IBI Tel Aviv","BRYANT, ELIJAH","Guard","Besiktas Fuzul Istanbul",25.45,15,381.75,15
+"48","Hapoel IBI Tel Aviv","CABOCLO, BRUNO","Center","Besiktas Fuzul Istanbul",1.01666666666667,0,0,0
+"48","Hapoel IBI Tel Aviv","COFFEY, AMIR","Guard","Besiktas Fuzul Istanbul",25.7,29,745.3,18
+"48","Hapoel IBI Tel Aviv","LEDAY, ZACH","Forward","Besiktas Fuzul Istanbul",20.55,29,595.95,22
+"48","Hapoel IBI Tel Aviv","MICIC, VASILIJE","Guard","Besiktas Fuzul Istanbul",24.65,19,468.35,16
+"48","Hapoel IBI Tel Aviv","ODIASE, TAI","Center","Besiktas Fuzul Istanbul",20.35,11,223.85,5
+"48","Hapoel IBI Tel Aviv","OTURU, DAN","Center","Besiktas Fuzul Istanbul",18.6333333333333,12,223.6,7
+"48","Hapoel IBI Tel Aviv","SATORANSKY, TOMAS","Guard","Besiktas Fuzul Istanbul",21.2833333333333,15,319.25,9
+"48","Hapoel IBI Tel Aviv","WAINRIGHT, ISH","Forward","Besiktas Fuzul Istanbul",19.45,12,233.4,6
+"48","Besiktas Fuzul Istanbul","BROWN, ANTHONY","Forward","Hapoel IBI Tel Aviv",19.6,11,215.6,8
+"48","Besiktas Fuzul Istanbul","DEJULIUS, DAVID","Guard","Hapoel IBI Tel Aviv",3.96666666666667,0,0,-2
+"48","Besiktas Fuzul Istanbul","DOTSON, DEVON","Guard","Hapoel IBI Tel Aviv",21.25,19,403.75,10
+"48","Besiktas Fuzul Istanbul","GABRIEL, WENYEN","Center","Hapoel IBI Tel Aviv",19.8,14,277.2,6
+"48","Besiktas Fuzul Istanbul","KORKMAZ, FURKAN","Forward","Hapoel IBI Tel Aviv",20.85,15,312.75,6
+"48","Besiktas Fuzul Istanbul","MORGAN, CONOR","Center","Hapoel IBI Tel Aviv",22.6333333333333,8,181.066666666667,5
+"48","Besiktas Fuzul Istanbul","NOWELL, JAYLEN","Guard","Hapoel IBI Tel Aviv",17.5833333333333,-1,-17.5833333333333,-4
+"48","Besiktas Fuzul Istanbul","OMORUYI, EUGENE","Center","Hapoel IBI Tel Aviv",17.3666666666667,9,156.3,9
+"48","Besiktas Fuzul Istanbul","UGURLU, BERK","Guard","Hapoel IBI Tel Aviv",16.4833333333333,0,0,-1
+"48","Besiktas Fuzul Istanbul","WILBEKIN, SCOTTIE","Guard","Hapoel IBI Tel Aviv",20.2666666666667,6,121.6,4
+"48","Besiktas Fuzul Istanbul","ZIZIC, ANTE","Center","Hapoel IBI Tel Aviv",20.2,40,808,28
 "45","Valencia Basket","BROOKS, ARMONI","Guard","Olympiacos Piraeus",25.0666666666667,10,250.666666666667,7
 "45","Valencia Basket","CARDENAS, ALVARO","Guard","Olympiacos Piraeus",13.4333333333333,13,174.633333333333,7
 "45","Valencia Basket","MIROTIC, NIKOLA","Forward","Olympiacos Piraeus",20.05,24,481.2,19
@@ -1817,28 +2040,28 @@
 "39","Zalgiris Kaunas","TUBELIS, AZUOLAS","Forward","FC Barcelona",21.65,17,368.05,10
 "39","Zalgiris Kaunas","ULANOVAS, EDGARAS","Forward","FC Barcelona",16.9,6,101.4,5
 "39","Zalgiris Kaunas","VALANCIUNAS, JONAS","Center","FC Barcelona",19.05,30,571.5,20
-"38","Kosner Baskonia Vitoria-Gasteiz","BAUGH, DAMION","Guard","Besiktas Istanbul",22.7166666666667,19,431.616666666667,11
-"38","Kosner Baskonia Vitoria-Gasteiz","DUARTE, CHRIS","Forward","Besiktas Istanbul",26.25,42,1102.5,31
-"38","Kosner Baskonia Vitoria-Gasteiz","FARIED, KENNETH","Center","Besiktas Istanbul",27.15,49,1330.35,21
-"38","Kosner Baskonia Vitoria-Gasteiz","JOKSIMOVIC, STEFAN","Forward","Besiktas Istanbul",11.3833333333333,6,68.3,4
-"38","Kosner Baskonia Vitoria-Gasteiz","KURUCS, RODIONS","Forward","Besiktas Istanbul",21.6333333333333,15,324.5,7
-"38","Kosner Baskonia Vitoria-Gasteiz","LAWSON, A.J.","Forward","Besiktas Istanbul",19.15,4,76.6,5
-"38","Kosner Baskonia Vitoria-Gasteiz","SANTOS, MARCIO","Center","Besiktas Istanbul",12.85,1,12.85,1
-"38","Kosner Baskonia Vitoria-Gasteiz","SEDEKERSKIS, TADAS","Forward","Besiktas Istanbul",10.05,3,30.15,1
-"38","Kosner Baskonia Vitoria-Gasteiz","SIMMONS, KOBI","Guard","Besiktas Istanbul",23.5333333333333,18,423.6,9
-"38","Kosner Baskonia Vitoria-Gasteiz","SPAGNOLO, MATTEO","Guard","Besiktas Istanbul",4.51666666666667,-1,-4.51666666666667,-1
-"38","Kosner Baskonia Vitoria-Gasteiz","STEWART, DJ","Forward","Besiktas Istanbul",20.7666666666667,15,311.5,8
-"38","Besiktas Istanbul","BIRSEN, METECAN","Center","Kosner Baskonia Vitoria-Gasteiz",11.5833333333333,-3,-34.75,-4
-"38","Besiktas Istanbul","BROWN, ANTHONY","Forward","Kosner Baskonia Vitoria-Gasteiz",19.9666666666667,21,419.3,14
-"38","Besiktas Istanbul","DEJULIUS, DAVID","Guard","Kosner Baskonia Vitoria-Gasteiz",14.7666666666667,6,88.6,3
-"38","Besiktas Istanbul","DOTSON, DEVON","Guard","Kosner Baskonia Vitoria-Gasteiz",23.8833333333333,31,740.383333333333,20
-"38","Besiktas Istanbul","GABRIEL, WENYEN","Center","Kosner Baskonia Vitoria-Gasteiz",17.6833333333333,19,335.983333333333,11
-"38","Besiktas Istanbul","KORKMAZ, FURKAN","Forward","Kosner Baskonia Vitoria-Gasteiz",9.5,5,47.5,3
-"38","Besiktas Istanbul","MORGAN, CONOR","Center","Kosner Baskonia Vitoria-Gasteiz",15.0833333333333,0,0,-1
-"38","Besiktas Istanbul","NOWELL, JAYLEN","Guard","Kosner Baskonia Vitoria-Gasteiz",26,17,442,12
-"38","Besiktas Istanbul","OMORUYI, EUGENE","Center","Kosner Baskonia Vitoria-Gasteiz",19.3666666666667,13,251.766666666667,5
-"38","Besiktas Istanbul","WILBEKIN, SCOTTIE","Guard","Kosner Baskonia Vitoria-Gasteiz",26.4166666666667,19,501.916666666667,17
-"38","Besiktas Istanbul","ZIZIC, ANTE","Center","Kosner Baskonia Vitoria-Gasteiz",15.75,20,315,13
+"38","Kosner Baskonia Vitoria-Gasteiz","BAUGH, DAMION","Guard","Besiktas Fuzul Istanbul",22.7166666666667,19,431.616666666667,11
+"38","Kosner Baskonia Vitoria-Gasteiz","DUARTE, CHRIS","Forward","Besiktas Fuzul Istanbul",26.25,42,1102.5,31
+"38","Kosner Baskonia Vitoria-Gasteiz","FARIED, KENNETH","Center","Besiktas Fuzul Istanbul",27.15,49,1330.35,21
+"38","Kosner Baskonia Vitoria-Gasteiz","JOKSIMOVIC, STEFAN","Forward","Besiktas Fuzul Istanbul",11.3833333333333,6,68.3,4
+"38","Kosner Baskonia Vitoria-Gasteiz","KURUCS, RODIONS","Forward","Besiktas Fuzul Istanbul",21.6333333333333,15,324.5,7
+"38","Kosner Baskonia Vitoria-Gasteiz","LAWSON, A.J.","Forward","Besiktas Fuzul Istanbul",19.15,4,76.6,5
+"38","Kosner Baskonia Vitoria-Gasteiz","SANTOS, MARCIO","Center","Besiktas Fuzul Istanbul",12.85,1,12.85,1
+"38","Kosner Baskonia Vitoria-Gasteiz","SEDEKERSKIS, TADAS","Forward","Besiktas Fuzul Istanbul",10.05,3,30.15,1
+"38","Kosner Baskonia Vitoria-Gasteiz","SIMMONS, KOBI","Guard","Besiktas Fuzul Istanbul",23.5333333333333,18,423.6,9
+"38","Kosner Baskonia Vitoria-Gasteiz","SPAGNOLO, MATTEO","Guard","Besiktas Fuzul Istanbul",4.51666666666667,-1,-4.51666666666667,-1
+"38","Kosner Baskonia Vitoria-Gasteiz","STEWART, DJ","Forward","Besiktas Fuzul Istanbul",20.7666666666667,15,311.5,8
+"38","Besiktas Fuzul Istanbul","BIRSEN, METECAN","Center","Kosner Baskonia Vitoria-Gasteiz",11.5833333333333,-3,-34.75,-4
+"38","Besiktas Fuzul Istanbul","BROWN, ANTHONY","Forward","Kosner Baskonia Vitoria-Gasteiz",19.9666666666667,21,419.3,14
+"38","Besiktas Fuzul Istanbul","DEJULIUS, DAVID","Guard","Kosner Baskonia Vitoria-Gasteiz",14.7666666666667,6,88.6,3
+"38","Besiktas Fuzul Istanbul","DOTSON, DEVON","Guard","Kosner Baskonia Vitoria-Gasteiz",23.8833333333333,31,740.383333333333,20
+"38","Besiktas Fuzul Istanbul","GABRIEL, WENYEN","Center","Kosner Baskonia Vitoria-Gasteiz",17.6833333333333,19,335.983333333333,11
+"38","Besiktas Fuzul Istanbul","KORKMAZ, FURKAN","Forward","Kosner Baskonia Vitoria-Gasteiz",9.5,5,47.5,3
+"38","Besiktas Fuzul Istanbul","MORGAN, CONOR","Center","Kosner Baskonia Vitoria-Gasteiz",15.0833333333333,0,0,-1
+"38","Besiktas Fuzul Istanbul","NOWELL, JAYLEN","Guard","Kosner Baskonia Vitoria-Gasteiz",26,17,442,12
+"38","Besiktas Fuzul Istanbul","OMORUYI, EUGENE","Center","Kosner Baskonia Vitoria-Gasteiz",19.3666666666667,13,251.766666666667,5
+"38","Besiktas Fuzul Istanbul","WILBEKIN, SCOTTIE","Guard","Kosner Baskonia Vitoria-Gasteiz",26.4166666666667,19,501.916666666667,17
+"38","Besiktas Fuzul Istanbul","ZIZIC, ANTE","Center","Kosner Baskonia Vitoria-Gasteiz",15.75,20,315,13
 "40","Olympiacos Piraeus","DORSEY, TYLER","Guard","Anadolu Efes Istanbul",17.4,13,226.2,5
 "40","Olympiacos Piraeus","DUNSTON, BRYANT","Center","Anadolu Efes Istanbul",9.91666666666667,1,9.91666666666667,0
 "40","Olympiacos Piraeus","FOURNIER, EVAN","Forward","Anadolu Efes Istanbul",20.45,15,306.75,7
@@ -2137,29 +2360,29 @@
 "29","Dubai Basketball","SHENGELIA, TORNIKE","Forward","Fenerbahce Tarfin Istanbul",14.3333333333333,-1,-14.3333333333333,0
 "29","Dubai Basketball","WALKUP, THOMAS","Guard","Fenerbahce Tarfin Istanbul",5.93333333333333,2,11.8666666666667,0
 "29","Dubai Basketball","WRIGHT IV, MCKINLEY","Guard","Fenerbahce Tarfin Istanbul",22.4166666666667,13,291.416666666667,9
-"25","Besiktas Istanbul","BIRSEN, METECAN","Center","FC Barcelona",14.25,18,256.5,10
-"25","Besiktas Istanbul","BROWN, ANTHONY","Forward","FC Barcelona",24.2333333333333,3,72.7,1
-"25","Besiktas Istanbul","DEJULIUS, DAVID","Guard","FC Barcelona",8.25,0,0,-3
-"25","Besiktas Istanbul","DOTSON, DEVON","Guard","FC Barcelona",26.2166666666667,13,340.816666666667,9
-"25","Besiktas Istanbul","GABRIEL, WENYEN","Center","FC Barcelona",11.1833333333333,8,89.4666666666667,6
-"25","Besiktas Istanbul","KORKMAZ, FURKAN","Forward","FC Barcelona",16.7,3,50.1,3
-"25","Besiktas Istanbul","MORGAN, CONOR","Center","FC Barcelona",24,20,480,11
-"25","Besiktas Istanbul","NOWELL, JAYLEN","Guard","FC Barcelona",19.5,10,195,5
-"25","Besiktas Istanbul","OMORUYI, EUGENE","Center","FC Barcelona",9.68333333333333,2,19.3666666666667,-1
-"25","Besiktas Istanbul","UGURLU, BERK","Guard","FC Barcelona",5.46666666666667,2,10.9333333333333,1
-"25","Besiktas Istanbul","WILBEKIN, SCOTTIE","Guard","FC Barcelona",25.4166666666667,24,610,16
-"25","Besiktas Istanbul","ZIZIC, ANTE","Center","FC Barcelona",15.1,25,377.5,18
-"25","FC Barcelona","BALCEROWSKI, OLEK","Center","Besiktas Istanbul",19.25,9,173.25,8
-"25","FC Barcelona","BRIZUELA, DARIO","Guard","Besiktas Istanbul",17,10,170,6
-"25","FC Barcelona","GIBSON, UMOJA","Guard","Besiktas Istanbul",20.1,26,522.6,20
-"25","FC Barcelona","MARTIN, TYRESE","Forward","Besiktas Istanbul",20.6833333333333,12,248.2,8
-"25","FC Barcelona","MINAYA, JUSTIN","Guard","Besiktas Istanbul",20.5,16,328,8
-"25","FC Barcelona","NKAMHOUA, OLIVIER","Forward","Besiktas Istanbul",18.3,20,366,13
-"25","FC Barcelona","NUNEZ, JUAN","Guard","Besiktas Istanbul",2.46666666666667,-1,-2.46666666666667,-1
-"25","FC Barcelona","PARRA, JOEL","Forward","Besiktas Istanbul",26.85,14,375.9,8
-"25","FC Barcelona","PUNTER, KEVIN","Guard","Besiktas Istanbul",24.0166666666667,27,648.45,19
-"25","FC Barcelona","ROBINSON, JUSTIN","Guard","Besiktas Istanbul",17.3833333333333,8,139.066666666667,7
-"25","FC Barcelona","UMUDE, STANLEY","Forward","Besiktas Istanbul",13.45,10,134.5,6
+"25","Besiktas Fuzul Istanbul","BIRSEN, METECAN","Center","FC Barcelona",14.25,18,256.5,10
+"25","Besiktas Fuzul Istanbul","BROWN, ANTHONY","Forward","FC Barcelona",24.2333333333333,3,72.7,1
+"25","Besiktas Fuzul Istanbul","DEJULIUS, DAVID","Guard","FC Barcelona",8.25,0,0,-3
+"25","Besiktas Fuzul Istanbul","DOTSON, DEVON","Guard","FC Barcelona",26.2166666666667,13,340.816666666667,9
+"25","Besiktas Fuzul Istanbul","GABRIEL, WENYEN","Center","FC Barcelona",11.1833333333333,8,89.4666666666667,6
+"25","Besiktas Fuzul Istanbul","KORKMAZ, FURKAN","Forward","FC Barcelona",16.7,3,50.1,3
+"25","Besiktas Fuzul Istanbul","MORGAN, CONOR","Center","FC Barcelona",24,20,480,11
+"25","Besiktas Fuzul Istanbul","NOWELL, JAYLEN","Guard","FC Barcelona",19.5,10,195,5
+"25","Besiktas Fuzul Istanbul","OMORUYI, EUGENE","Center","FC Barcelona",9.68333333333333,2,19.3666666666667,-1
+"25","Besiktas Fuzul Istanbul","UGURLU, BERK","Guard","FC Barcelona",5.46666666666667,2,10.9333333333333,1
+"25","Besiktas Fuzul Istanbul","WILBEKIN, SCOTTIE","Guard","FC Barcelona",25.4166666666667,24,610,16
+"25","Besiktas Fuzul Istanbul","ZIZIC, ANTE","Center","FC Barcelona",15.1,25,377.5,18
+"25","FC Barcelona","BALCEROWSKI, OLEK","Center","Besiktas Fuzul Istanbul",19.25,9,173.25,8
+"25","FC Barcelona","BRIZUELA, DARIO","Guard","Besiktas Fuzul Istanbul",17,10,170,6
+"25","FC Barcelona","GIBSON, UMOJA","Guard","Besiktas Fuzul Istanbul",20.1,26,522.6,20
+"25","FC Barcelona","MARTIN, TYRESE","Forward","Besiktas Fuzul Istanbul",20.6833333333333,12,248.2,8
+"25","FC Barcelona","MINAYA, JUSTIN","Guard","Besiktas Fuzul Istanbul",20.5,16,328,8
+"25","FC Barcelona","NKAMHOUA, OLIVIER","Forward","Besiktas Fuzul Istanbul",18.3,20,366,13
+"25","FC Barcelona","NUNEZ, JUAN","Guard","Besiktas Fuzul Istanbul",2.46666666666667,-1,-2.46666666666667,-1
+"25","FC Barcelona","PARRA, JOEL","Forward","Besiktas Fuzul Istanbul",26.85,14,375.9,8
+"25","FC Barcelona","PUNTER, KEVIN","Guard","Besiktas Fuzul Istanbul",24.0166666666667,27,648.45,19
+"25","FC Barcelona","ROBINSON, JUSTIN","Guard","Besiktas Fuzul Istanbul",17.3833333333333,8,139.066666666667,7
+"25","FC Barcelona","UMUDE, STANLEY","Forward","Besiktas Fuzul Istanbul",13.45,10,134.5,6
 "24","Paris Basketball","AYAYI, JOEL","Guard","Zalgiris Kaunas",11.8166666666667,12,141.8,7
 "24","Paris Basketball","CAVALIERE, LEOPOLD","Forward","Zalgiris Kaunas",15.05,13,195.65,10
 "24","Paris Basketball","DOKOSSI, ALLAN","Center","Zalgiris Kaunas",21.7333333333333,29,630.266666666667,17
@@ -2275,28 +2498,28 @@
 "20","LDLC ASVEL Villeurbanne","PONS, YVES","Forward","Panathinaikos AKTOR Athens",8.21666666666667,-4,-32.8666666666667,-4
 "20","LDLC ASVEL Villeurbanne","SESTINA, NATHAN","Forward","Panathinaikos AKTOR Athens",22.65,19,430.35,13
 "20","LDLC ASVEL Villeurbanne","WATERS, TREMONT","Guard","Panathinaikos AKTOR Athens",14.8166666666667,13,192.616666666667,9
-"19","Maccabi Rapyd Tel Aviv","BRISSETT, O'SHAE J","Forward","Besiktas Istanbul",18.55,11,204.05,8
-"19","Maccabi Rapyd Tel Aviv","CLARK III, JIMMY","Guard","Besiktas Istanbul",23.5666666666667,30,707,19
-"19","Maccabi Rapyd Tel Aviv","COLSON, BONZIE","Forward","Besiktas Istanbul",29.15,20,583,17
-"19","Maccabi Rapyd Tel Aviv","HOARD, JAYLEN","Forward","Besiktas Istanbul",27.3166666666667,17,464.383333333333,10
-"19","Maccabi Rapyd Tel Aviv","LEAF, TJ","Forward","Besiktas Istanbul",9.6,-2,-19.2,-2
-"19","Maccabi Rapyd Tel Aviv","LUNDBERG, IFFE","Guard","Besiktas Istanbul",20.6,18,370.8,11
-"19","Maccabi Rapyd Tel Aviv","MADAR, YAM","Guard","Besiktas Istanbul",20.8166666666667,17,353.883333333333,10
-"19","Maccabi Rapyd Tel Aviv","RAYMAN, WILLIAM","Forward","Besiktas Istanbul",2.78333333333333,0,0,-1
-"19","Maccabi Rapyd Tel Aviv","SORKIN, ROMAN","Forward","Besiktas Istanbul",11.4166666666667,18,205.5,12
-"19","Maccabi Rapyd Tel Aviv","THEIS, DANIEL","Center","Besiktas Istanbul",20.3833333333333,20,407.666666666667,14
-"19","Maccabi Rapyd Tel Aviv","WALLACE, KEATON","Guard","Besiktas Istanbul",15.8166666666667,3,47.45,3
-"19","Besiktas Istanbul","BIRSEN, METECAN","Center","Maccabi Rapyd Tel Aviv",8.33333333333333,6,50,2
-"19","Besiktas Istanbul","BROWN, ANTHONY","Forward","Maccabi Rapyd Tel Aviv",30.8166666666667,31,955.316666666667,24
-"19","Besiktas Istanbul","DOTSON, DEVON","Guard","Maccabi Rapyd Tel Aviv",25.6166666666667,31,794.116666666667,24
-"19","Besiktas Istanbul","GABRIEL, WENYEN","Center","Maccabi Rapyd Tel Aviv",7.13333333333333,-2,-14.2666666666667,-2
-"19","Besiktas Istanbul","KORKMAZ, FURKAN","Forward","Maccabi Rapyd Tel Aviv",10.9,12,130.8,11
-"19","Besiktas Istanbul","MORGAN, CONOR","Center","Maccabi Rapyd Tel Aviv",22.3166666666667,21,468.65,15
-"19","Besiktas Istanbul","NOWELL, JAYLEN","Guard","Maccabi Rapyd Tel Aviv",14.8666666666667,13,193.266666666667,5
-"19","Besiktas Istanbul","OMORUYI, EUGENE","Center","Maccabi Rapyd Tel Aviv",19.8166666666667,14,277.433333333333,7
-"19","Besiktas Istanbul","UGURLU, BERK","Guard","Maccabi Rapyd Tel Aviv",14.9833333333333,-3,-44.95,-1
-"19","Besiktas Istanbul","WILBEKIN, SCOTTIE","Guard","Maccabi Rapyd Tel Aviv",22.85,21,479.85,18
-"19","Besiktas Istanbul","ZIZIC, ANTE","Center","Maccabi Rapyd Tel Aviv",22.3666666666667,15,335.5,9
+"19","Maccabi Rapyd Tel Aviv","BRISSETT, O'SHAE J","Forward","Besiktas Fuzul Istanbul",18.55,11,204.05,8
+"19","Maccabi Rapyd Tel Aviv","CLARK III, JIMMY","Guard","Besiktas Fuzul Istanbul",23.5666666666667,30,707,19
+"19","Maccabi Rapyd Tel Aviv","COLSON, BONZIE","Forward","Besiktas Fuzul Istanbul",29.15,20,583,17
+"19","Maccabi Rapyd Tel Aviv","HOARD, JAYLEN","Forward","Besiktas Fuzul Istanbul",27.3166666666667,17,464.383333333333,10
+"19","Maccabi Rapyd Tel Aviv","LEAF, TJ","Forward","Besiktas Fuzul Istanbul",9.6,-2,-19.2,-2
+"19","Maccabi Rapyd Tel Aviv","LUNDBERG, IFFE","Guard","Besiktas Fuzul Istanbul",20.6,18,370.8,11
+"19","Maccabi Rapyd Tel Aviv","MADAR, YAM","Guard","Besiktas Fuzul Istanbul",20.8166666666667,17,353.883333333333,10
+"19","Maccabi Rapyd Tel Aviv","RAYMAN, WILLIAM","Forward","Besiktas Fuzul Istanbul",2.78333333333333,0,0,-1
+"19","Maccabi Rapyd Tel Aviv","SORKIN, ROMAN","Forward","Besiktas Fuzul Istanbul",11.4166666666667,18,205.5,12
+"19","Maccabi Rapyd Tel Aviv","THEIS, DANIEL","Center","Besiktas Fuzul Istanbul",20.3833333333333,20,407.666666666667,14
+"19","Maccabi Rapyd Tel Aviv","WALLACE, KEATON","Guard","Besiktas Fuzul Istanbul",15.8166666666667,3,47.45,3
+"19","Besiktas Fuzul Istanbul","BIRSEN, METECAN","Center","Maccabi Rapyd Tel Aviv",8.33333333333333,6,50,2
+"19","Besiktas Fuzul Istanbul","BROWN, ANTHONY","Forward","Maccabi Rapyd Tel Aviv",30.8166666666667,31,955.316666666667,24
+"19","Besiktas Fuzul Istanbul","DOTSON, DEVON","Guard","Maccabi Rapyd Tel Aviv",25.6166666666667,31,794.116666666667,24
+"19","Besiktas Fuzul Istanbul","GABRIEL, WENYEN","Center","Maccabi Rapyd Tel Aviv",7.13333333333333,-2,-14.2666666666667,-2
+"19","Besiktas Fuzul Istanbul","KORKMAZ, FURKAN","Forward","Maccabi Rapyd Tel Aviv",10.9,12,130.8,11
+"19","Besiktas Fuzul Istanbul","MORGAN, CONOR","Center","Maccabi Rapyd Tel Aviv",22.3166666666667,21,468.65,15
+"19","Besiktas Fuzul Istanbul","NOWELL, JAYLEN","Guard","Maccabi Rapyd Tel Aviv",14.8666666666667,13,193.266666666667,5
+"19","Besiktas Fuzul Istanbul","OMORUYI, EUGENE","Center","Maccabi Rapyd Tel Aviv",19.8166666666667,14,277.433333333333,7
+"19","Besiktas Fuzul Istanbul","UGURLU, BERK","Guard","Maccabi Rapyd Tel Aviv",14.9833333333333,-3,-44.95,-1
+"19","Besiktas Fuzul Istanbul","WILBEKIN, SCOTTIE","Guard","Maccabi Rapyd Tel Aviv",22.85,21,479.85,18
+"19","Besiktas Fuzul Istanbul","ZIZIC, ANTE","Center","Maccabi Rapyd Tel Aviv",22.3666666666667,15,335.5,9
 "18","Paris Basketball","CAVALIERE, LEOPOLD","Forward","Partizan Mozzart Bet Belgrade",14.3166666666667,11,157.483333333333,6
 "18","Paris Basketball","DOKOSSI, ALLAN","Center","Partizan Mozzart Bet Belgrade",20,3,60,-1
 "18","Paris Basketball","ETIENNE, TYSON","Guard","Partizan Mozzart Bet Belgrade",17.7166666666667,8,141.733333333333,6
@@ -2522,29 +2745,29 @@
 "9","Virtus Bologna","HACKETT, DANIEL","Guard","Fenerbahce Tarfin Istanbul",15.0833333333333,5,75.4166666666667,1
 "9","Virtus Bologna","KLINTMAN, BO","Forward","Fenerbahce Tarfin Istanbul",21,8,168,3
 "9","Virtus Bologna","MOORE, WENDELL","Guard","Fenerbahce Tarfin Istanbul",25.7666666666667,19,489.566666666667,11
-"8","Besiktas Istanbul","BROWN, ANTHONY","Forward","Valencia Basket",24.8666666666667,7,174.066666666667,3
-"8","Besiktas Istanbul","DEJULIUS, DAVID","Guard","Valencia Basket",12.65,12,151.8,6
-"8","Besiktas Istanbul","DOTSON, DEVON","Guard","Valencia Basket",22.1166666666667,15,331.75,12
-"8","Besiktas Istanbul","GABRIEL, WENYEN","Center","Valencia Basket",15,11,165,7
-"8","Besiktas Istanbul","JEFFRIES, DAQUAN","Forward","Valencia Basket",5.45,-1,-5.45,-3
-"8","Besiktas Istanbul","MORGAN, CONOR","Center","Valencia Basket",20.2166666666667,15,303.25,12
-"8","Besiktas Istanbul","NOWELL, JAYLEN","Guard","Valencia Basket",28.2333333333333,17,479.966666666667,13
-"8","Besiktas Istanbul","OMORUYI, EUGENE","Center","Valencia Basket",26.2666666666667,20,525.333333333333,15
-"8","Besiktas Istanbul","UGURLU, BERK","Guard","Valencia Basket",5.23333333333333,8,41.8666666666667,6
-"8","Besiktas Istanbul","WILBEKIN, SCOTTIE","Guard","Valencia Basket",24.1666666666667,21,507.5,13
-"8","Besiktas Istanbul","ZIZIC, ANTE","Center","Valencia Basket",15.8,23,363.4,14
-"8","Valencia Basket","BROOKS, ARMONI","Guard","Besiktas Istanbul",23.3666666666667,14,327.133333333333,7
-"8","Valencia Basket","CARDENAS, ALVARO","Guard","Besiktas Istanbul",9.65,3,28.95,1
-"8","Valencia Basket","MIROTIC, NIKOLA","Forward","Besiktas Istanbul",13.75,22,302.5,17
-"8","Valencia Basket","MOORE, OMARI","Guard","Besiktas Istanbul",12.8333333333333,10,128.333333333333,3
-"8","Valencia Basket","OSETKOWSKI, DYLAN","Forward","Besiktas Istanbul",17.7333333333333,9,159.6,2
-"8","Valencia Basket","PUERTO, JOSEP","Guard","Besiktas Istanbul",11.3166666666667,2,22.6333333333333,1
-"8","Valencia Basket","REUVERS, NATHAN","Forward","Besiktas Istanbul",21.0833333333333,6,126.5,3
-"8","Valencia Basket","RIVERO, JASIEL","Forward","Besiktas Istanbul",15.2833333333333,13,198.683333333333,10
-"8","Valencia Basket","SAINT-SUPERY, MARIO","Guard","Besiktas Istanbul",16.4333333333333,15,246.5,10
-"8","Valencia Basket","SAKO, NEAL","Center","Besiktas Istanbul",11.3833333333333,17,193.516666666667,13
-"8","Valencia Basket","SHORTS, TJ","Guard","Besiktas Istanbul",23.55,24,565.2,20
-"8","Valencia Basket","TAYLOR, KAMERON","Forward","Besiktas Istanbul",23.6166666666667,25,590.416666666667,17
+"8","Besiktas Fuzul Istanbul","BROWN, ANTHONY","Forward","Valencia Basket",24.8666666666667,7,174.066666666667,3
+"8","Besiktas Fuzul Istanbul","DEJULIUS, DAVID","Guard","Valencia Basket",12.65,12,151.8,6
+"8","Besiktas Fuzul Istanbul","DOTSON, DEVON","Guard","Valencia Basket",22.1166666666667,15,331.75,12
+"8","Besiktas Fuzul Istanbul","GABRIEL, WENYEN","Center","Valencia Basket",15,11,165,7
+"8","Besiktas Fuzul Istanbul","JEFFRIES, DAQUAN","Forward","Valencia Basket",5.45,-1,-5.45,-3
+"8","Besiktas Fuzul Istanbul","MORGAN, CONOR","Center","Valencia Basket",20.2166666666667,15,303.25,12
+"8","Besiktas Fuzul Istanbul","NOWELL, JAYLEN","Guard","Valencia Basket",28.2333333333333,17,479.966666666667,13
+"8","Besiktas Fuzul Istanbul","OMORUYI, EUGENE","Center","Valencia Basket",26.2666666666667,20,525.333333333333,15
+"8","Besiktas Fuzul Istanbul","UGURLU, BERK","Guard","Valencia Basket",5.23333333333333,8,41.8666666666667,6
+"8","Besiktas Fuzul Istanbul","WILBEKIN, SCOTTIE","Guard","Valencia Basket",24.1666666666667,21,507.5,13
+"8","Besiktas Fuzul Istanbul","ZIZIC, ANTE","Center","Valencia Basket",15.8,23,363.4,14
+"8","Valencia Basket","BROOKS, ARMONI","Guard","Besiktas Fuzul Istanbul",23.3666666666667,14,327.133333333333,7
+"8","Valencia Basket","CARDENAS, ALVARO","Guard","Besiktas Fuzul Istanbul",9.65,3,28.95,1
+"8","Valencia Basket","MIROTIC, NIKOLA","Forward","Besiktas Fuzul Istanbul",13.75,22,302.5,17
+"8","Valencia Basket","MOORE, OMARI","Guard","Besiktas Fuzul Istanbul",12.8333333333333,10,128.333333333333,3
+"8","Valencia Basket","OSETKOWSKI, DYLAN","Forward","Besiktas Fuzul Istanbul",17.7333333333333,9,159.6,2
+"8","Valencia Basket","PUERTO, JOSEP","Guard","Besiktas Fuzul Istanbul",11.3166666666667,2,22.6333333333333,1
+"8","Valencia Basket","REUVERS, NATHAN","Forward","Besiktas Fuzul Istanbul",21.0833333333333,6,126.5,3
+"8","Valencia Basket","RIVERO, JASIEL","Forward","Besiktas Fuzul Istanbul",15.2833333333333,13,198.683333333333,10
+"8","Valencia Basket","SAINT-SUPERY, MARIO","Guard","Besiktas Fuzul Istanbul",16.4333333333333,15,246.5,10
+"8","Valencia Basket","SAKO, NEAL","Center","Besiktas Fuzul Istanbul",11.3833333333333,17,193.516666666667,13
+"8","Valencia Basket","SHORTS, TJ","Guard","Besiktas Fuzul Istanbul",23.55,24,565.2,20
+"8","Valencia Basket","TAYLOR, KAMERON","Forward","Besiktas Fuzul Istanbul",23.6166666666667,25,590.416666666667,17
 "6","LDLC ASVEL Villeurbanne","BESSON, HUGO","Guard","Maccabi Rapyd Tel Aviv",17.0166666666667,14,238.233333333333,7
 "6","LDLC ASVEL Villeurbanne","BOLOMBOY, JOEL","Center","Maccabi Rapyd Tel Aviv",25.6833333333333,15,385.25,5
 "6","LDLC ASVEL Villeurbanne","CALE, MYLES","Forward","Maccabi Rapyd Tel Aviv",9.05,-1,-9.05,-2
