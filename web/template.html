@@ -1582,8 +1582,9 @@ function simBuild(useMoves=true){
       bank += o.price - i.price; done.push({...m, o, i});
     }
     const club = {}; [...sq, coach].filter(Boolean).forEach(x=>club[x.team]=(club[x.team]||0)+1);
-    const bo = simBoost(C, r), lu = lineupAt(sq, h, bo), cv = coach ? coach.fps[h] : 0;
-    return {r, h, sq:[...sq], coach, bank, sq0, coach0, bank0, done, bad, limit:simLimit(r,h,C), bo, lu, tot:(lu?lu.v:0)+cv,
+    const bo = simBoost(C, r), lu = lineupAt(sq, h, bo), cv = coach ? coach.fps[h] : 0, lu0 = lineupAt(sq0, h, bo);
+    const tot0 = (lu0?lu0.v:0) + (coach0 ? coach0.fps[h] : 0);   // the same round without this round's transfers
+    return {r, h, sq:[...sq], coach, bank, sq0, coach0, bank0, done, bad, limit:simLimit(r,h,C), bo, lu, tot:(lu?lu.v:0)+cv, tot0,
             over:Object.entries(club).filter(([t,n])=>n>2).map(([t])=>t)};
   });
 }
@@ -1679,9 +1680,9 @@ function simRender(){
     <div class="hint">לחץ על שחקן או על המאמן כדי להחליף אותו במחזור שנבחר, או החל אחת מהתוכניות המומלצות. החילופים נשמרים במכשיר הזה לקבוצה שלך וממשיכים למחזורים הבאים, עד ${RO.length} מחזורים קדימה (כמה שיש תחזית). ההרכב והקפטן נבחרים אוטומטית לפי הצפי. המחירים = המחירים הנוכחיים.</div>
     <div class="seg simtabs" id="simTabs" style="display:flex;flex-wrap:wrap;margin:10px 0">${tabs}</div>
     <div class="kpis">
-      <div class="kpi"><span>צפי מחזור ${cur.r}</span><b>${f(cur.tot,1)}</b><small>הסגל המקורי: ${f(base.tot,1)} (${sg(cur.tot-base.tot)})</small></div>
+      <div class="kpi"><span>צפי מחזור ${cur.r}</span><b>${f(cur.tot,1)}</b><small>בלי חילופים במחזור הזה: ${f(cur.tot0,1)} (${sg(cur.tot-cur.tot0)})</small></div>
       <div class="kpi"><span>חילופים במחזור</span><b>${cur.done.length}/${cur.limit}</b><small>בקופה: ${f(cur.bank,0)}M</small></div>
-      <div class="kpi"><span>סה"כ ${RO[0]}–${RO[RO.length-1]}</span><b>${f(sumR,1)}</b><small>הסגל המקורי: ${f(sumB,1)} (${sg(sumR-sumB)})</small></div></div>
+      <div class="kpi"><span>סה"כ ${RO[0]}–${RO[RO.length-1]}</span><b>${f(sumR,1)}</b><small>בלי שום חילוף: ${f(sumB,1)} (${sg(sumR-sumB)} מכל החילופים)</small></div></div>
     <div class="bons" id="simChips">בונוסים למחזור ${cur.r}: ${[1,3,4,2].map(chipBtn).join('')}</div>
     ${warn.length?`<div class="warn">${warn.join(' · ')}</div>`:''}
     ${cur.done.length?`<div class="note" style="margin:8px 0">${cur.done.map(m=>`<div><span class="out">⬅ ${esc(m.o.name)} <small>(${ph[m.o.pos]}, ${f(m.o.fps[h],1)})</small></span> <span class="in">➜ ${esc(m.i.name)} <small>(${f(m.i.price,0)}M, ${f(m.i.fps[h],1)})</small></span> <button class="btn ghost sm" data-undo="${m.in}">ביטול</button></div>`).join('')}</div>`:''}
