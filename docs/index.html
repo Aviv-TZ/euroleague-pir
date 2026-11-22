@@ -1811,7 +1811,19 @@ function simRender(){
     <div class="phead" style="margin-top:16px"><h3>חילופים מומלצים למחזור ${cur.r}</h3>
       ${left>1?`<label class="hzl">להסתכל קדימה: <select id="simH">${Array.from({length:left},(_,i)=>i+1).map(k=>`<option value="${k}" ${k===Hs?'selected':''}>${k===1?`מחזור ${cur.r} בלבד`:`${k} מחזורים (${cur.r}–${RO[h+k-1]})`}</option>`).join('')}</select></label>`:''}</div>
     <div class="hint">3 התוכניות הטובות ביותר מהסגל כפי שהוא מתחיל את מחזור ${cur.r}${h?' (אחרי החילופים שעשית במחזורים הקודמים)':''}, עד ${simLimitFull(cur.r,h,C)} חילופים${cur.bo?' ועם הבונוס שסימנת':''}. "החל" מחליף את החילופים של מחזור ${cur.r} בתוכנית.</div>
-    ${plansHtml}</div>`;
+    ${plansHtml}
+    ${(()=>{ // who hurts this squad most in this round: popular players / coaches it does not have (ownership now x projection)
+      if(!OWN.size) return '';
+      const mine = new Set([...cur.sq, cur.coach].filter(Boolean).map(x=>x.s5id)), off = MT.off||0;
+      const rows = [
+        ...P.filter(p=>p.s5id!=null && !mine.has(p.s5id) && ownPct(p)!=null && p.fut).map(p=>{ const v = fpsOf(p,false,h+1,off)[h]; return {p, name:p.he||p.name, team:p.team, pos:ph[p.s5pos]||'', own:ownPct(p), v}; }),
+        ...(D.coaches||[]).filter(c=>c.fut && !mine.has(c.s5id) && ownPct(c)!=null).map(c=>({c, name:c.he||c.raw, team:c.team, pos:'מאמן', own:ownPct(c), v:coachFpN(c,h,off)}))
+      ].map(x=>({...x, risk:x.own/100*x.v})).sort((a,b)=>b.risk-a.risk).slice(0,10);
+      return `<h3 style="margin-top:20px">השחקנים שהכי פוגעים בך במחזור ${cur.r}</h3>
+      <div class="hint">שחקנים ומאמנים פופולריים שאין בסגל שלך במחזור ${cur.r} (אחרי החילופים בסימולטור עד המחזור הזה, כולל), מדורגים לפי % אחזקה כרגע × צפי במחזור ${cur.r}.</div>
+      <div class="scroll" id="simThr"><table><thead><tr><th>שחקן</th><th class="col-mh">יריבה</th><th class="num">% אחזקה</th><th class="num">צפי ${cur.r}</th><th class="num">"פגיעה"</th></tr></thead><tbody>
+      ${rows.map(x=>`<tr><td class="pl" ${x.p?`data-id="${x.p.id}"`:''}><b>${esc(x.name)}</b><small>${tName(x.team)} · ${x.pos}</small></td><td class="col-mh">${oT(x)}</td>
+        <td class="num"><b>${f(x.own,0)}%</b></td><td class="num">${f(x.v,1)}</td><td class="num">${f(x.risk,1)}</td></tr>`).join('')}</tbody></table></div>`; })()}</div>`;
   // events
   box.querySelectorAll('#simTabs button').forEach(b=>b.onclick=()=>{ SIM.r = +b.dataset.sr; SIM.pick = null; simRender(); });
   box.querySelectorAll('[data-sim]').forEach(el=>el.onclick=e=>{ e.stopPropagation(); SIM.pick = +el.dataset.sim; SIM.q=''; simRender();
@@ -1838,6 +1850,7 @@ function simRender(){
   const qi = $('#simQ'); if(qi) qi.oninput = ()=>{ SIM.q = qi.value; const pos = qi.selectionStart; simRender(); const n = $('#simQ'); n.focus(); n.setSelectionRange(pos,pos); };
   box.querySelectorAll('tr.simc[data-in]').forEach(tr=>tr.onclick=()=>{ if(tr.classList.contains('dis')) return;
     simMove(cur.r, SIM.pick, +tr.dataset.in); SIM.pick = null; simRender(); });
+  box.querySelectorAll('td.pl[data-id]').forEach(el=>el.onclick=()=>openPlayer(+el.dataset.id));
   loadCoachPhotos(box);
 }
 function renderMyTeam(){
