@@ -31,6 +31,7 @@ details.xhelp{margin:12px 4px 0;color:var(--muted);font-size:12px}
 details.xhelp summary{cursor:pointer;color:var(--muted);font-size:12px;list-style:none;display:inline-block;border:1px solid var(--line);border-radius:999px;padding:2px 10px}
 details.xhelp summary::-webkit-details-marker{display:none}
 details.xhelp > div{margin-top:6px;line-height:1.5}
+details.xhelp > div > div{margin-top:6px}
 .dot{width:10px;height:10px;border-radius:50%;display:inline-block}
 .dot.m1{background:var(--m1)} .dot.m2{background:var(--m2)}
 table{width:100%;border-collapse:collapse}
@@ -268,7 +269,7 @@ button.bon{background:none;font:inherit;font-size:12px;cursor:pointer;color:var(
 .ts{display:none}
 @media(max-width:600px){
   .tl{display:none} .ts{display:inline}
-  nav{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:12px;padding-bottom:10px}
+  nav{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:12px;padding-bottom:10px}
   nav button{white-space:nowrap;padding:9px 2px;border-radius:10px;background:var(--panel);border:1px solid var(--line);font-size:13px}
   nav button.on{background:var(--accent);color:#1a0f00;box-shadow:none;border-color:var(--accent)}
   main{padding:14px 10px} .card{padding:12px}
@@ -316,8 +317,7 @@ footer{color:var(--muted);font-size:12px;padding:10px 20px 30px;text-align:cente
     <button data-tab="top" class="on">טופ 15</button>
     <button data-tab="fixtures"><span class="tl">לוח המחזור הקרוב</span><span class="ts">לוח</span></button>
     <button data-tab="search"><span class="tl">חיפוש והשוואת שחקנים</span><span class="ts">חיפוש</span></button>
-    <button data-tab="opp"><span class="tl">יריבות לפי עמדה</span><span class="ts">יריבות</span></button>
-    <button data-tab="fdr"><span class="tl">לוח קושי משחקים</span><span class="ts">קושי</span></button>
+    <button data-tab="opp"><span class="tl">יריבות וקושי משחקים</span><span class="ts">יריבות וקושי</span></button>
     <button data-tab="build"><span class="tl">חמישייה אידיאלית</span><span class="ts">חמישייה</span></button>
     <button data-tab="myteam">הקבוצה שלי</button>
   </nav>
@@ -333,11 +333,8 @@ footer{color:var(--muted);font-size:12px;padding:10px 20px 30px;text-align:cente
   </section>
 
   <section class="tab" id="tab-opp">
-    <div id="oppView"></div>
-  </section>
-
-  <section class="tab" id="tab-fdr">
     <div id="fdrView"></div>
+    <div id="oppView" style="margin-top:16px"></div>
   </section>
 
   <section class="tab" id="tab-myteam">
@@ -429,11 +426,15 @@ function tidyHints(){
   document.querySelectorAll('section.tab > div[id]').forEach(root=>{
     const long = [...root.querySelectorAll('.card .hint:not([data-tidy])')].filter(h=>{ h.dataset.tidy = '1'; return h.textContent.trim().length > HINT_MAX; });
     if(!long.length) return;
-    let d = root.nextElementSibling;
-    if(!(d && d.matches('details.xhelp[data-for="'+root.id+'"]'))){
-      d = document.createElement('details'); d.className = 'xhelp'; d.dataset.for = root.id; root.after(d); }
-    d.innerHTML = '<summary>ℹ︎ הסבר</summary>';
-    long.forEach(h=>{ h.removeAttribute('class'); h.remove(); d.appendChild(h); });
+    // one block at the bottom of the tab; a tab can hold more than one view, each with its own part
+    const sec = root.parentElement;
+    let d = sec.querySelector(':scope > details.xhelp');
+    if(!d){ d = document.createElement('details'); d.className = 'xhelp'; d.innerHTML = '<summary>ℹ︎ הסבר</summary>'; sec.appendChild(d); }
+    let part = d.querySelector(':scope > div[data-for="'+root.id+'"]');
+    if(!part){ part = document.createElement('div'); part.dataset.for = root.id; d.appendChild(part);
+      [...d.querySelectorAll(':scope > div[data-for]')].sort((x,y)=>[...sec.children].indexOf(document.getElementById(x.dataset.for))-[...sec.children].indexOf(document.getElementById(y.dataset.for))).forEach(x=>d.appendChild(x)); }
+    part.innerHTML = '';
+    long.forEach(h=>{ h.removeAttribute('class'); h.remove(); part.appendChild(h); });
   });
 }
 new MutationObserver(()=>tidyHints()).observe(document.querySelector('main'), {childList:true, subtree:true});
@@ -2268,7 +2269,8 @@ function readHash(){
     const ids = (h.split('/')[1]||'').split(',').map(Number).filter(id=>byId.has(id)).slice(0,4);
     if(ids.length){ current=ids[0]; compare=ids; mode = h.startsWith('compare')?'compare':'card'; showCmpSearch = mode==='compare'&&ids.length<2; }
     showTab('search');
-  } else if(['top','fixtures','opp','fdr','build','myteam'].includes(h)) showTab(h);
+  } else if(['top','fixtures','opp','build','myteam'].includes(h)) showTab(h);
+  else if(h==='fdr') showTab('opp');
 }
 
 // ---------- footer ----------
