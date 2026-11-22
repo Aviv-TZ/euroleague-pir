@@ -1674,6 +1674,18 @@ function simMove(r, out, inn){
   const j = st.moves.findIndex(m=>m.r===r && m.in===out);
   if(j>=0){ if(st.moves[j].out===inn) st.moves.splice(j,1); else st.moves[j].in = inn; }
   else st.moves.push({r, out, in:inn});
+  simSave(st); simNormalize(r);
+}
+// count a round's transfers as the fantasy site does: by who is in and out of the squad at the end of the round.
+// Selling a player and buying him back in the same round (e.g. A -> B, then C -> A) is one transfer (C -> B).
+function simNormalize(r){
+  const cur = simBuild().find(x=>x.r===r); if(!cur || !cur.done.length) return;
+  const start = new Set([...cur.sq0, cur.coach0].filter(Boolean).map(x=>x.s5id)), end = [...cur.sq, cur.coach].filter(Boolean);
+  const ins = end.filter(x=>!start.has(x.s5id)), endIds = new Set(end.map(x=>x.s5id));
+  const outs = [...cur.sq0, cur.coach0].filter(x=>x && !endIds.has(x.s5id));
+  if(ins.length >= cur.done.length) return;
+  const pi = pairByPos(outs, ins), st = simLoad();
+  st.moves = (st.moves||[]).filter(m=>m.r!==r).concat(outs.map((o,j)=>({r, out:o.s5id, in:pi[j].s5id})));
   simSave(st);
 }
 // top 3 transfer plans for round r from the squad as it starts that round (after the earlier rounds' simulated transfers)
@@ -1693,6 +1705,7 @@ function simRender(){
   const box = $('#simBox'); if(!box) return;
   if(!MT.sq || !MT.sq.length){ box.innerHTML = ''; return; }
   const RO = simRounds(); if(!RO.length){ box.innerHTML = ''; return; }
+  RO.forEach(simNormalize);   // also tidies transfers saved before this rule
   const st = simLoad(), C = simChips(st), R = simBuild(), B = simBuild(false);
   if(!RO.includes(SIM.r)) SIM.r = RO[0];
   const cur = R.find(x=>x.r===SIM.r), base = B.find(x=>x.r===SIM.r), h = cur.h;
