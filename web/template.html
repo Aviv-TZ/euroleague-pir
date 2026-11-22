@@ -1568,7 +1568,7 @@ function simLimitFull(r, h, C){
 }
 const simLimit = (r, h, C) => { const W = MT.win || {}; return Math.max(0, simLimitFull(r,h,C) - (h===0 && W.open ? (W.made||0) : 0)); };
 // lineup edits by hand (o = the round's saved lineup, edited in place)
-function luBase(cur){ const L = cur.lu; return cur.ov && L.manual ? {...cur.ov, bench:L.bench.map(x=>x.s5id)} : {bench:L.bench.map(x=>x.s5id), cap:null, vc:null}; }
+function luBase(cur){ const L = cur.lu; return {bench:L.bench.map(x=>x.s5id), cap:L.cap?L.cap.s5id:null, vc:(cur.L&&cur.L.vc)??null}; }
 function luSwap(o, a, b){ o.bench = o.bench.map(id => id===a ? b : id===b ? a : id);
   if(o.cap!=null && o.bench.includes(o.cap)) o.cap = null; if(o.vc!=null && o.bench.includes(o.vc)) o.vc = null; return o; }
 // points this round after an edit, minus the points now
@@ -1588,29 +1588,71 @@ function lineupFixed(sq, h, b, ov){
 }
 // squads round by round; moves that no longer fit (player not in the squad / already in it) are skipped and flagged;
 // the budget and the lineup are checked on the squad after all the round's transfers (as on the fantasy site)
+// The lineup is never chosen for you: it starts as it is on the fantasy site (five / bench / captain / vice-captain)
+// and carries on from round to round. A player brought in takes the place of the one who left; when that breaks
+// the position rules, the smallest same-position swap with the bench is made. Edits by hand (st.lu[r]) hold from
+// round r on. L = {bench:[3 ids], cap, vc}.
+function luMove(L, sq, o, i, h){
+  if(!L) return L;
+  const fix = id => id===o.s5id ? i.s5id : id, by = id => sq.find(x=>x.s5id===id);
+  const L2 = {bench:[...L.bench], cap:L.cap!=null?fix(L.cap):null, vc:L.vc!=null?fix(L.vc):null};
+  const bi = L2.bench.indexOf(o.s5id);
+  if(bi>=0){
+    if(i.pos===o.pos) L2.bench[bi] = i.s5id;
+    else { // a bench place keeps its position: the weakest starter of that position sits, the new player starts
+      const s = sq.filter(x=>x.pos===o.pos && x!==i && !L2.bench.includes(x.s5id) && x.s5id!==L2.cap).sort((a,c)=>a.fps[h]-c.fps[h])[0];
+      L2.bench[bi] = s ? s.s5id : i.s5id; }
+  } else if(!lineupFixed(sq, h, null, L2)){
+    const k = L2.bench.findIndex(id=>{ const x = by(id); return x && x.pos===i.pos; });
+    if(k>=0){ const T = {...L2, bench:[...L2.bench]}; T.bench[k] = i.s5id; if(lineupFixed(sq, h, null, T)) return T; }
+  }
+  return L2;
+}
+function luStart(sq){
+  const bench = MT.sq.filter(x=>x.reserve).map(x=>x.s5id);
+  const L = {bench, cap:MT.capId??null, vc:MT.vcId??null};
+  if(lineupFixed(sq, 0, null, L)) return L;
+  const a = lineupAt(sq, 0, null);   // no lineup on the site (e.g. a new team): best one, once, as a starting point
+  return a ? {bench:a.bench.map(x=>x.s5id), cap:a.cap.s5id, vc:null} : L;
+}
 function simBuild(useMoves=true){
   const RO = simRounds(), st = simLoad(), C = simChips(st), moves = useMoves ? (st.moves||[]).filter(m=>RO.includes(m.r)) : [];
   let sq = MT.sq.map(x=>simItem(x.s5id, x)), coach = MT.coach ? simItem(MT.coach.s5id, {...MT.coach, isCoach:true}) : null, bank = MT.bank;
+  let L = luStart(sq);
   return RO.map((r,h)=>{
-    const sq0 = [...sq], coach0 = coach, bank0 = bank, done = [], bad = [];
+    const sq0 = [...sq], coach0 = coach, bank0 = bank, L0 = L, done = [], bad = [];
     for(const m of moves.filter(m=>m.r===r)){
       const o = coach && coach.s5id===m.out ? coach : sq.find(x=>x.s5id===m.out);
       const i = simItem(m.in);
       const has = id => sq.some(x=>x.s5id===id) || (coach && coach.s5id===id);
       if(!o || !i || has(m.in) || (!!o.isCoach !== !!i.isCoach)){ bad.push(m); continue; }
-      if(o.isCoach) coach = i; else sq = sq.map(x=>x===o?i:x);
+      if(o.isCoach) coach = i; else { sq = sq.map(x=>x===o?i:x); L = luMove(L, sq, o, i, h); }
       bank += o.price - i.price; done.push({...m, o, i});
     }
     const club = {}; [...sq, coach].filter(Boolean).forEach(x=>club[x.team]=(club[x.team]||0)+1);
-    // a hand-picked lineup follows the round's transfers (the player brought in takes the place of the one who left)
-    const ov0 = (st.lu||{})[r], mp = id => { const m = done.find(m=>m.out===id); return m ? m.in : id; };
-    const ov = ov0 ? {bench:(ov0.bench||[]).map(mp), cap:ov0.cap!=null?mp(ov0.cap):null, vc:ov0.vc!=null?mp(ov0.vc):null} : null;
-    const bo = simBoost(C, r), cv = coach ? coach.fps[h] : 0;
-    const lu = lineupFixed(sq, h, bo, ov) || lineupAt(sq, h, bo), lu0 = lineupFixed(sq0, h, bo, ov0) || lineupAt(sq0, h, bo);
-    const tot0 = (lu0?lu0.v:0) + (coach0 ? coach0.fps[h] : 0);   // the same round without this round's transfers
-    return {r, h, sq:[...sq], coach, bank, sq0, coach0, bank0, done, bad, limit:simLimit(r,h,C), bo, lu, ov, luStale:!!ov0 && !(lu&&lu.manual), tot:(lu?lu.v:0)+cv, tot0,
-            over:Object.entries(club).filter(([t,n])=>n>2).map(([t])=>t)};
+    const bo = simBoost(C, r), cv = coach ? coach.fps[h] : 0, Lmv = L;
+    // an edit by hand from this round on (players since replaced in this round are followed to their replacement)
+    const ed0 = (st.lu||{})[r], mp = id => { const m = done.find(m=>m.out===id); return m ? m.in : id; };
+    const ed = ed0 && Array.isArray(ed0.bench) ? {bench:ed0.bench.map(mp), cap:ed0.cap!=null?mp(ed0.cap):null, vc:ed0.vc!=null?mp(ed0.vc):null} : null;
+    const edOk = !!(ed && lineupFixed(sq, h, bo, ed));
+    if(edOk) L = ed;
+    let lu = lineupFixed(sq, h, bo, L); const luBad = !lu; if(!lu) lu = lineupAt(sq, h, bo);
+    const luPrev = edOk ? lineupFixed(sq, h, bo, Lmv) : null;
+    const l0 = (ed0 && lineupFixed(sq0, h, bo, ed0)) || lineupFixed(sq0, h, bo, L0);
+    const tot0 = (l0?l0.v:0) + (coach0 ? coach0.fps[h] : 0);   // the same round without this round's transfers
+    return {r, h, sq:[...sq], coach, bank, sq0, coach0, bank0, L0, L, done, bad, limit:simLimit(r,h,C), bo, lu, luBad, edited:edOk, luStale:!!ed0 && !edOk,
+            luPrev, tot:(lu?lu.v:0)+cv, tot0, over:Object.entries(club).filter(([t,n])=>n>2).map(([t])=>t)};
   });
+}
+// a plan's points with your own lineup carried over (the plans are searched with the best lineup, then scored like this)
+function simPlanValue(cur, plan, H){
+  let sq = [...cur.sq0], L = cur.L0, coach = cur.coach0, v = 0;
+  const ins = pairByPos(plan.outs, plan.ins);
+  plan.outs.forEach((o,j)=>{ const i = simItem(ins[j].s5id); if(!i) return;
+    if(o.isCoach) coach = i; else { const oo = sq.find(x=>x.s5id===o.s5id); if(!oo) return; sq = sq.map(x=>x===oo?i:x); L = luMove(L, sq, oo, i, cur.h); } });
+  for(let k=0;k<H;k++){ const l = lineupFixed(sq, cur.h+k, k===0?cur.bo:null, L) || lineupAt(sq, cur.h+k, k===0?cur.bo:null);
+    v += (l?l.v:0) + (coach ? coach.fps[cur.h+k] : 0); }
+  return v;
 }
 // a transfer in round r: replacing someone brought in this same round edits that move (and bringing the original back cancels it)
 function simMove(r, out, inn){
@@ -1658,7 +1700,9 @@ function simRender(){
   const left = RO.length - h, Hs = Math.max(1, Math.min(SIM.H, left));
   const rkey = JSON.stringify([cur.r, Hs, cur.sq0.map(x=>x.s5id), cur.coach0&&cur.coach0.s5id, cur.bank0, cur.bo, cur.limit, MT.off||0]);
   if(SIM.recKey!==rkey){ SIM.rec = null; SIM.sel = 0;
-    if(!SIM.busy){ SIM.busy = true; setTimeout(()=>{ try{ SIM.rec = simRecommend(cur, RO, C); }catch(e){ SIM.rec = {err:String(e)}; } SIM.recKey = rkey; SIM.busy = false; simRender(); }, 30); } }
+    if(!SIM.busy){ SIM.busy = true; setTimeout(()=>{ try{ const rc = simRecommend(cur, RO, C), Hh = rc.H;
+      // scored with your own lineup carried over, not the best one
+      rc.baseV = simPlanValue(cur, {outs:[], ins:[]}, Hh); rc.plans.forEach(p=>{ p.v = simPlanValue(cur, p, Hh); }); rc.plans.sort((a,b)=>b.v-a.v); SIM.rec = rc; }catch(e){ SIM.rec = {err:String(e)}; } SIM.recKey = rkey; SIM.busy = false; simRender(); }, 30); } }
   const rec = SIM.recKey===rkey ? SIM.rec : null;
   const rng = Hs===1 ? `מחזור ${cur.r}` : `מחזורים ${cur.r}–${RO[h+Hs-1]}`;
   const plansHtml = !rec ? '<div class="empty">מחשב חילופים מומלצים…</div>' : rec.err ? `<div class="warn">${esc(rec.err)}</div>` :
@@ -1694,7 +1738,7 @@ function simRender(){
         if(pk!==lu.cap) luBtns.push(`<button class="btn ghost sm" data-cap="${pk.s5id}">קפטן${eff(o=>{ o.cap = pk.s5id; if(o.vc===o.cap) o.vc = null; return o; })}</button>`);
         if(cur.bo && cur.bo.dc && pk!==lu.vc && pk!==lu.cap) luBtns.push(`<button class="btn ghost sm" data-vc="${pk.s5id}">סגן קפטן${eff(o=>{ o.vc = pk.s5id; return o; })}</button>`); }
     }
-    if(lu && lu.manual) luBtns.push(`<button class="btn ghost sm" data-luauto="1">הרכב אוטומטי</button>`);
+    if(cur.edited) luBtns.push(`<button class="btn ghost sm" data-luauto="1">↺ ביטול שינויי ההרכב במחזור ${cur.r}</button>`);
     picker = `<div class="card simpick" style="margin-top:12px;background:var(--panel2)">
       ${luBtns.length?`<div class="phead"><h3>הרכב במחזור ${cur.r}: ${esc(pk.name)} ${onBench?'(בספסל)':pk.isCoach?'':'(בחמישייה)'}</h3></div><div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px">${luBtns.join('')}</div>`:''}
       <div class="phead"><h3>החלפה במחזור ${cur.r}: ${esc(pk.name)} <small>(${ph[pk.pos]}, ${f(pk.price,0)}M, צפי ${f(pk.fps[h],1)})</small></h3><button class="btn ghost sm" id="simClose">סגור</button></div>
@@ -1711,12 +1755,13 @@ function simRender(){
     cur.bad.length ? `${cur.bad.length} ${cur.bad.length===1?'חילוף שמור לא תקף':'חילופים שמורים לא תקפים'} (השחקן כבר לא בסגל) – לא נספרו` : '',
     cur.bank < -1e-9 ? `חריגה מהתקציב (<bdi dir="ltr">${f(cur.bank,0)}M</bdi>)` : '',
     cur.done.length > cur.limit ? `יותר חילופים (${cur.done.length}) ממה שמותר במחזור (${cur.limit})` : '',
-    cur.luStale ? 'ההרכב שבחרת ידנית כבר לא מתאים לסגל – נבחר הרכב אוטומטי' : '',
+    cur.luStale ? 'שינוי ההרכב ששמרת למחזור הזה כבר לא מתאים לסגל – נשאר ההרכב הקודם' : '',
+    cur.luBad ? 'ההרכב לא חוקי אחרי החילופים – לחץ על שחקן כדי לסדר אותו' : '',
     cur.over.length ? `יותר מ-2 שחקנים מ${cur.over.map(tName).join(', ')}` : ''].filter(Boolean);
   const bo = cur.bo || {};
   box.innerHTML = `<div class="card">
     <div class="phead"><h2>סימולטור מחזורים</h2>${(st.moves||[]).length||Object.keys(st.chips||{}).length?'<button class="btn ghost sm" id="simReset">איפוס</button>':''}</div>
-    <div class="hint">לחץ על שחקן או על המאמן כדי להחליף אותו במחזור שנבחר, או החל אחת מהתוכניות המומלצות. החילופים נשמרים במכשיר הזה לקבוצה שלך וממשיכים למחזורים הבאים, עד ${RO.length} מחזורים קדימה (כמה שיש תחזית). ההרכב והקפטן נבחרים אוטומטית לפי הצפי, ואפשר לשנות אותם בלחיצה על שחקן (להכניס מהספסל, להוריד לספסל, לבחור קפטן). המחירים = המחירים הנוכחיים.</div>
+    <div class="hint">לחץ על שחקן או על המאמן כדי להחליף אותו במחזור שנבחר, או החל אחת מהתוכניות המומלצות. החילופים נשמרים במכשיר הזה לקבוצה שלך וממשיכים למחזורים הבאים, עד ${RO.length} מחזורים קדימה (כמה שיש תחזית). ההרכב והקפטן לא נבחרים בשבילך: הם מתחילים כמו באתר הפנטזי וממשיכים ממחזור למחזור, ושחקן שנכנס בחילוף תופס את המקום של מי שיצא. אפשר לשנות אותם בלחיצה על שחקן (להכניס מהספסל, להוריד לספסל, לבחור קפטן), והשינוי נשאר גם במחזורים הבאים. המחירים = המחירים הנוכחיים.</div>
     <div class="seg simtabs" id="simTabs" style="display:flex;flex-wrap:wrap;margin:10px 0">${tabs}</div>
     <div class="kpis">
       <div class="kpi"><span>צפי מחזור ${cur.r}</span><b>${f(cur.tot,1)}</b><small>בלי חילופים במחזור הזה: ${f(cur.tot0,1)} (${sg(cur.tot-cur.tot0)})</small></div>
@@ -1725,14 +1770,14 @@ function simRender(){
     <div class="bons" id="simChips">בונוסים למחזור ${cur.r}: ${[1,3,4,2].map(chipBtn).join('')}</div>
     ${warn.length?`<div class="warn">${warn.join(' · ')}</div>`:''}
     ${cur.done.length?`<div class="note" style="margin:8px 0">${cur.done.map(m=>`<div><span class="out">⬅ ${esc(m.o.name)} <small>(${ph[m.o.pos]}, ${f(m.o.fps[h],1)})</small></span> <span class="in">➜ ${esc(m.i.name)} <small>(${f(m.i.price,0)}M, ${f(m.i.fps[h],1)})</small></span> <button class="btn ghost sm" data-undo="${m.in}">ביטול</button></div>`).join('')}</div>`:''}
-    ${lu&&lu.manual?`<div class="note" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:8px 0">שינית ידנית את ההרכב או הקפטן במחזור ${cur.r}: ${(()=>{ const a = lineupAt(cur.sq, h, cur.bo), d = a ? lu.v - a.v : 0;
-      return `<b class="${d>0.05?'up':d<-0.05?'down':''}">${sg(d)}</b> נקודות לעומת ההרכב האוטומטי (${f(a?a.v+(cur.coach?cur.coach.fps[h]:0):0,1)})`; })()}<button class="btn ghost sm" data-luauto="1">↺ ביטול שינויי ההרכב</button></div>`:''}
+    ${cur.edited&&cur.luPrev?`<div class="note" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:8px 0">שינית את ההרכב או הקפטן ממחזור ${cur.r}: ${(()=>{ const d = lu.v - cur.luPrev.v;
+      return `<b class="${d>0.05?'up':d<-0.05?'down':''}">${sg(d)}</b> נקודות במחזור הזה לעומת ההרכב הקודם (${f(cur.luPrev.v+(cur.coach?cur.coach.fps[h]:0),1)})`; })()}<button class="btn ghost sm" data-luauto="1">↺ ביטול שינויי ההרכב</button></div>`:''}
     ${lu?`<div class="court"><svg class="lines" viewBox="0 0 100 140" preserveAspectRatio="none" aria-hidden="true">
       <rect x="3" y="2" width="94" height="136" fill="none"/><rect x="34" y="2" width="32" height="30" fill="none"/>
       <path d="M34 32 A16 10 0 0 0 66 32" fill="none"/><line x1="3" y1="70" x2="97" y2="70"/>
       <circle cx="50" cy="70" r="11" fill="none"/><path d="M10 138 L10 120 A40 32 0 0 1 90 120 L90 138" fill="none"/></svg>
       <div class="crow">${row('Center')}</div><div class="crow">${row('Forward')}</div><div class="crow">${row('Guard')}</div></div>
-    ${benchRow(`ספסל · ${bo.bench?'100% (בונוס)':'50%'} · מחזור ${cur.r}${lu.manual?' · הרכב ידני':''}`, lu.bench.map(x=>card(x).replace('class="ccard ','class="ccard bcard ')).join(''), co)}`:'<div class="warn">הסגל לא מאפשר הרכב חוקי</div>'}
+    ${benchRow(`ספסל · ${bo.bench?'100% (בונוס)':'50%'} · מחזור ${cur.r}${cur.edited?' · הרכב ששינית':''}`, lu.bench.map(x=>card(x).replace('class="ccard ','class="ccard bcard ')).join(''), co)}`:'<div class="warn">הסגל לא מאפשר הרכב חוקי</div>'}
     ${picker}
     <div class="phead" style="margin-top:16px"><h3>חילופים מומלצים למחזור ${cur.r}</h3>
       ${left>1?`<label class="hzl">להסתכל קדימה: <select id="simH">${Array.from({length:left},(_,i)=>i+1).map(k=>`<option value="${k}" ${k===Hs?'selected':''}>${k===1?`מחזור ${cur.r} בלבד`:`${k} מחזורים (${cur.r}–${RO[h+k-1]})`}</option>`).join('')}</select></label>`:''}</div>
