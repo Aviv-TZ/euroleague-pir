@@ -1256,24 +1256,37 @@ async function loadOwn(){
   if(!j || (OWN.updated===j.updated_utc && (OWN.base&&OWN.base.updated_utc)===(b&&b.updated_utc))) return;
   OWN.size=j.size; OWN.own=j.own||{}; OWN.updated=j.updated_utc; OWN.base=b; renderAll(); renderOwnMoves();
 }
-// Who was bought the most since the transfer window opened. The fantasy site only publishes how many times a player
-// was picked (it goes up when he is bought and back down only when a transfer is undone, not when he is sold), so the
-// rise since the window opened = teams that bought him; sales cannot be seen.
+// Since the transfer window opened. The fantasy site only publishes how many times each player was picked: it goes
+// up when he is bought and does not go down when he is sold. So:
+//  - bought: the rise in his count, as a share of all teams;
+//  - fell behind: his share of all the picks (players among players, coaches among coaches) now vs then - a player
+//    whose count stands still while others are bought loses share, even though his sales cannot be seen.
 function renderOwnMoves(){
   const box = $('#ownMoves'); if(!box) return;
   const B = OWN.base; if(!OWN.size || !B || !B.own || !B.size){ box.innerHTML = ''; return; }
   const off = dayDone() ? 1 : 0, rnd = roundsFrom(off)[0];
+  const coachIds = new Set((D.coaches||[]).map(c=>String(c.s5id)));
+  const sums = o => { let pl = 0, co = 0; for(const [k,v] of Object.entries(o)) (coachIds.has(k) ? (co+=v) : (pl+=v)); return {pl, co}; };
+  const SA = sums(OWN.own), SB = sums(B.own);
+  // share of picks scaled to "% of teams": 8 player places and 1 coach place per team
+  const share = (o, S, id) => coachIds.has(String(id)) ? 100*o[id]/S.co : 800*o[id]/S.pl;
   const rows = [];
-  const add = (x, id) => { const a = OWN.own[id], b = B.own[id]; if(a==null || b==null || a<=b) return; rows.push({...x, n:a-b, d:100*(a-b)/OWN.size, now:100*a/OWN.size}); };
+  const add = (x, id) => { const a = OWN.own[id], b = B.own[id]; if(a==null || b==null) return;
+    rows.push({...x, n:a-b, d:100*(a-b)/OWN.size, now:100*a/OWN.size, rel:share(OWN.own,SA,id)-share(B.own,SB,id)}); };
   P.forEach(p=>{ if(p.s5id!=null) add({p, name:p.he||p.name, team:p.team, pos:p.pos_he||'', v:fpsOf(p,false,1,off)[0], ot: off ? oppTxt(oppNR(p.team)) : oppShort(p)}, p.s5id); });
   (D.coaches||[]).forEach(c=>add({c, name:c.he||c.raw, team:c.team, pos:'מאמן', v:coachFpN(c,0,off), ot: off ? oppTxt(oppNR(c.team)) : coachOpp(c)}, c.s5id));
-  const up = rows.sort((a,b)=>b.n-a.n).slice(0,10);
+  const up = rows.filter(x=>x.n>0).sort((a,b)=>b.n-a.n).slice(0,10), down = rows.filter(x=>x.rel<-0.05).sort((a,b)=>a.rel-b.rel).slice(0,10);
   const tf = t => { const d = new Date(t); return `${shortDate.format(d)} ${timeFmt.format(d)}`; };
-  box.innerHTML = `<div class="card" style="margin-top:16px"><h2>הכי נקנו בחלון החילופים${B.round?` · לקראת מחזור ${B.round}`:''}</h2>
-    <div class="hint">כמה מהקבוצות קנו כל שחקן / מאמן מאז שנפתח חלון החילופים (${tf(B.updated_utc)}) ועד העדכון האחרון (${tf(OWN.updated)}). אתר הפנטזי מפרסם רק כמה פעמים שחקן נבחר – המספר עולה כשקונים אותו ולא יורד כשמוכרים, ולכן אפשר לראות מי נקנה אבל לא מי נמכר. מתעדכן כל 3 שעות כשהחלון פתוח, כל שעה ב-12 השעות האחרונות לפני הסגירה וכל חצי שעה ב-6 האחרונות.</div>
-    ${!up.length?'<div class="note">עוד אין קניות מאז שנפתח החלון</div>':`<div class="scroll"><table><thead><tr><th>שחקן</th><th class="num">צפי ${rnd??''}</th><th class="num">אחזקה עכשיו</th><th class="num">קנו אותו</th></tr></thead><tbody>
-    ${up.map(x=>`<tr><td class="pl" ${x.p?`data-id="${x.p.id}"`:''}><b>${esc(x.name)}</b><small>${tName(x.team)} · ${x.pos}</small>${x.ot?`<small>${x.ot}</small>`:''}</td>
-      <td class="num">${f(x.v,1)}</td><td class="num">${f(x.now,0)}%</td><td class="num"><b style="color:var(--good)"><bdi dir="ltr">+${f(x.d,1)}%</bdi></b></td></tr>`).join('')}</tbody></table></div>`}</div>`;
+  const sg = v => `<bdi dir="ltr">${v>0?'+':''}${f(v,1)}%</bdi>`;
+  const table = (list, head, val, col) => `<div class="scroll"><table><thead><tr><th>שחקן</th><th class="num">צפי ${rnd??''}</th><th class="num">אחזקה עכשיו</th><th class="num">${head}</th></tr></thead><tbody>
+    ${list.map(x=>`<tr><td class="pl" ${x.p?`data-id="${x.p.id}"`:''}><b>${esc(x.name)}</b><small>${tName(x.team)} · ${x.pos}</small>${x.ot?`<small>${x.ot}</small>`:''}</td>
+      <td class="num">${f(x.v,1)}</td><td class="num">${f(x.now,0)}%</td><td class="num"><b style="color:${col}">${sg(val(x))}</b></td></tr>`).join('')}</tbody></table></div>`;
+  box.innerHTML = `<div class="card" style="margin-top:16px"><h2>מי נקנה ומי ירד בחלון החילופים${B.round?` · לקראת מחזור ${B.round}`:''}</h2>
+    <div class="hint">מאז שנפתח חלון החילופים (${tf(B.updated_utc)}) ועד העדכון האחרון (${tf(OWN.updated)}). אתר הפנטזי מפרסם רק כמה פעמים כל שחקן נבחר: המספר עולה כשקונים אותו ולא יורד כשמוכרים. "קנו אותו" = העלייה במספר, כאחוז מכל הקבוצות. "ירידה יחסית" = השינוי בחלק של השחקן מכל הבחירות (שחקנים מול שחקנים, מאמנים מול מאמנים): שחקן שאחרים נקנים והוא לא – החלק שלו יורד, גם אם את המכירות עצמן אי אפשר לראות. מתעדכן כל 3 שעות כשהחלון פתוח, כל שעה ב-12 השעות האחרונות לפני הסגירה וכל חצי שעה ב-6 האחרונות.</div>
+    <h3 style="margin-top:14px">הכי נקנו</h3>
+    ${up.length ? table(up, 'קנו אותו', x=>x.d, 'var(--good)') : '<div class="note">עוד אין קניות מאז שנפתח החלון</div>'}
+    <h3 style="margin-top:18px">הכי ירדו (יחסית)</h3>
+    ${down.length ? table(down, 'ירידה יחסית', x=>x.rel, '#e5484d') : '<div class="note">עוד אין ירידות מאז שנפתח החלון</div>'}</div>`;
   box.querySelectorAll('td.pl[data-id]').forEach(el=>el.onclick=()=>openPlayer(+el.dataset.id));
 }
 // projected fantasy points per future round (index 0 = next round); 0 if injured / out
