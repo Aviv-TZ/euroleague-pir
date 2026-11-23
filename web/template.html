@@ -344,6 +344,7 @@ footer{color:var(--muted);font-size:12px;padding:10px 20px 30px;text-align:cente
   <section class="tab" id="tab-build">
     <div id="builderView"></div>
     <div id="squadView"></div>
+    <div id="ownMoves"></div>
   </section>
 
   <section class="tab" id="tab-search">
@@ -1237,13 +1238,41 @@ const byS5 = new Map(P.filter(p=>p.s5id!=null).map(p=>[p.s5id,p]));
 const FUT = (M.fut_rounds||[]), FUT0 = FUT;
 const MT = {data:null, loading:false, err:null, rec:null, H:1, q:'', sel:0, thrSort:'risk', coachMode:'auto'};
 // ownership (own.json, refreshed every 6 hours)
-const OWN = {size:null, own:{}, updated:null};
+const OWN = {size:null, own:{}, updated:null, base:null};
 const ownPct = p => (p && p.s5id!=null && OWN.size && OWN.own[p.s5id]!=null) ? 100*OWN.own[p.s5id]/OWN.size : null;
 const ownTxt = p => { const v = ownPct(p); return v==null ? '' : `${v<1?f(v,1):f(v,0)}%`; };
+// own.json: now; own_base.json: when the transfer window opened. Both also read from the repository directly
+// (the newest wins), so a refresh shows up before the page is redeployed.
 async function loadOwn(){
   if(location.protocol==='file:') return;
-  try{ const r = await fetch('own.json?t='+Date.now(), {cache:'no-store'}); if(!r.ok) return;
-       const j = await r.json(); OWN.size=j.size; OWN.own=j.own||{}; OWN.updated=j.updated_utc; renderAll(); }catch(e){}
+  const get = u => fetch(u, {cache:'no-store'}).then(r=>r.ok?r.json():null).catch(()=>null);
+  const own = location.hostname.endsWith('.github.io') ? location.hostname.split('.')[0] : null;
+  const repo = own ? location.pathname.split('/').filter(Boolean)[0] : null;
+  const two = f => Promise.all([get(f+'?t='+Date.now()), own && repo ? get(`https://raw.githubusercontent.com/${own}/${repo}/main/docs/${f}?t=${Date.now()}`) : null])
+    .then(xs=>xs.filter(x=>x && x.updated_utc).sort((x,y)=>y.updated_utc.localeCompare(x.updated_utc))[0] || null);
+  const [j, b] = await Promise.all([two('own.json'), two('own_base.json')]);
+  if(!j || (OWN.updated===j.updated_utc && (OWN.base&&OWN.base.updated_utc)===(b&&b.updated_utc))) return;
+  OWN.size=j.size; OWN.own=j.own||{}; OWN.updated=j.updated_utc; OWN.base=b; renderAll(); renderOwnMoves();
+}
+// Who was bought the most since the transfer window opened. The fantasy site only publishes how many times a player
+// was picked (it goes up when he is bought and back down only when a transfer is undone, not when he is sold), so the
+// rise since the window opened = teams that bought him; sales cannot be seen.
+function renderOwnMoves(){
+  const box = $('#ownMoves'); if(!box) return;
+  const B = OWN.base; if(!OWN.size || !B || !B.own || !B.size){ box.innerHTML = ''; return; }
+  const off = dayDone() ? 1 : 0, rnd = roundsFrom(off)[0];
+  const rows = [];
+  const add = (x, id) => { const a = OWN.own[id], b = B.own[id]; if(a==null || b==null || a<=b) return; rows.push({...x, n:a-b, d:100*(a-b)/OWN.size}); };
+  P.forEach(p=>{ if(p.s5id!=null) add({p, name:p.he||p.name, team:p.team, pos:p.pos_he||'', v:fpsOf(p,false,1,off)[0], ot: off ? oppTxt(oppNR(p.team)) : oppShort(p)}, p.s5id); });
+  (D.coaches||[]).forEach(c=>add({c, name:c.he||c.raw, team:c.team, pos:'מאמן', v:coachFpN(c,0,off), ot: off ? oppTxt(oppNR(c.team)) : coachOpp(c)}, c.s5id));
+  const up = rows.sort((a,b)=>b.n-a.n).slice(0,10);
+  const tf = t => { const d = new Date(t); return `${shortDate.format(d)} ${timeFmt.format(d)}`; };
+  box.innerHTML = `<div class="card" style="margin-top:16px"><h2>הכי נקנו בחלון החילופים${B.round?` · לקראת מחזור ${B.round}`:''}</h2>
+    <div class="hint">כמה מהקבוצות קנו כל שחקן / מאמן מאז שנפתח חלון החילופים (${tf(B.updated_utc)}) ועד העדכון האחרון (${tf(OWN.updated)}). אתר הפנטזי מפרסם רק כמה פעמים שחקן נבחר – המספר עולה כשקונים אותו ולא יורד כשמוכרים, ולכן אפשר לראות מי נקנה אבל לא מי נמכר. מתעדכן כל 3 שעות כשהחלון פתוח, כל שעה ב-12 השעות האחרונות לפני הסגירה וכל חצי שעה ב-6 האחרונות.</div>
+    ${!up.length?'<div class="note">עוד אין קניות מאז שנפתח החלון</div>':`<div class="scroll"><table><thead><tr><th>שחקן</th><th class="num">צפי ${rnd??''}</th><th class="num">קנו אותו</th></tr></thead><tbody>
+    ${up.map(x=>`<tr><td class="pl" ${x.p?`data-id="${x.p.id}"`:''}><b>${esc(x.name)}</b><small>${tName(x.team)} · ${x.pos}${x.ot?` · ${x.ot}`:''}</small></td>
+      <td class="num">${f(x.v,1)}</td><td class="num"><b style="color:var(--good)"><bdi dir="ltr">+${f(x.d,1)}%</bdi></b><br><small style="white-space:nowrap">${x.n.toLocaleString('he-IL')} קבוצות</small></td></tr>`).join('')}</tbody></table></div>`}</div>`;
+  box.querySelectorAll('td.pl[data-id]').forEach(el=>el.onclick=()=>openPlayer(+el.dataset.id));
 }
 // projected fantasy points per future round (index 0 = next round); 0 if injured / out
 // off = 0: projections from the round being played (or the next one); off = 1: from the round after it
@@ -2304,7 +2333,8 @@ function renderAll(){
 updateSubline(); renderTops(); renderFixtures(); renderOpp(); renderFdr(); renderBuilder(); renderSquad(); renderMyTeam(); readHash(); renderPlayer();
 { const sv = mtSaved(); if(sv.name && location.protocol!=='file:') mtLookup(sv.name, sv.id || null); }
 setInterval(()=>{ if(MT.data && MT.data.team && !MT.loading) mtLookup(MT.data.team.name, MT.data.team.userId, true); }, 15*60e3);
-loadLive().then(()=>{ pollDirect(); loadNext(); loadPrev(); }); loadOwn();
+loadLive().then(()=>{ pollDirect(); loadNext(); loadPrev(); renderOwnMoves(); }); loadOwn();
+setInterval(loadOwn, 10*60e3);
 setInterval(loadNext, 30*60e3);
 window.addEventListener('hashchange', ()=>{ readHash(); renderPlayer(); });
 })();

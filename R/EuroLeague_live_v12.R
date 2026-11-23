@@ -205,7 +205,7 @@ el_past_games <- function(raw, s) {
 # Ownership: how many fantasy teams hold each player (public player pages, no login).
 # Refreshed at most every 6 hours; league size comes from the Cloudflare Worker.
 EL_WORKER <- 'https://el-fantasy.aviv-tzafrir.workers.dev'
-el_ownership <- function(site_dir, max_age_h=6) {
+el_ownership <- function(site_dir, max_age_h=8) {   # fallback: tools/ownership.py (own workflow) refreshes more often
   f <- file.path(site_dir, 'own.json')
   if (file.exists(f)) {
     old <- tryCatch(jsonlite::fromJSON(f), error=function(e) NULL)
