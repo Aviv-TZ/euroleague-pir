@@ -170,6 +170,8 @@ td.num.up{color:var(--good)} td.num.down{color:var(--bad)}
 #tops td:nth-child(3){white-space:normal;min-width:110px}
 #tops th,#tops td{padding:7px 5px}
 #tops td.pl{white-space:normal;min-width:120px}
+#ownMoves td.pl{white-space:normal} #ownMoves td.pl small{display:block}
+@media(max-width:600px){ #ownMoves th,#ownMoves td{padding:6px 4px;font-size:13px} }
 /* single-model layout */
 .stack{display:flex;flex-direction:column;gap:18px}
 .models{grid-template-columns:1fr}
@@ -1262,16 +1264,16 @@ function renderOwnMoves(){
   const B = OWN.base; if(!OWN.size || !B || !B.own || !B.size){ box.innerHTML = ''; return; }
   const off = dayDone() ? 1 : 0, rnd = roundsFrom(off)[0];
   const rows = [];
-  const add = (x, id) => { const a = OWN.own[id], b = B.own[id]; if(a==null || b==null || a<=b) return; rows.push({...x, n:a-b, d:100*(a-b)/OWN.size}); };
+  const add = (x, id) => { const a = OWN.own[id], b = B.own[id]; if(a==null || b==null || a<=b) return; rows.push({...x, n:a-b, d:100*(a-b)/OWN.size, now:100*a/OWN.size}); };
   P.forEach(p=>{ if(p.s5id!=null) add({p, name:p.he||p.name, team:p.team, pos:p.pos_he||'', v:fpsOf(p,false,1,off)[0], ot: off ? oppTxt(oppNR(p.team)) : oppShort(p)}, p.s5id); });
   (D.coaches||[]).forEach(c=>add({c, name:c.he||c.raw, team:c.team, pos:'מאמן', v:coachFpN(c,0,off), ot: off ? oppTxt(oppNR(c.team)) : coachOpp(c)}, c.s5id));
   const up = rows.sort((a,b)=>b.n-a.n).slice(0,10);
   const tf = t => { const d = new Date(t); return `${shortDate.format(d)} ${timeFmt.format(d)}`; };
   box.innerHTML = `<div class="card" style="margin-top:16px"><h2>הכי נקנו בחלון החילופים${B.round?` · לקראת מחזור ${B.round}`:''}</h2>
     <div class="hint">כמה מהקבוצות קנו כל שחקן / מאמן מאז שנפתח חלון החילופים (${tf(B.updated_utc)}) ועד העדכון האחרון (${tf(OWN.updated)}). אתר הפנטזי מפרסם רק כמה פעמים שחקן נבחר – המספר עולה כשקונים אותו ולא יורד כשמוכרים, ולכן אפשר לראות מי נקנה אבל לא מי נמכר. מתעדכן כל 3 שעות כשהחלון פתוח, כל שעה ב-12 השעות האחרונות לפני הסגירה וכל חצי שעה ב-6 האחרונות.</div>
-    ${!up.length?'<div class="note">עוד אין קניות מאז שנפתח החלון</div>':`<div class="scroll"><table><thead><tr><th>שחקן</th><th class="num">צפי ${rnd??''}</th><th class="num">קנו אותו</th></tr></thead><tbody>
-    ${up.map(x=>`<tr><td class="pl" ${x.p?`data-id="${x.p.id}"`:''}><b>${esc(x.name)}</b><small>${tName(x.team)} · ${x.pos}${x.ot?` · ${x.ot}`:''}</small></td>
-      <td class="num">${f(x.v,1)}</td><td class="num"><b style="color:var(--good)"><bdi dir="ltr">+${f(x.d,1)}%</bdi></b><br><small style="white-space:nowrap">${x.n.toLocaleString('he-IL')} קבוצות</small></td></tr>`).join('')}</tbody></table></div>`}</div>`;
+    ${!up.length?'<div class="note">עוד אין קניות מאז שנפתח החלון</div>':`<div class="scroll"><table><thead><tr><th>שחקן</th><th class="num">צפי ${rnd??''}</th><th class="num">אחזקה עכשיו</th><th class="num">קנו אותו</th></tr></thead><tbody>
+    ${up.map(x=>`<tr><td class="pl" ${x.p?`data-id="${x.p.id}"`:''}><b>${esc(x.name)}</b><small>${tName(x.team)} · ${x.pos}</small>${x.ot?`<small>${x.ot}</small>`:''}</td>
+      <td class="num">${f(x.v,1)}</td><td class="num">${f(x.now,0)}%</td><td class="num"><b style="color:var(--good)"><bdi dir="ltr">+${f(x.d,1)}%</bdi></b></td></tr>`).join('')}</tbody></table></div>`}</div>`;
   box.querySelectorAll('td.pl[data-id]').forEach(el=>el.onclick=()=>openPlayer(+el.dataset.id));
 }
 // projected fantasy points per future round (index 0 = next round); 0 if injured / out
