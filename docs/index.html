@@ -590,7 +590,7 @@ function renderAbsences(){
   for(const [k0, a] of Object.entries(A)){
     const p = byKey.get(ABS_KEY(k0)); if(!p || a.fp < 10) continue;
     if(p.injured) list.push({p, a});
-    else if(a.streak >= 2) quiet.push({p, a});     // missed EuroLeague games but not flagged (rest, domestic league, coach's call)
+    else if(a.streak >= 2 && a.streak <= 4) quiet.push({p, a});   // recently missed EuroLeague games but not flagged (rest, domestic league, coach's call); long gaps are old news
   }
   list.sort((x,y)=>y.a.fp-x.a.fp); quiet.sort((x,y)=>y.a.fp-x.a.fp);
   if(!list.length){ box.innerHTML = ''; return; }
@@ -611,7 +611,7 @@ function renderAbsences(){
         <small>עמדה סמוכה:</small><div>${watch(x, ADJ[x.p.pos]||[], 3)}</div></td></tr>`).join('')}
     </tbody></table></div>
     ${list.length>12?`<button class="btn ghost sm" id="absAll" style="margin-top:8px">${ABS_ALL?'הצג פחות':`הצג את כל ${list.length}`}</button>`:''}
-    ${quiet.length?`<div class="note" style="margin-top:10px">לא שיחקו ב-2+ המשחקים האחרונים ביורוליג אבל לא מסומנים פצועים באתר הפנטזי (מנוחה, ליגה מקומית או החלטת מאמן): ${quiet.map(x=>`<span class="pl absw" data-id="${x.p.id}">${esc(x.p.he||x.p.name)}</span> <small>(${tName(x.p.team)}, ${x.a.streak})</small>`).join(' · ')}</div>`:''}</div>`;
+    ${quiet.length?`<div class="note" style="margin-top:10px">לא שיחקו ב-2–4 המשחקים האחרונים ביורוליג אבל לא מסומנים פצועים באתר הפנטזי (מנוחה, ליגה מקומית או החלטת מאמן): ${quiet.map(x=>`<span class="pl absw" data-id="${x.p.id}">${esc(x.p.he||x.p.name)}</span> <small>(${tName(x.p.team)}, ${x.a.streak})</small>`).join(' · ')}</div>`:''}</div>`;
   box.querySelectorAll('[data-id]').forEach(el=>el.onclick=()=>openPlayer(+el.dataset.id));
   const ab = $('#absAll'); if(ab) ab.onclick = ()=>{ ABS_ALL = !ABS_ALL; renderAbsences(); };
 }
