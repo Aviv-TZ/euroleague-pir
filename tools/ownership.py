@@ -72,16 +72,31 @@ def fetch():
     size = (get(f'{WORKER}/size') or {}).get('leagueSize')
     if not tp or not size: return None
     ids = [p['id'] for t in tp.get('data') or [] for p in t.get('players') or []]
-    own = {}
+    own, inj = {}, []
     for pid in ids:
         d = get(f'{API}/Players/GetPlayerData?seasonId={sid}&playerId={pid}', post=True)
-        v = ((d or {}).get('data') or {}).get('timesSelected')
+        dd = (d or {}).get('data') or {}
+        v = dd.get('timesSelected')
         if v is not None: own[str(pid)] = v
+        pl = dd.get('player') or {}
+        if (pl.get('injuredStatus') or 0) > 0 or (pl.get('missingStatus') or 0) > 0: inj.append(pid)   # injured / missing on the fantasy site
         time.sleep(0.1)
     if len(own) < 0.8 * len(ids): return None   # a partial reading would show fake drops
-    return {'updated_utc': iso(now_utc()), 'size': size, 'own': own}
+    return {'updated_utc': iso(now_utc()), 'size': size, 'own': own, 'inj': inj}
+
+def wait_seconds():
+    """For the workflow's loop: seconds until the next refresh is due, while the window closes within 6 hours
+    (GitHub starts scheduled runs late or skips them, so in the last hours one run stays and refreshes on time).
+    0 = no need to wait in this run."""
+    now = now_utc(); locked, nxt, hours = state(now)
+    if locked or hours is None or hours > 6.5: return 0
+    cur = load('own.json')
+    if not cur: return 1
+    due = parse(cur['updated_utc']) + cadence(locked, hours)
+    return max(1, int((due - now).total_seconds()) + 30)
 
 def main():
+    if '--wait' in sys.argv: print(wait_seconds()); return
     force = '--force' in sys.argv
     now = now_utc()
     locked, nxt, hours = state(now)

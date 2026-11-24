@@ -22,22 +22,33 @@ concurrency:
 jobs:
   ownership:
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    timeout-minutes: 350
     steps:
       - uses: actions/checkout@v4
-      - name: Refresh ownership when due
+      - name: Refresh ownership when due (in the window's last 6 hours this run stays and refreshes every 30 minutes)
         env:
           FORCE: ${{ inputs.force && '--force' || '' }}
         run: |
-          python3 tools/ownership.py $FORCE
           git config user.name  "el-bot"
           git config user.email "el-bot@users.noreply.github.com"
-          git add docs/own.json docs/own_base.json
-          if git diff --cached --quiet; then echo "Nothing new"; exit 0; fi
-          git commit -q -m "Ownership $(date -u +%Y-%m-%dT%H:%MZ)"
-          for i in 1 2 3 4; do
-            if git pull -q --rebase -X theirs origin main && git push -q; then echo "Published"; exit 0; fi
-            git rebase --abort 2>/dev/null || true
-            sleep $((5 * i))
+          publish() {
+            git add docs/own.json docs/own_base.json
+            if git diff --cached --quiet; then echo "Nothing new"; return 0; fi
+            git commit -q -m "Ownership $(date -u +%Y-%m-%dT%H:%MZ)"
+            for i in 1 2 3 4; do
+              if git pull -q --rebase -X theirs origin main && git push -q; then echo "Published"; return 0; fi
+              git rebase --abort 2>/dev/null || true
+              sleep $((5 * i))
+            done
+            echo "Publish failed"; git reset -q --hard origin/main || true
+          }
+          START=$(date +%s)
+          python3 tools/ownership.py $FORCE; publish
+          while [ $(( $(date +%s) - START )) -lt 19800 ]; do
+            W=$(python3 tools/ownership.py --wait)
+            [ "$W" -gt 0 ] || break
+            [ "$W" -gt 1900 ] && W=1900
+            echo "next refresh in ${W}s"; sleep "$W"
+            git pull -q --rebase -X theirs origin main || { git rebase --abort 2>/dev/null; git reset -q --hard origin/main; } || true
+            python3 tools/ownership.py; publish
           done
-          echo "Publish failed"; exit 1

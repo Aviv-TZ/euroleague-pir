@@ -586,29 +586,32 @@ function renderAbsences(){
   const box = $('#absView'); if(!box) return;
   const A = D.absences; if(!A){ box.innerHTML = ''; return; }
   const byKey = new Map(P.map(p=>[p.raw+'||'+p.team, p]));
-  const list = [];
+  const list = [], quiet = [];
   for(const [k0, a] of Object.entries(A)){
-    const p = byKey.get(ABS_KEY(k0)); if(!p) continue;
-    if(!(p.injured || a.streak >= 2) || a.fp < 10) continue;
-    list.push({p, a});
+    const p = byKey.get(ABS_KEY(k0)); if(!p || a.fp < 10) continue;
+    if(p.injured) list.push({p, a});
+    else if(a.streak >= 2) quiet.push({p, a});     // missed EuroLeague games but not flagged (rest, domestic league, coach's call)
   }
-  list.sort((x,y)=>y.a.fp-x.a.fp);
+  list.sort((x,y)=>y.a.fp-x.a.fp); quiet.sort((x,y)=>y.a.fp-x.a.fp);
   if(!list.length){ box.innerHTML = ''; return; }
   const posPl = {Guard:'הגארדים', Forward:'הפורוורדים', Center:'הסנטרים'};
-  const status = x => x.p.injured ? 'פצוע/חסר' : `לא שיחק ${x.a.streak} משחקים`;
-  const watch = x => {
+  const status = x => x.a.streak ? `פצוע/חסר · לא שיחק ${x.a.streak===1?'במשחק האחרון':`${x.a.streak} משחקים`}` : 'פצוע/חסר';
+  const ADJ = {Guard:['Forward'], Forward:['Guard','Center'], Center:['Forward']};
+  const watch = (x, poss, n) => {
     const ev = new Map((x.a.mates||[]).filter(m=>m.n>=2 && m.d>=3).map(m=>[m.p, m]));
-    return P.filter(q=>q.team===x.p.team && q.pos===x.p.pos && q!==x.p && !q.injured && !q.out3 && (q.min||0) >= 5)
-      .sort((a,b)=>(b.min||0)-(a.min||0)).slice(0,4)
-      .map(q=>{ const m = ev.get(q.raw); return `<span class="pl absw" data-id="${q.id}">${esc(q.he||q.name)}${m?` <small style="color:var(--good)">(+${f(m.d,0)} בלעדיו)</small>`:''}</span>`; }).join(' · ') || '<small>אין</small>';
+    return P.filter(q=>q.team===x.p.team && poss.includes(q.pos) && q!==x.p && !q.injured && !q.out3 && (q.min||0) >= 5)
+      .sort((a,b)=>((ev.get(b.raw)||{d:0}).d-(ev.get(a.raw)||{d:0}).d) || ((b.min||0)-(a.min||0))).slice(0,n)
+      .map(q=>{ const m = ev.get(q.raw); return `<span class="pl absw" data-id="${q.id}">${esc(q.he||q.name)}${poss.length>1||poss[0]!==x.p.pos?` <small>(${q.pos_he})</small>`:''}${m?` <small style="color:var(--good)">(+${f(m.d,0)} בלעדיו)</small>`:''}</span>`; }).join(' · ') || '<small>אין</small>';
   };
   box.innerHTML = `<div class="card" style="margin-top:16px"><h2>חסרים לקראת מחזור ${M.next_round??''} – שימו לב</h2>
-    <div class="hint">שחקנים קבועים (15+ דקות ו-10+ נקודות פנטזי בממוצע) שמסומנים פצועים באתר הפנטזי או שלא שיחקו ב-2 המשחקים האחרונים של הקבוצה, ולידם שחקני אותה עמדה בקבוצה שעשויים לקבל יותר דקות. בירוק – כמה יותר הם עשו העונה במשחקים בלעדיו (2+ משחקים). זו רק תשומת לב – הצפי לא משתנה.</div>
+    <div class="hint">שחקנים קבועים (15+ דקות ו-10+ נקודות פנטזי בממוצע) שמסומנים פצועים או חסרים באתר הפנטזי${OWN.injAt?` (נבדק ${(d=>`${shortDate.format(d)} ${timeFmt.format(d)}`)(new Date(OWN.injAt))})`:''}, ולידם שחקני אותה עמדה ועמדה סמוכה בקבוצה שעשויים לקבל יותר דקות. בירוק – כמה יותר הם עשו העונה במשחקים בלעדיו (2+ משחקים). זו רק תשומת לב – הצפי לא משתנה.</div>
     <div class="scroll"><table><thead><tr><th>חסר</th><th>שימו לב ל${''}</th></tr></thead><tbody>
     ${(ABS_ALL?list:list.slice(0,12)).map(x=>`<tr><td class="pl" data-id="${x.p.id}"><b>${esc(x.p.he||x.p.name)}</b><small>${tName(x.p.team)} · ${x.p.pos_he}</small><small style="color:#e5484d">${status(x)}</small></td>
-      <td class="absm"><small>${posPl[x.p.pos]||''} של ${tName(x.p.team)}:</small><div>${watch(x)}</div></td></tr>`).join('')}
+      <td class="absm"><small>${posPl[x.p.pos]||''} של ${tName(x.p.team)}:</small><div>${watch(x, [x.p.pos], 4)}</div>
+        <small>עמדה סמוכה:</small><div>${watch(x, ADJ[x.p.pos]||[], 3)}</div></td></tr>`).join('')}
     </tbody></table></div>
-    ${list.length>12?`<button class="btn ghost sm" id="absAll" style="margin-top:8px">${ABS_ALL?'הצג פחות':`הצג את כל ${list.length}`}</button>`:''}</div>`;
+    ${list.length>12?`<button class="btn ghost sm" id="absAll" style="margin-top:8px">${ABS_ALL?'הצג פחות':`הצג את כל ${list.length}`}</button>`:''}
+    ${quiet.length?`<div class="note" style="margin-top:10px">לא שיחקו ב-2+ המשחקים האחרונים ביורוליג אבל לא מסומנים פצועים באתר הפנטזי (מנוחה, ליגה מקומית או החלטת מאמן): ${quiet.map(x=>`<span class="pl absw" data-id="${x.p.id}">${esc(x.p.he||x.p.name)}</span> <small>(${tName(x.p.team)}, ${x.a.streak})</small>`).join(' · ')}</div>`:''}</div>`;
   box.querySelectorAll('[data-id]').forEach(el=>el.onclick=()=>openPlayer(+el.dataset.id));
   const ab = $('#absAll'); if(ab) ab.onclick = ()=>{ ABS_ALL = !ABS_ALL; renderAbsences(); };
 }
@@ -1291,7 +1294,10 @@ async function loadOwn(){
     .then(xs=>xs.filter(x=>x && x.updated_utc).sort((x,y)=>y.updated_utc.localeCompare(x.updated_utc))[0] || null);
   const [j, b] = await Promise.all([two('own.json'), two('own_base.json')]);
   if(!j || (OWN.updated===j.updated_utc && (OWN.base&&OWN.base.updated_utc)===(b&&b.updated_utc))) return;
-  OWN.size=j.size; OWN.own=j.own||{}; OWN.updated=j.updated_utc; OWN.base=b; renderAll(); renderOwnMoves();
+  OWN.size=j.size; OWN.own=j.own||{}; OWN.updated=j.updated_utc; OWN.base=b;
+  // injury flags from the same reading (fresher than the round's data): a player is out when the fantasy site says so
+  if(Array.isArray(j.inj)){ const s = new Set(j.inj.map(Number)); P.forEach(p=>{ if(p.s5id!=null) p.injured = s.has(Number(p.s5id)); }); OWN.injAt = j.updated_utc; }
+  renderAll(); renderOwnMoves(); renderAbsences();
 }
 // Since the transfer window opened. The fantasy site only publishes how many times each player was picked: it goes
 // up when he is bought and does not go down when he is sold. So:
