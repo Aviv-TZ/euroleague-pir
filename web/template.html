@@ -1846,7 +1846,7 @@ function simRender(){
     const rest = x => x.fps.slice(h).reduce((a,b)=>a+b,0);
     const q = norm(SIM.q).trim();
     let cand = (pk.isCoach ? (D.coaches||[]).filter(c=>c.fut && c.price!=null).map(c=>simItem(c.s5id))
-                           : P.filter(p=>p.s5id!=null && p.price!=null && POS3.includes(p.s5pos) && (p.ranked || (SIM.q.trim() && p.fut&&p.fut.some(v=>v)))).map(p=>simItem(p.s5id)))
+                           : P.filter(p=>p.s5id!=null && p.price!=null && POS3.includes(p.s5pos) && (p.ranked || (p.fut&&p.fut.some(v=>v)))).map(p=>simItem(p.s5id)))
       .filter(x=>x && !has.has(x.s5id) && x.price<=money+1e-9 && (club[x.team]||0)<2 && (!q || norm(x.name+' '+(x.p?x.p.name+' '+x.p.raw:x.c.raw)+' '+x.team).includes(q)));
     // any position that still leaves a legal lineup (five 1-3 G / 1-3 F / 1-2 C + bench G, F, C)
     if(!pk.isCoach) cand = cand.filter(x=> x.pos===pk.pos || lineupAt(cur.sq.map(y=>y===pk?x:y), h, null));
