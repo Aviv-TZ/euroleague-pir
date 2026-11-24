@@ -468,7 +468,8 @@ const oppText = p => p.opp ? vsTxt(p.venue, p.opp, true) : 'אין משחק במ
 
 // ---------- Live / in-round results (live.json, refreshed by the server every 10-60 min) ----------
 const LIVE = {data:null, rows:[], map:new Map(), direct:new Map(), round:M.next_round, nPlayed:0, nFinal:0, roundDone:false};
-const akey = (raw,team)=>raw+'||'+team;
+// the live feed and the season box scores sometimes spell a name differently ('ALSTON JR., DERRICK' vs 'ALSTON JR. , DERRICK')
+const akey = (raw,team)=>String(raw).toUpperCase().replace(/\s+,/g, ',').replace(/\s+/g, ' ').trim()+'||'+team;
 function rebuildLive(){
   const L = LIVE.data; LIVE.map = new Map();
   if(!L || (M.next_round && L.round!==M.next_round)) { LIVE.nPlayed=LIVE.nFinal=0; return; }
