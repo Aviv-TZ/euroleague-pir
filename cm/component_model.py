@@ -211,6 +211,37 @@ def head_to_head(cur_all, sch, R0, players):
         out += 1
     return out
 
+def absences(cur_all):
+    """Regulars (>= 3 games with the team, >= 15 minutes a game) and how their teammates did in the team's games without
+    them this season (games before his first appearance with the team count too, e.g. a returning injury).
+    Per regular: games missed in a row up to the team's last game, his averages, and the teammates whose fantasy
+    points rose the most without him (with >= 1 game each way)."""
+    c = prep(cur_all.copy()); c = c[c.phase == 'RS']
+    out = {}
+    for team, t in c.groupby('team'):
+        rounds = sorted(t['round'].unique()); last = rounds[-1]
+        for pl, x in t.groupby('player'):
+            if len(x) < 3 or x['min'].mean() < 15: continue
+            on = set(x['round']); off = [r for r in rounds if r not in on]
+            streak = 0
+            for r in reversed(rounds):
+                if r in on: break
+                streak += 1
+            mates = []
+            if off:
+                w = t[t['round'].isin(on) & (t.player != pl)]; o = t[t['round'].isin(off)]
+                nw, no = len(on), len(off)
+                for q in set(o.player) | set(w.player):
+                    a, b = w[w.player == q], o[o.player == q]
+                    if not len(b) or not len(a) or q not in set(t[t['round'] >= rounds[-3]].player): continue   # still with the team
+                    fw, fo = a.fp.sum() / nw, b.fp.sum() / no
+                    mates.append(dict(p=q, d=round(fo - fw, 1), w=round(fw, 1), o=round(fo, 1), n=int(len(b)),
+                                      mw=round(a['min'].sum() / nw, 1), mo=round(b['min'].sum() / no, 1)))
+                mates = sorted([m for m in mates if m['d'] > 0], key=lambda m: -m['d'])[:4]
+            out[f'{pl}||{team}'] = dict(streak=streak, last=int(max(on)), off=len(off), min=round(float(x['min'].mean()), 1),
+                                        fp=round(float(x.fp.mean()), 1), mates=mates)
+    return out
+
 def main(out_dir, target_round=None):
     t0 = time.time()
     train = prep(pd.read_csv(os.path.join(HERE, 'data', 'train_rows_2024_2026.csv.gz')))
@@ -266,7 +297,9 @@ def main(out_dir, target_round=None):
     bt = pd.DataFrame(bt_rows)
     try: print(f'head-to-head: {head_to_head(cur_all, sch, R0, players)} players with past games vs their next opponent', flush=True)
     except Exception as e: print('head-to-head failed:', e, flush=True)
-    out = dict(model='component', generated=time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()), rounds=rounds,
+    try: ab = absences(cur_all)
+    except Exception as e: ab = {}; print('absences failed:', e, flush=True)
+    out = dict(absences=ab, model='component', generated=time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()), rounds=rounds,
                resid=dict(lo=round(float(np.quantile(resid, .10)), 2), hi=round(float(np.quantile(resid, .90)), 2)),
                players=players, round_hits=hits_rows,
                backtest=(dict(rounds=f'{bt["round"].min()}-{bt["round"].max()}', n_rounds=len(bt),

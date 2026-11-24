@@ -441,6 +441,7 @@ export_euroleague_web <- function(output_dir, site_dir, template_file,
   s5teams <- if (!is.null(prices)) { u <- unique(prices[,c('s5team','team')]); setNames(as.list(u$team), u$s5team) } else if (!is.null(old_data)) old_data$s5teams else list()
   data <- list(meta=meta, fixtures=fixtures, players=players, round_hits=round_hits, coaches=coaches, s5teams=s5teams,
                opponents=opponents, league=league)
+  if (!is.null(CM) && length(CM$absences)) data$absences <- CM$absences     # regulars out + teammates without them
   json <- jsonlite::toJSON(data, auto_unbox=TRUE, null='null', na='null', digits=NA, pretty=FALSE)
   writeLines(json, file.path(site_dir, 'data.json'), useBytes=TRUE)
 

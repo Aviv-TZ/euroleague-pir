@@ -170,6 +170,7 @@ td.num.up{color:var(--good)} td.num.down{color:var(--bad)}
 #tops td:nth-child(3){white-space:normal;min-width:110px}
 #tops th,#tops td{padding:7px 5px}
 #tops td.pl{white-space:normal;min-width:120px}
+#absView td.pl,#absView td.absm{white-space:normal} #absView td.pl small,#absView td.num small{display:block} #absView td.absm div{margin:2px 0}
 #ownMoves td.pl{white-space:normal} #ownMoves td.pl small{display:block}
 @media(max-width:600px){ #ownMoves th,#ownMoves td{padding:6px 4px;font-size:13px} }
 /* single-model layout */
@@ -328,6 +329,7 @@ footer{color:var(--muted);font-size:12px;padding:10px 20px 30px;text-align:cente
 <main><div class="wrap">
   <section class="tab on" id="tab-top">
     <div id="tops" class="stack"></div>
+    <div id="absView"></div>
   </section>
 
   <section class="tab" id="tab-fixtures">
@@ -574,6 +576,51 @@ function actualCell(p, k){
   return `<td class="num act ${a.status}">
     <span class="badge ${a.status} sm">${a.status==='live'?'<i></i>':'✓ '}${f(a.pir,0)}</span>
     <small>מקום ${a.rank} <span class="${d>0?'down':d<0?'up':''}" title="הפרש מקומות מול הדירוג החזוי">(${dTxt})</span> · <bdi dir="ltr">${dv>=0?'+':''}${f(dv,0)}</bdi></small></td>`;
+}
+// Regulars who are out (injured on the fantasy site, or missed the team's last 2+ games) and the teammates who
+// scored more in the team's games without them this season. Evidence only: the projection itself is not changed.
+let ABS_ALL = false;
+const ABS_KEY = k => { const i = k.lastIndexOf('||'); const t = k.slice(i+2); return k.slice(0,i)+'||'+(TEAM_ALIAS[t]||t); };
+function renderAbsences(){
+  const box = $('#absView'); if(!box) return;
+  const A = D.absences; if(!A){ box.innerHTML = ''; return; }
+  const byKey = new Map(P.map(p=>[p.raw+'||'+p.team, p]));
+  const rnd = M.next_round;
+  const list = [];
+  for(const [k0, a] of Object.entries(A)){
+    const p = byKey.get(ABS_KEY(k0)); if(!p) continue;
+    if(!(p.injured || a.streak >= 2) || a.fp < 10) continue;
+    list.push({p, a});
+  }
+  list.sort((x,y)=>y.a.fp-x.a.fp);
+  if(!list.length){ box.innerHTML = ''; return; }
+  const nm = (raw, team) => { const q = byKey.get(raw+'||'+team); return q ? (q.he||q.name) : fmtRaw(raw); };
+  const status = x => [x.p.injured ? 'פצוע/חסר באתר הפנטזי' : '', x.a.streak ? `לא שיחק ${x.a.streak===1?'במשחק האחרון':`${x.a.streak} משחקים`}` : ''].filter(Boolean).join(' · ');
+  const sg = v => `<bdi dir="ltr">${v>0?'+':''}${f(v,1)}</bdi>`;
+  // who may gain: teammates who scored more without them (>= 2 games without, still healthy), best per player
+  const gain = new Map();
+  for(const x of list) for(const m of x.a.mates||[]){
+    const q = byKey.get(m.p+'||'+x.p.team); if(!q || q.injured || m.n < 2 || m.d < 3) continue;
+    const g = gain.get(q.id);
+    if(!g || m.d > g.m.d) gain.set(q.id, {q, m, who:[...(g?g.who:[]), x.p]}); else g.who.push(x.p);
+  }
+  const G = [...gain.values()].sort((a,b)=>b.m.d-a.m.d).slice(0,12);
+  box.innerHTML = `<div class="card" style="margin-top:16px"><h2>חסרים לקראת מחזור ${rnd??''}</h2>
+    <div class="hint">שחקנים קבועים (3+ משחקים, 15+ דקות בממוצע, 10+ נקודות פנטזי) שמסומנים פצועים באתר הפנטזי או שלא שיחקו ב-2 המשחקים האחרונים של הקבוצה. "בלעדיו" = ממוצע הפנטזי של חברי הקבוצה במשחקים העונה שבהם הוא לא שיחק, מול המשחקים שבהם שיחק (כולל 0 כשלא שיחקו). לא משנה את הצפי – בבדיקה על עונות קודמות התאמה אוטומטית של הצפי לא שיפרה אותו.</div>
+    <div class="scroll"><table><thead><tr><th>שחקן</th><th class="num">ממוצע</th><th>מי קיבל יותר בלעדיו</th></tr></thead><tbody>
+    ${(ABS_ALL?list:list.slice(0,10)).map(x=>`<tr><td class="pl" data-id="${x.p.id}"><b>${esc(x.p.he||x.p.name)}</b><small>${tName(x.p.team)} · ${x.p.pos_he}</small><small style="color:#e5484d">${status(x)}</small></td>
+      <td class="num">${f(x.a.fp,1)}<small>${f(x.a.min,0)} דק׳</small></td>
+      <td class="absm">${(x.a.mates||[]).slice(0,3).map(m=>`<div>${esc(nm(m.p, x.p.team))} <b style="color:var(--good)">${sg(m.d)}</b> <small>(${f(m.w,0)}→${f(m.o,0)}, ${m.n} מש׳)</small></div>`).join('') || '<small>עוד אין משחקים בלעדיו</small>'}</td></tr>`).join('')}
+    </tbody></table></div>
+    ${list.length>10?`<button class="btn ghost sm" id="absAll" style="margin-top:8px">${ABS_ALL?'הצג רק 10':`הצג את כל ${list.length}`}</button>`:''}
+    ${G.length?`<h3 style="margin-top:18px">מי יכול להרוויח במחזור ${rnd??''}</h3>
+    <div class="scroll"><table><thead><tr><th>שחקן</th><th class="num">איתו → בלעדיו</th><th class="num">צפי ${rnd??''}</th><th class="num col-price">מחיר</th></tr></thead><tbody>
+    ${G.map(g=>`<tr><td class="pl" data-id="${g.q.id}"><b>${esc(g.q.he||g.q.name)}</b><small>${tName(g.q.team)} · ${g.q.pos_he}</small><small>בלי ${g.who.map(w=>esc(w.he||w.name)).join(', ')}</small></td>
+      <td class="num">${f(g.m.w,1)} → <b style="color:var(--good)">${f(g.m.o,1)}</b><small>${g.m.n} משחקים</small></td>
+      <td class="num">${g.q.ranked?f(g.q.m[1].pir,1):'–'}</td><td class="num col-price">${g.q.price!=null?f(g.q.price,0)+'M':'–'}</td></tr>`).join('')}</tbody></table></div>`:''}
+  </div>`;
+  box.querySelectorAll('td.pl[data-id]').forEach(el=>el.onclick=()=>openPlayer(+el.dataset.id));
+  const ab = $('#absAll'); if(ab) ab.onclick = ()=>{ ABS_ALL = !ABS_ALL; renderAbsences(); };
 }
 function renderTops(){
   $('#tops').innerHTML = MODELS.map(m=>{
@@ -2351,7 +2398,7 @@ function renderAll(){
   const ae = document.activeElement;   // do not rebuild the search area while the user is typing
   if(!(ae && ae.tagName==='INPUT' && $('#tab-search').contains(ae))) renderPlayer();
 }
-updateSubline(); renderTops(); renderFixtures(); renderOpp(); renderFdr(); renderBuilder(); renderSquad(); renderMyTeam(); readHash(); renderPlayer();
+updateSubline(); renderTops(); renderAbsences(); renderFixtures(); renderOpp(); renderFdr(); renderBuilder(); renderSquad(); renderMyTeam(); readHash(); renderPlayer();
 { const sv = mtSaved(); if(sv.name && location.protocol!=='file:') mtLookup(sv.name, sv.id || null); }
 setInterval(()=>{ if(MT.data && MT.data.team && !MT.loading) mtLookup(MT.data.team.name, MT.data.team.userId, true); }, 15*60e3);
 loadLive().then(()=>{ pollDirect(); loadNext(); loadPrev(); renderOwnMoves(); }); loadOwn();
