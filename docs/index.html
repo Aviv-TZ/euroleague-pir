@@ -1720,7 +1720,8 @@ function simBuild(useMoves=true){
       const o = coach && coach.s5id===m.out ? coach : sq.find(x=>x.s5id===m.out);
       const i = simItem(m.in);
       const has = id => sq.some(x=>x.s5id===id) || (coach && coach.s5id===id);
-      if(!o || !i || has(m.in) || (!!o.isCoach !== !!i.isCoach)){ bad.push(m); continue; }
+      const why = !o ? (moves.some(x=>x.r<r && x.out===m.out) ? 'sold' : 'gone') : !i ? 'unknown' : has(m.in) ? 'has' : (!!o.isCoach !== !!i.isCoach) ? 'kind' : '';
+      if(why){ bad.push({...m, why}); continue; }
       if(o.isCoach) coach = i; else { sq = sq.map(x=>x===o?i:x); L = luMove(L, sq, o, i, h); }
       bank += o.price - i.price; done.push({...m, o, i});
     }
@@ -1808,7 +1809,7 @@ function simRender(){
   const sg = v => `<bdi dir="ltr">${v>0.05?'+':''}${f(v,1)}</bdi>`;
   const ph = {Guard:'ג',Forward:'פ',Center:'ס',Coach:'מאמן'};
   const W = MT.win || {};
-  const tabs = R.map(x=>`<button data-sr="${x.r}" class="${x.r===SIM.r?'on':''}" style="flex:1 1 17%;padding:6px 4px">מחזור ${x.r}<small style="display:block;font-weight:400">${f(x.tot,0)}${x.done.length?` · ${x.done.length}⇄`:''}${[1,3,4,2].some(id=>chipOn(C,id,x.r))?' · ★':''}${x.bad.length||x.over.length||x.done.length>x.limit?' ⚠':''}</small></button>`).join('');
+  const tabs = R.map(x=>`<button data-sr="${x.r}" class="${x.r===SIM.r?'on':''}" style="flex:1 1 17%;padding:6px 4px">מחזור ${x.r}<small style="display:block;font-weight:400">${f(x.tot,0)}${x.done.length?` · ${x.done.length}⇄`:''}${[1,3,4,2].some(id=>chipOn(C,id,x.r))?' · ★':''}${x.bad.length||x.over.length||x.done.length>x.limit||x.luBad||x.bank<-1e-9?' ⚠':''}</small></button>`).join('');
   const chipBtn = id => { const c = C[id], nm = id===2 ? `${(W.round&&W.round.subsBonus)||9} ${CHIP_NM[2]}` : CHIP_NM[id];
     if(c.used) return `<span class="bon used">${nm}: נוצל</span>`;
     if(c.fixed) return c.r===cur.r ? `<span class="bon on">${nm}: מופעל באתר</span>` : '';
@@ -1875,7 +1876,10 @@ function simRender(){
         : '<div class="empty">אין מחליף מתאים בתקציב (או שכבר יש 2 מאותה קבוצה)</div>'}</div>`;
   }
   const warn = [
-    cur.bad.length ? `${cur.bad.length} ${cur.bad.length===1?'חילוף שמור לא תקף':'חילופים שמורים לא תקפים'} (השחקן כבר לא בסגל) – לא נספרו` : '',
+    ...cur.bad.map(m=>{ const nm = id => { const x = byS5.get(id) || (D.coaches||[]).find(c=>c.s5id===id); return x ? esc(x.he||x.name||x.raw) : String(id); };
+      const why = {sold:`${nm(m.out)} כבר יצא מהסגל בחילוף במחזור קודם בסימולטור`, gone:`${nm(m.out)} כבר לא בסגל שלך (הסגל באתר הפנטזי השתנה מאז ששמרת)`,
+                   has:`${nm(m.in)} כבר בסגל`, kind:'שחקן במקום מאמן', unknown:`${nm(m.in)} לא נמצא ברשימת השחקנים`}[m.why] || '';
+      return `חילוף שמור לא נספר: ${nm(m.out)} ➜ ${nm(m.in)} – ${why} <button class="btn ghost sm" data-delbad="${m.r}|${m.out}|${m.in}">מחק</button>`; }),
     cur.bank < -1e-9 ? `חריגה מהתקציב (<bdi dir="ltr">${f(cur.bank,0)}M</bdi>)` : '',
     cur.done.length > cur.limit ? `יותר חילופים (${cur.done.length}) ממה שמותר במחזור (${cur.limit})` : '',
     cur.luStale ? 'שינוי ההרכב ששמרת למחזור הזה כבר לא מתאים לסגל – נשאר ההרכב הקודם' : '',
@@ -1891,7 +1895,7 @@ function simRender(){
       <div class="kpi"><span>חילופים במחזור</span><b>${cur.done.length}/${cur.limit}</b><small>בקופה: <bdi dir="ltr">${f(cur.bank,0)}M</bdi></small></div>
       <div class="kpi"><span>סה"כ ${RO[0]}–${RO[RO.length-1]}</span><b>${f(sumR,1)}</b><small>בלי שום חילוף: ${f(sumB,1)} (${sg(sumR-sumB)} מכל החילופים)</small></div></div>
     <div class="bons" id="simChips">בונוסים למחזור ${cur.r}: ${[1,3,4,2].map(chipBtn).join('')}</div>
-    ${warn.length?`<div class="warn">${warn.join(' · ')}</div>`:''}
+    ${warn.length?`<div class="warn">${warn.map(w=>`<div style="margin:3px 0">${w}</div>`).join('')}</div>`:''}
     ${cur.done.length?`<div class="note" style="margin:8px 0">${cur.done.map(m=>`<div><span class="out">⬅ ${esc(m.o.name)} <small>(${ph[m.o.pos]}, ${f(m.o.fps[h],1)})</small></span> <span class="in">➜ ${esc(m.i.name)} <small>(${f(m.i.price,0)}M, ${f(m.i.fps[h],1)})</small></span> <button class="btn ghost sm" data-undo="${m.in}">ביטול</button></div>`).join('')}</div>`:''}
     ${cur.edited&&cur.luPrev?`<div class="note" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:8px 0">שינית את ההרכב או הקפטן ממחזור ${cur.r}: ${(()=>{ const d = lu.v - cur.luPrev.v;
       return `<b class="${d>0.05?'up':d<-0.05?'down':''}">${sg(d)}</b> נקודות במחזור הזה לעומת ההרכב הקודם (${f(cur.luPrev.v+(cur.coach?cur.coach.fps[h]:0),1)})`; })()}<button class="btn ghost sm" data-luauto="1">↺ ביטול שינויי ההרכב</button></div>`:''}
@@ -1922,6 +1926,8 @@ function simRender(){
   box.querySelectorAll('#simTabs button').forEach(b=>b.onclick=()=>{ SIM.r = +b.dataset.sr; SIM.pick = null; simRender(); });
   box.querySelectorAll('[data-sim]').forEach(el=>el.onclick=e=>{ e.stopPropagation(); SIM.pick = +el.dataset.sim; SIM.q=''; simRender();
     const p = $('#simBox .simpick'); if(p) p.scrollIntoView({behavior:'smooth', block:'nearest'}); });
+  box.querySelectorAll('[data-delbad]').forEach(b=>b.onclick=()=>{ const [r,o,i] = b.dataset.delbad.split('|').map(Number), s = simLoad();
+    s.moves = (s.moves||[]).filter(m=>!(m.r===r && m.out===o && m.in===i)); simSave(s); simRender(); });
   box.querySelectorAll('[data-undo]').forEach(b=>b.onclick=()=>{ const m = cur.done.find(x=>x.in===+b.dataset.undo); if(m){ simMove(cur.r, m.in, m.out); simRender(); } });
   box.querySelectorAll('[data-chip]').forEach(b=>b.onclick=()=>{ const id = +b.dataset.chip, s = simLoad(); s.chips = s.chips || {};
     if(s.chips[id]===cur.r) delete s.chips[id]; else s.chips[id] = cur.r; simSave(s); simRender(); });
