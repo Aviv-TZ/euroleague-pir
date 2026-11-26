@@ -53,16 +53,19 @@ def upcoming_lines():
     """Current point spread of every upcoming fixture of both leagues (one request: one bookmaker, both tournaments),
     written in the sites' own team names: docs/coach_lines.json {league: [{home, away, start, margin_home}]}."""
     import re, unicodedata
-    R = []
-    for tid in LEAGUES.values():          # one tournament per call (a call with both answered 404); Pinnacle, else bet365
-        for bk in (BOOKS[0], 'bet365'):
-            x = call('odds-by-tournaments', wait=1.2, tournamentIds=str(tid), bookmaker=bk)
-            if isinstance(x, dict): x = x.get('data') or []
-            if x:
-                for f in x: f['_book'] = bk
-                R += x; break
     el = json.load(open(os.path.join(ROOT, 'docs', 'data.json')))
     wl = json.load(open(os.path.join(ROOT, 'docs', 'winner', 'data.json')))
+    # the bookmakers list a game only in its last days: ask (1 request) only for a league with a game in the next 3 days
+    import calendar
+    soon = lambda D: any(0 < (calendar.timegm(time.strptime(f['utc'][:19], '%Y-%m-%dT%H:%M:%S')) - time.time()) < 3 * 86400
+                         for f in D.get('fixtures') or [] if f.get('utc'))
+    R = []
+    for lg, D in (('euroleague', el), ('israel', wl)):
+        if not soon(D): print(f'{lg}: no game in the next 3 days, not asked', flush=True); continue
+        x = call('odds-by-tournaments', wait=1.2, tournamentIds=str(LEAGUES[lg]), bookmaker=BOOKS[0])
+        if isinstance(x, dict): x = x.get('data') or []
+        for f in x or []: f['_book'] = BOOKS[0]
+        R += x or []
     toks = lambda x: {w for w in re.sub(r'[^a-z0-9 ]', ' ', unicodedata.normalize('NFKD', str(x)).encode('ascii', 'ignore').decode().lower()).split()
                       if len(w) > 2 and w not in ('basket', 'basketball', 'club', 'the')}
     el_teams = sorted({f[k] for f in el.get('fixtures') or [] for k in ('home', 'away')} | {c['team'] for c in el.get('coaches') or []})
