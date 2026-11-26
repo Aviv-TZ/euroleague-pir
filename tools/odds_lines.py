@@ -103,6 +103,14 @@ def upcoming_lines():
         h, a = name(lg, f.get('participant1Name') or u.get('team1')), name(lg, f.get('participant2Name') or u.get('team2'))
         if best and h and a:
             out['euroleague' if lg == 'euroleague' else 'winner'].append(dict(home=h, away=a, start=f.get('startTime'), margin_home=best[1]))
+    # a league not asked this run (or with no answer) keeps its earlier lines of games not played yet
+    try:
+        with open(os.path.join(ROOT, 'docs', 'coach_lines.json')) as fh: old = json.load(fh)
+    except Exception: old = {}
+    nowz = time.strftime('%Y-%m-%dT%H:%M:%S', time.gmtime())
+    for k in ('euroleague', 'winner'):
+        have = {(x['home'], x['away']) for x in out[k]}
+        out[k] += [x for x in old.get(k) or [] if (x['home'], x['away']) not in have and str(x.get('start', ''))[:19] > nowz]
     out['updated_utc'] = time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())
     with open(os.path.join(ROOT, 'docs', 'coach_lines.json'), 'w', encoding='utf-8') as fh: json.dump(out, fh, ensure_ascii=False)
     print('upcoming lines:', {k: len(v) for k, v in out.items() if k != 'updated_utc'}, '| fixtures answered', len(R), 'named', sum(1 for f in R if f.get('participant1Name') or f.get('fixtureId') in UP), flush=True)
