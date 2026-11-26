@@ -336,9 +336,16 @@ def write_live(sch, cur, R0, now, label):
              for _, g in sch.sort_values('utc').iterrows()
              if not ((g.fr is None or g.fr != g.fr) and g['round'] >= min(label.values()))]   # played before the fantasy game began, ahead of its round
     games = [x for x in sched if x['round'] == R0]
-    rr = cur[cur.game.isin([int(x['game']) for x in games])].sort_values('fp', ascending=False)
-    actual = [dict(raw=x.player, team=x.team, opp=x.opp, game=str(x.game), pir=int(x.fp), min=round(float(x['min']), 1), status='final',
-                   rank=int((rr.fp > x.fp).sum()) + 1) for _, x in rr.iterrows()]
+    # points this fantasy round: a team with two games that week gets both added up (only for the round's score;
+    # the model itself always works game by game)
+    rr = cur[cur.game.isin([int(x['game']) for x in games])].sort_values('utc' if 'utc' in cur else 'game')
+    ag = rr.groupby(['player', 'team']).agg(fp=('fp', 'sum'), min=('min', 'sum'), opp=('opp', 'last'), game=('game', 'last'), n=('fp', 'size')).reset_index()
+    team_n = {t: sum(1 for g in games if t in (g['home'], g['away'])) for t in set(ag.team)}
+    team_done = {t: sum(1 for g in games if t in (g['home'], g['away']) and g['status'] == 'final') for t in set(ag.team)}
+    ag = ag.sort_values('fp', ascending=False)
+    actual = [dict(raw=x.player, team=x.team, opp=x.opp, game=str(x.game), pir=int(x.fp), min=round(float(x['min']), 1),
+                   status='final' if team_done[x.team] >= team_n[x.team] else 'live', games=int(x.n),
+                   rank=int((ag.fp > x.fp).sum()) + 1) for _, x in ag.iterrows()]
     nxt = {}
     for x in sched:
         if x['status'] == 'final': continue
