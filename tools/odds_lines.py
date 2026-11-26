@@ -60,8 +60,8 @@ def upcoming_lines():
     soon = lambda D: any(0 < (calendar.timegm(time.strptime(f['utc'][:19], '%Y-%m-%dT%H:%M:%S')) - time.time()) < 3 * 86400
                          for f in D.get('fixtures') or [] if f.get('utc'))
     R = []
-    for lg, D in (('euroleague', el), ('israel', wl)):
-        if not soon(D) and '--any' not in sys.argv: print(f'{lg}: no game in the next 3 days, not asked', flush=True); continue
+    for lg, LD in (('euroleague', el), ('israel', wl)):
+        if not soon(LD) and '--any' not in sys.argv: print(f'{lg}: no game in the next 3 days, not asked', flush=True); continue
         for bk in ('pinnacle+30', '1xbet'):   # Pinnacle opens a game only a day or two ahead; 1xbet days earlier
             x = call('odds-by-tournaments', wait=1.2, tournamentIds=str(LEAGUES[lg]), bookmaker=bk)
             if isinstance(x, dict): x = x.get('data') or []
@@ -87,7 +87,6 @@ def upcoming_lines():
     try:
         with open(os.path.join(D, 'upcoming.csv')) as fh: UP = {r['fixtureId']: r for r in csv.DictReader(fh)}
     except Exception: UP = {}
-    for f in R: print('  answered', f.get('fixtureId'), f.get('tournamentId'), f.get('startTime'), f.get('statusId'), f.get('participant1Id'), f.get('participant2Id'), f.get('_book'), flush=True)
     out = {'euroleague': [], 'winner': []}
     for f in R:
         lg = lg_of.get(f.get('tournamentId')); bk = ((f.get('bookmakerOdds') or {}).get(f.get('_book', BOOKS[0])) or {})
