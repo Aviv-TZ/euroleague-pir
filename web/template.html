@@ -2404,6 +2404,7 @@ function compareTable(ps){
   h += row('יריבה במחזור', p=>p.opp?vsTxt(p.venue, p.opp, true)+dblTag(p):'אין משחק');
   h += row('תאריך', p=>fmtShortDate(p.date)||'–');
   if(ps.some(nextGameOf)) h += row('המשחק הבא', p=>{ const n = nextGameOf(p); return n ? nextGameTxt(n) : '–'; });
+  h += row('מחיר פנטזי', p=>p.price!=null?`${f(p.price,0)}M`:'–');
   h += row('משחקים', p=>p.games, {d:0});
   h += row('% אחזקה בפנטזי', p=>ownPct(p), {d:1});
   h += row('פנטזי ממוצע עונה', p=>p.avg, {best:'max'});
