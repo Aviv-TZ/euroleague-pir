@@ -2160,7 +2160,8 @@ function makeSearch(container, placeholder, onPick, getExclude){
 
 // ---------- Search by position(s) and max price ----------
 const vfm = p => p.price ? p.m[1].pir / p.price : 0;   // value for money: projected points per 1M
-const FILT = {pos:new Set(['Guard','Forward','Center']), max:17, injured:true, sort:'pir'};   // sort: pir | vfm | price
+const PMAX = Math.max(5, ...P.filter(p=>p.price!=null).map(p=>Math.ceil(p.price)));   // the dearest player on the fantasy site (17 EuroLeague, 18 Winner League)
+const FILT = {pos:new Set(['Guard','Forward','Center']), max:PMAX, injured:true, sort:'pir'};   // sort: pir | vfm | price
 function renderFilter(){
   const box = $('#filterView'); if(!box) return;
   const posHe = {Guard:'גארד', Forward:'פורוורד', Center:'סנטר'};
@@ -2172,7 +2173,7 @@ function renderFilter(){
   const head = `<div class="fctl">
       <div class="seg" id="fPos">${Object.entries(posHe).map(([k,h])=>`<button data-p="${k}" class="${FILT.pos.has(k)?'on':''}">${h}</button>`).join('')}</div>
       <label>עד מחיר: <b id="fMaxLbl">${f(FILT.max,0)}M</b>
-        <input type="range" id="fMax" min="5" max="17" step="1" value="${FILT.max}"></label>
+        <input type="range" id="fMax" min="5" max="${PMAX}" step="1" value="${FILT.max}"></label>
       <label class="chk"><input type="checkbox" id="fInj" ${FILT.injured?'checked':''}> בלי פצועים / מי שלא שיחק ב-3 האחרונים</label>
       <span class="note">${list.length} שחקנים · לחיצה על מחיר / צפי / נק׳ למיליון ממיינת</span></div>`;
   // phones: position and opponent move into the player's second line, so the row fits without scrolling

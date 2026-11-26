@@ -176,6 +176,33 @@ def fantasy_rounds(sch, S5):
     sch['frl'] = sch.fr.map(lab)
     return sch
 
+# ---------------- player photos (the league administration site's player page, og:image) ----------------
+PHOTOS = os.path.join(ROOT, 'cm', 'data', 'wl_photos.json')
+def photos(allbox, keys, budget=400):
+    """{normalized name: photo url}. Each player's league id from his latest box score; a page is fetched once
+    (entries without a photo are retried after a week)."""
+    try:
+        with open(PHOTOS) as fh: P = json.load(fh)
+    except Exception: P = {}
+    b = allbox.sort_values(['season', 'game_id']).assign(k=lambda z: z.name.map(nn))
+    pid = dict(zip(b.k, b.player_id.astype(int).astype(str)))
+    today = time.strftime('%Y-%m-%d'); n = 0
+    for k in keys:
+        i = pid.get(k)
+        if not i or n >= budget: continue
+        e = P.get(i)
+        if e and (e.get('img') or e.get('t', '') > time.strftime('%Y-%m-%d', time.gmtime(time.time() - 7 * 86400))): continue
+        s = get(f'https://basket.co.il/player.asp?PlayerId={i}', text=True); n += 1; time.sleep(0.6)
+        if not s: continue
+        m = re.search(r'og:image"\s+content="([^"]*)"', s)
+        u = (m.group(1) if m else '').replace('basket.co.il//', 'basket.co.il/')
+        P[i] = dict(img=u if re.search(r'\.(jpe?g|png|webp)$', u, re.I) and 'default_player' not in u else '', t=today)
+    for e in P.values():
+        if 'default_player' in e.get('img', ''): e['img'] = ''
+    with open(PHOTOS, 'w', encoding='utf-8') as fh: json.dump(P, fh, ensure_ascii=False, indent=0, sort_keys=True)
+    print(f'photos: {n} pages fetched, {sum(1 for k in keys if (P.get(pid.get(k, "")) or {}).get("img"))}/{len(keys)} players with a photo', flush=True)
+    return {k: P[pid[k]]['img'] for k in keys if k in pid and (P.get(pid[k]) or {}).get('img')}
+
 def main():
     t0 = time.time()
     sch = schedule()
@@ -262,6 +289,11 @@ def main():
                             date=nxt[2].utc.strftime('%Y-%m-%d') if nxt else None, games_in_round=len(ng), ranked=reason is None, reason=reason,
                             fut=fut, price=int(p.price), s5id=int(p.s5id), s5pos=ppos, injured=bool(p.injured), out3=out3, cm=cmx,
                             **({'g0': g0} if len(g0) > 1 else {})))
+    try:
+        ph = photos(allbox, [x['raw'] for x in players])
+        for x in players:
+            if x['raw'] in ph: x['img'] = ph[x['raw']]
+    except Exception as e: print('photos failed:', e, flush=True)
     ranked = sorted([x for x in players if x['ranked']], key=lambda x: -x['fut'][0])
     resid_lo, resid_hi = -12.0, 14.0
     for i, x in enumerate(ranked):

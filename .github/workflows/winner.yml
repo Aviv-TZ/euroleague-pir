@@ -34,7 +34,7 @@ jobs:
           python3 tools/winner.py
           git config user.name  "el-bot"
           git config user.email "el-bot@users.noreply.github.com"
-          git add docs/winner
+          git add docs/winner cm/data/wl_photos.json
           if git diff --cached --quiet; then echo "Nothing new"; exit 0; fi
           git commit -q -m "Winner League page $(date -u +%Y-%m-%dT%H:%MZ)"
           for i in 1 2 3 4; do
