@@ -61,7 +61,7 @@ def upcoming_lines():
                          for f in D.get('fixtures') or [] if f.get('utc'))
     R = []
     for lg, D in (('euroleague', el), ('israel', wl)):
-        if not soon(D): print(f'{lg}: no game in the next 3 days, not asked', flush=True); continue
+        if not soon(D) and '--any' not in sys.argv: print(f'{lg}: no game in the next 3 days, not asked', flush=True); continue
         for bk in ('pinnacle+30', '1xbet'):   # Pinnacle opens a game only a day or two ahead; 1xbet days earlier
             x = call('odds-by-tournaments', wait=1.2, tournamentIds=str(LEAGUES[lg]), bookmaker=bk)
             if isinstance(x, dict): x = x.get('data') or []
