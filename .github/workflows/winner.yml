@@ -1,0 +1,45 @@
+name: Winner League page
+
+# docs/winner/: new box scores from basket.co.il, players / prices / injuries from the fantasy site, projections.
+# Every 3 hours, and hourly on the evenings games are played (Israel time ~ 17:00-23:00 UTC+2/3).
+on:
+  schedule:
+    - cron: '23 */3 * * *'
+    - cron: '53 17-22 * * 0,1,2,3,4,6'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: el-winner
+  cancel-in-progress: false
+
+jobs:
+  winner:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Cache the league site's game pages
+        uses: actions/cache@v4
+        with:
+          path: cm/.wl_cache
+          key: wlcache-${{ github.run_id }}
+          restore-keys: wlcache-
+      - name: Python packages
+        run: python3 -m pip install --user --quiet pandas numpy
+      - name: Build docs/winner
+        run: |
+          python3 tools/winner.py
+          git config user.name  "el-bot"
+          git config user.email "el-bot@users.noreply.github.com"
+          git add docs/winner
+          if git diff --cached --quiet; then echo "Nothing new"; exit 0; fi
+          git commit -q -m "Winner League page $(date -u +%Y-%m-%dT%H:%MZ)"
+          for i in 1 2 3 4; do
+            if git pull -q --rebase -X theirs origin main && git push -q; then echo "Published"; exit 0; fi
+            git rebase --abort 2>/dev/null || true
+            sleep $((5 * i))
+          done
+          echo "Publish failed"; exit 1

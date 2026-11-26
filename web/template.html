@@ -18,6 +18,7 @@ h1{margin:0;font-size:24px;display:flex;align-items:center;gap:10px}
 h1 .ball{width:26px;height:26px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#ffb066,#ff7a00 60%,#c95400);box-shadow:0 0 0 2px #0003 inset}
 .sub{color:var(--muted);font-size:13px;margin-top:6px}
 nav{display:flex;gap:4px;margin-top:16px;flex-wrap:wrap}
+.lswitch{display:inline-block;margin-top:6px;font-size:13px;font-weight:600;color:var(--accent);text-decoration:none;border:1px solid var(--line);border-radius:999px;padding:3px 12px}
 nav button{background:none;border:none;color:var(--muted);font:inherit;font-weight:600;padding:10px 16px;border-radius:10px 10px 0 0;cursor:pointer}
 nav button.on{background:var(--bg);color:var(--text);box-shadow:inset 0 3px 0 var(--accent)}
 main{padding:20px}
@@ -315,6 +316,7 @@ footer{color:var(--muted);font-size:12px;padding:10px 20px 30px;text-align:cente
 <body>
 <header><div class="wrap">
   <h1><span class="ball"></span>יורוליג 2026/27 · דירוג ותחזית נקודות פנטזי</h1>
+  <a class="lswitch" id="leagueSwitch" href="winner/">לעבור לליגת ווינר סל ›</a>
   <div class="sub" id="subline"></div>
   <nav>
     <button data-tab="top" class="on">טופ 15</button>
@@ -362,6 +364,9 @@ footer{color:var(--muted);font-size:12px;padding:10px 20px 30px;text-align:cente
 
 <script>
 const EL_DATA = /*__EL_DATA__*/null;
+// which league this page is: the EuroLeague site (docs/) or the Winner League one (docs/winner/, built by tools/winner.py)
+const SITE = /*__SITE__*/null || {league:'euroleague', dir:'docs', live:true, myteam:true};
+const LEAGUE_HE = SITE.league==='winner' ? 'ליגת ווינר סל' : 'יורוליג';
 (async function(){
 // Club renames in the EuroLeague data (applied retroactively by the source): every file the page reads is
 // mapped to the current name, so data computed before and after a rename still match.
@@ -380,7 +385,7 @@ const MODELS = [
   M.model==='component' ? {k:1, cls:'m2', name:'מודל מרכיבים', long:'תחזית · מודל מרכיבים', color:'var(--m2)'}
                          : {k:1, cls:'m2', name:'מודל 2', long:'תחזית · מודל 2 (Walk-forward)', color:'var(--m2)'}
 ];
-const W = [M.weights.m1, M.weights.m2];
+const W = M.weights ? [M.weights.m1, M.weights.m2] : [{}, {}];
 const CMP_COLORS = ['#ff8a1f','#4fa3ff','#2ec4a0','#d17bff'];
 const $ = (s,el=document)=>el.querySelector(s);
 const esc = s => String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -444,6 +449,9 @@ function tidyHints(){
 }
 new MutationObserver(()=>tidyHints()).observe(document.querySelector('main'), {childList:true, subtree:true});
 
+// ---------- league switch / tabs this league has ----------
+if(SITE.league==='winner'){ const a = document.getElementById('leagueSwitch'); if(a){ a.href = '../'; a.textContent = 'לעבור ליורוליג ›'; } }
+if(!SITE.myteam){ document.querySelectorAll('nav button[data-tab="myteam"], #tab-myteam').forEach(el=>el.remove()); }
 // ---------- tabs ----------
 function showTab(t){
   document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.tab===t));
@@ -460,7 +468,7 @@ const TSHORT = {'Besiktas Fuzul Istanbul':'Besiktas','Anadolu Efes Istanbul':'Ef
   'Kosner Baskonia Vitoria-Gasteiz':'Baskonia','LDLC ASVEL Villeurbanne':'ASVEL','Maccabi Rapyd Tel Aviv':'Maccabi TA','Olympiacos Piraeus':'Olympiacos',
   'Panathinaikos AKTOR Athens':'Panathinaikos','Paris Basketball':'Paris','Partizan Mozzart Bet Belgrade':'Partizan','Real Madrid':'Real Madrid',
   'Valencia Basket':'Valencia','Virtus Bologna':'Virtus','Zalgiris Kaunas':'Zalgiris'};
-const tShort = t => TSHORT[t] || String(t||'').split(' ')[0];
+const tShort = t => ((typeof D!=='undefined' && D.meta && D.meta.team_short) || {})[t] || TSHORT[t] || String(t||'').split(' ')[0];
 const tName = t => `<span class="tl">${esc(t)}</span><span class="ts">${esc(tShort(t))}</span>`;   // long on desktop, short on mobile
 // opponent with the venue: "Bayern (H)" = home game, "Bayern (A)" = away; isolated LTR so Hebrew text around it stays tidy
 const vsTxt = (venue, team, long=false) => `<bdi dir="ltr">${long ? tName(team) : esc(tShort(team))} (${venue==='Home'?'H':'A'})</bdi>`;   // HTML
@@ -516,7 +524,7 @@ async function loadLive(){
     const own = location.hostname.endsWith('.github.io') ? location.hostname.split('.')[0] : null;
     const repo = own ? location.pathname.split('/').filter(Boolean)[0] : null;
     const [a, b] = await Promise.all([get('live.json?t='+Date.now()),
-      own && repo ? get(`https://raw.githubusercontent.com/${own}/${repo}/main/docs/live.json?t=${Date.now()}`) : null]);
+      own && repo ? get(`https://raw.githubusercontent.com/${own}/${repo}/main/${SITE.dir}/live.json?t=${Date.now()}`) : null]);
     const j = canonTeams([a, b].filter(x=>x && x.updated_utc).sort((x,y)=>y.updated_utc.localeCompare(x.updated_utc))[0]);
     if(!j) return;
     if(LIVE.data && j.updated_utc===LIVE.data.updated_utc) return;
@@ -540,7 +548,7 @@ function fpLine(st){
 }
 let directBlocked = false;
 async function pollDirect(){
-  if(directBlocked || !LIVE.data) return;
+  if(directBlocked || !LIVE.data || SITE.league!=='euroleague') return;   // the EuroLeague's live feed only
   const now = Date.now();
   const games = (LIVE.data.games||[]).filter(g=>g.status!=='final' && g.utc &&
     now >= Date.parse(g.utc) && now <= Date.parse(g.utc)+3.5*3600e3);
@@ -612,7 +620,7 @@ function renderAbsences(){
         <small>עמדה סמוכה:</small><div>${watch(x, ADJ[x.p.pos]||[], 3)}</div></td></tr>`).join('')}
     </tbody></table></div>
     ${list.length>12?`<button class="btn ghost sm" id="absAll" style="margin-top:8px">${ABS_ALL?'הצג פחות':`הצג את כל ${list.length}`}</button>`:''}
-    ${quiet.length?`<div class="note" style="margin-top:10px">לא שיחקו ב-2–4 המשחקים האחרונים ביורוליג אבל לא מסומנים פצועים באתר הפנטזי (מנוחה, ליגה מקומית או החלטת מאמן): ${quiet.map(x=>`<span class="pl absw" data-id="${x.p.id}">${esc(x.p.he||x.p.name)}</span> <small>(${tName(x.p.team)}, ${x.a.streak})</small>`).join(' · ')}</div>`:''}</div>`;
+    ${quiet.length?`<div class="note" style="margin-top:10px">לא שיחקו ב-2–4 המשחקים האחרונים ב${LEAGUE_HE} אבל לא מסומנים פצועים באתר הפנטזי (מנוחה, ליגה מקומית או החלטת מאמן): ${quiet.map(x=>`<span class="pl absw" data-id="${x.p.id}">${esc(x.p.he||x.p.name)}</span> <small>(${tName(x.p.team)}, ${x.a.streak})</small>`).join(' · ')}</div>`:''}</div>`;
   box.querySelectorAll('[data-id]').forEach(el=>el.onclick=()=>openPlayer(+el.dataset.id));
   const ab = $('#absAll'); if(ab) ab.onclick = ()=>{ ABS_ALL = !ABS_ALL; renderAbsences(); };
 }
@@ -836,7 +844,7 @@ let fdrSort = 'avg', fdrDir = 1;   // sort: 'avg' | 'team' | a round number; dir
 const ABBR = {Efes:'EFS', Milan:'MIL', Besiktas:'BJK', Zvezda:'CZV', Dubai:'DUB', Barcelona:'BAR', Bayern:'BAY', Fenerbahce:'FEN',
   'Hapoel TA':'HTA', Baskonia:'BKN', ASVEL:'ASV', 'Maccabi TA':'MTA', Olympiacos:'OLY', Panathinaikos:'PAO', Paris:'PRS',
   Partizan:'PAR', 'Real Madrid':'RMB', Valencia:'VAL', Virtus:'VIR', Zalgiris:'ZAL', Monaco:'MCO'};
-const tAbbr = t => ABBR[tShort(t)] || tShort(t).slice(0,3).toUpperCase();
+const tAbbr = t => ((D.meta && D.meta.team_abbr) || {})[t] || ABBR[tShort(t)] || tShort(t).slice(0,3).toUpperCase();
 const tFd = t => `<span class="tl">${esc(tShort(t))}</span><span class="ts">${esc(tAbbr(t))}</span>`;
 function renderFdr(){
   const box = $('#fdrView'); if(!box) return;
@@ -1133,7 +1141,7 @@ async function loadNext(){
   const own = location.hostname.endsWith('.github.io') ? location.hostname.split('.')[0] : null;
   const repo = own ? location.pathname.split('/').filter(Boolean)[0] : null;
   const [a, b] = await Promise.all([get('next.json?t='+Date.now()),
-    own && repo ? get(`https://raw.githubusercontent.com/${own}/${repo}/main/docs/next.json?t=${Date.now()}`) : null]);
+    own && repo ? get(`https://raw.githubusercontent.com/${own}/${repo}/main/${SITE.dir}/next.json?t=${Date.now()}`) : null]);
   const j = canonTeams([a, b].filter(x=>x && x.round===NR()).sort((x,y)=>(y.generated_utc||'').localeCompare(x.generated_utc||''))[0]);
   if(!j || (NEXT.data && NEXT.data.generated_utc===j.generated_utc)) return;
   NEXT.data = j;
@@ -1291,7 +1299,7 @@ async function loadOwn(){
   const get = u => fetch(u, {cache:'no-store'}).then(r=>r.ok?r.json():null).catch(()=>null);
   const own = location.hostname.endsWith('.github.io') ? location.hostname.split('.')[0] : null;
   const repo = own ? location.pathname.split('/').filter(Boolean)[0] : null;
-  const two = f => Promise.all([get(f+'?t='+Date.now()), own && repo ? get(`https://raw.githubusercontent.com/${own}/${repo}/main/docs/${f}?t=${Date.now()}`) : null])
+  const two = f => Promise.all([get(f+'?t='+Date.now()), own && repo ? get(`https://raw.githubusercontent.com/${own}/${repo}/main/${SITE.dir}/${f}?t=${Date.now()}`) : null])
     .then(xs=>xs.filter(x=>x && x.updated_utc).sort((x,y)=>y.updated_utc.localeCompare(x.updated_utc))[0] || null);
   const [j, b] = await Promise.all([two('own.json'), two('own_base.json')]);
   if(!j || (OWN.updated===j.updated_utc && (OWN.base&&OWN.base.updated_utc)===(b&&b.updated_utc))) return;
@@ -2285,7 +2293,7 @@ const imgPending = {};
 // surname in the article title + "basketball" (in that language) in its description.
 const BASKET_RE = /basketball|baloncesto|bàsquet|pallacanestro|basket|basketbol|krepšin|basquete/i;
 function wikiImage(p, langs=['en'], keyPrefix=''){
-  if(!p) return Promise.resolve(null);
+  if(!p || SITE.league!=='euroleague') return Promise.resolve(null);
   const key = keyPrefix + p.raw;
   if(key in imgCache) return Promise.resolve(imgCache[key]);
   if(imgPending[key]) return imgPending[key];
@@ -2388,7 +2396,9 @@ function readHash(){
 
 // ---------- footer ----------
 const bt = M.backtest||{};
-$('#foot').innerHTML = (M.model==='component' ? `יעד: נקודות פנטזי לפי חוקי ערוץ הספורט · מודל מרכיבים (כל סטטיסטיקה נחזית בנפרד; הגדרות נבחרו על 2024/25–2025/26) · ` : `יעד: נקודות פנטזי לפי חוקי ערוץ הספורט · מודלים שאומנו על 2024/25–2025/26 (משקלים קפואים) · `) +
+$('#foot').innerHTML = SITE.league==='winner' ?
+  `יעד: נקודות פנטזי לפי חוקי ערוץ הספורט · מודל המרכיבים של אתר היורוליג · נתוני משחקים: אתר מנהלת הליגה (basket.co.il)${bt.m2?` · בקטסט ${bt.m2.rounds}: Spearman ${bt.m2.spearman}, ממוצע ${bt.m2.top10} פגיעות בטופ 10`:''}` :
+  (M.model==='component' ? `יעד: נקודות פנטזי לפי חוקי ערוץ הספורט · מודל מרכיבים (כל סטטיסטיקה נחזית בנפרד; הגדרות נבחרו על 2024/25–2025/26) · ` : `יעד: נקודות פנטזי לפי חוקי ערוץ הספורט · מודלים שאומנו על 2024/25–2025/26 (משקלים קפואים) · `) +
   MODELS.map(m=>{const b=bt['m'+(m.k+1)]; return b?`${m.name}: NDCG@10 ${b.ndcg}, Spearman ${b.spearman}`:''}).filter(Boolean).join(' · ') +
   ` · בקטסט על מחזורי 2026/27 (מחוץ למדגם)`;
 
@@ -2404,7 +2414,7 @@ function renderAll(){
 updateSubline(); renderTops(); renderAbsences(); renderFixtures(); renderOpp(); renderFdr(); renderBuilder(); renderSquad(); renderMyTeam(); readHash(); renderPlayer();
 { const sv = mtSaved(); if(sv.name && location.protocol!=='file:') mtLookup(sv.name, sv.id || null); }
 setInterval(()=>{ if(MT.data && MT.data.team && !MT.loading) mtLookup(MT.data.team.name, MT.data.team.userId, true); }, 15*60e3);
-loadLive().then(()=>{ pollDirect(); loadNext(); loadPrev(); renderOwnMoves(); }); loadOwn();
+if(SITE.live) loadLive().then(()=>{ pollDirect(); loadNext(); loadPrev(); renderOwnMoves(); }); loadOwn();
 setInterval(loadOwn, 10*60e3);
 setInterval(loadNext, 30*60e3);
 window.addEventListener('hashchange', ()=>{ readHash(); renderPlayer(); });
