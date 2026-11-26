@@ -139,6 +139,43 @@ def positions(d, s5pos):
     near = {p: cent.sub(z.loc[p], axis=1).pow(2).sum(axis=1).idxmin() for p in agg.index}
     return {p: (agg.known[p] if isinstance(agg.known[p], str) else near[p]) for p in agg.index}
 
+def fantasy_rounds(sch, S5):
+    """The fantasy game's rounds are calendar weeks, not the league's rounds: a team can have two games in one fantasy
+    round (a postponed game made up that week) or none. The fantasy site lists each team's next 3 games with their
+    fantasy round; later games are put in weekly windows after the last known round. Returns sch with
+    'fr' (fantasy round id, None for games before the game started) and 'frl' (label: the league round most of its games belong to)."""
+    sch = sch.copy(); sch['fr'] = None
+    known = {}
+    for team, g in S5[S5.pos != 4].groupby('team'):
+        d = get(f'https://dreamteam.sport5.co.il/api/Players/GetPlayerData?seasonId={S5_SEASON}&playerId={int(g.s5id.iloc[0])}', post=True)
+        for x in ((d or {}).get('data') or {}).get('futureGames') or []:
+            day = x['gameStart'][:10]
+            known[(nt(x['teamAName']), nt(x['teamBName']), day)] = x['roundId']
+        time.sleep(0.15)
+    ilday = lambda u: (u + timedelta(hours=2)).strftime('%Y-%m-%d')
+    for i, g in sch.iterrows():
+        k = known.get((g.home, g.away, ilday(g.utc))) or known.get((g.away, g.home, ilday(g.utc)))
+        if k: sch.at[i, 'fr'] = int(k)
+    if not sch.fr.notna().any(): return sch.assign(fr=sch['round'], frl=sch['round'])
+    # the rest: a league round goes to the fantasy round most of its known games are in; rounds after the known ones
+    # follow one a week; a game far from the rest of its round (a postponed game) goes to the round played that week
+    kn = sch[sch.fr.notna()]
+    fr_of = kn.groupby('round').fr.agg(lambda f: int(f.mode().max())).to_dict()
+    lastL = max(fr_of); lastF = fr_of[lastL]
+    mid = sch.groupby('round').utc.median()
+    first_fr_start = kn.utc.min()
+    for L in sorted(sch['round'].unique()):
+        if L not in fr_of and L > lastL: fr_of[L] = lastF + (L - lastL)
+    for i, g in sch[sch.fr.isna()].iterrows():
+        if g.utc < first_fr_start - timedelta(days=1): continue          # played before the fantasy game started
+        L = g['round']
+        if abs((g.utc - mid[L]).total_seconds()) > 4 * 86400:            # postponed: the round played that week
+            L = min(mid.index, key=lambda r: abs((g.utc - mid[r]).total_seconds()))
+        if L in fr_of: sch.at[i, 'fr'] = int(fr_of[L])
+    lab = sch[sch.fr.notna()].groupby('fr')['round'].agg(lambda r: int(r.mode().max()))
+    sch['frl'] = sch.fr.map(lab)
+    return sch
+
 def main():
     t0 = time.time()
     sch = schedule()
@@ -161,20 +198,26 @@ def main():
     cur = d[(d.season == CYEAR) & (d.phase == 'RS')]; prev = d[d.season == CYEAR - 1]
     train = d[d.season.isin([CYEAR - 3, CYEAR - 2, CYEAR - 1]) & (d.phase == 'RS')]
     HF = C.home_factors(train)
-    # ---- rounds to project ----
+    # ---- fantasy rounds (calendar weeks on the fantasy site) to project ----
     now = datetime.now(timezone.utc)
-    played_rounds = set(cur['round'].unique())
-    # the round to project: the first one with most of its games still to play (a postponed game does not hold a round back)
-    fut_n = sch[sch.utc > now - timedelta(hours=2.5)].groupby('round').size(); all_n = sch.groupby('round').size()
-    upcoming = sorted(r for r in fut_n.index if fut_n[r] * 2 > all_n[r])
-    complete = [r for r in sorted(sch['round'].unique()) if (sch[sch['round'] == r].utc < now - timedelta(hours=2.5)).all()]
-    R0 = int(upcoming[0]) if upcoming else int(max(sch['round']))
-    rounds = [r for r in range(R0, R0 + 5) if r in set(sch['round'])]
-    fx = {}
-    for r in rounds:
-        g = sch[sch['round'] == r]
-        fx[r] = {**{x.home: (x.away, 1, x) for _, x in g.iterrows()}, **{x.away: (x.home, 0, x) for _, x in g.iterrows()}}
-    st = C.State(cur, prev) if len(cur) else None
+    sch = fantasy_rounds(sch, S5)
+    fs = sch[sch.fr.notna()]
+    open_fr = sorted(fs[fs.utc > now - timedelta(hours=2.5)].fr.unique())
+    R0f = int(open_fr[0]) if open_fr else int(fs.fr.max())
+    frs = [f for f in sorted(fs.fr.unique()) if f >= R0f][:5]
+    label = {int(f): int(fs[fs.fr == f].frl.iloc[0]) for f in frs}
+    rounds = [label[f] for f in frs]; R0 = rounds[0]
+    complete = [int(fs[fs.fr == f].frl.iloc[0]) for f in sorted(fs.fr.unique()) if (fs[fs.fr == f].utc < now - timedelta(hours=2.5)).all()]
+    fx = {}                                  # label -> team -> [(opponent, home, game row), ...] (two games in one week happen)
+    for f in frs:
+        g = fs[fs.fr == f].sort_values('utc'); m = {}
+        for _, x in g.iterrows():
+            m.setdefault(x.home, []).append((x.away, 1, x)); m.setdefault(x.away, []).append((x.home, 0, x))
+        fx[label[f]] = m
+    # the model's recency weights follow the order the games were played in (a postponed game counts when it was played)
+    order = cur[['game', 'round']].drop_duplicates().merge(sch[['game', 'utc']], on='game', how='left').sort_values(['utc', 'round'])
+    seq = {g: i for i, g in enumerate(order.game)}
+    st = C.State(cur.assign(round=cur.game.map(seq)), prev) if len(cur) else None
     # earlier seasons, newest first: a player with no game this season is projected from his last season in the league
     past = [C.State(d[d.season == y], None) for y in range(CYEAR - 1, CYEAR - 4, -1) if len(d[d.season == y])]
     # ---- players ----
@@ -188,32 +231,32 @@ def main():
         fut = None; cmx = None; e0 = None
         if known_cur or old is not None:
             src = st if known_cur else old
-            vals = []
-            for r in rounds:
-                f = fx[r].get(team)
-                if not f: vals.append(None); continue
-                e = src.project(key, ppos, f[0], f[1], HF)
-                vals.append(e)
-            E = [C.fp_from(pd.DataFrame([dict(**e)])).iloc[0] if e else None for e in vals]
-            fut = [round(float(x.pred), 1) if x is not None else 0.0 for x in E]
-            e0 = E[0]
+            fut = []; e0 = None
+            for j, r in enumerate(rounds):
+                tot = 0.0
+                for (o, hm, _) in fx[r].get(team, []):
+                    e = src.project(key, ppos, o, hm, HF)
+                    if not e: continue
+                    E1 = C.fp_from(pd.DataFrame([dict(**e)])).iloc[0]; tot += float(E1.pred)
+                    if j == 0 and e0 is None: e0 = E1
+                fut.append(round(tot, 1))
             if e0 is not None: cmx = dict(min=round(float(e0['min']), 1), e={k: round(float(e0['e_' + k]), 2) for k in C.K},
                                           p_dd=round(float(e0.p_dd), 3), p_td=round(float(e0.p_td), 4))
         gt = len(mine)
-        nxt = fx[rounds[0]].get(team) if rounds else None
+        ng = fx[rounds[0]].get(team, []) if rounds else []; nxt = ng[0] if ng else None
         reason = None
         if fut is None: reason = 'אין לו משחקים בליגה (העונה ו-3 העונות הקודמות)'
         elif gt < C.MIN_GAMES: reason = f'פחות מ-{C.MIN_GAMES} הופעות בקבוצה הנוכחית העונה'
         elif not nxt: reason = 'אין משחק במחזור'
         elif e0 is None or e0['min'] < C.MIN_EXP_MIN: reason = f'פחות מ-{C.MIN_EXP_MIN} דקות צפויות'
-        team_rounds = sorted(cur[cur.team == team]['round'].unique())
-        out3 = bool(gt and len(team_rounds) >= 3 and not set(team_rounds[-3:]) & set(mine['round']))
-        l5 = mine.sort_values('round').tail(5)
+        team_games = sorted(cur[cur.team == team].game.unique(), key=lambda g: seq.get(g, 0))
+        out3 = bool(gt and len(team_games) >= 3 and not set(team_games[-3:]) & set(mine.game))
+        l5 = mine.assign(_s=mine.game.map(seq)).sort_values('_s').tail(5)
         players.append(dict(id=ident, raw=key, name=p['name'], he=p['name'], team=team, pos=ppos, pos_he={'Guard': 'גארד', 'Forward': 'פורוורד', 'Center': 'סנטר'}[ppos],
                             games=int(gt), avg=round(float(mine.fp.mean()), 2) if gt else None, l5=round(float(l5.fp.mean()), 2) if gt else None,
                             l5n=int(len(l5)), min=round(float(mine['min'].mean()), 1) if gt else None, l5min=round(float(l5['min'].mean()), 1) if gt else None,
                             opp=nxt[0] if nxt else None, venue=('Home' if nxt[1] else 'Away') if nxt else None,
-                            date=nxt[2].utc.strftime('%Y-%m-%d') if nxt else None, ranked=reason is None, reason=reason,
+                            date=nxt[2].utc.strftime('%Y-%m-%d') if nxt else None, games_in_round=len(ng), ranked=reason is None, reason=reason,
                             fut=fut, price=int(p.price), s5id=int(p.s5id), s5pos=ppos, injured=bool(p.injured), out3=out3, cm=cmx))
     ranked = sorted([x for x in players if x['ranked']], key=lambda x: -x['fut'][0])
     resid_lo, resid_hi = -12.0, 14.0
@@ -227,14 +270,16 @@ def main():
     def coach_fut(team):
         out = []
         for r in rounds:
-            f = fx[r].get(team)
-            if not f or team not in net or f[0] not in net: out.append(0.0); continue
-            mu = 0.6 * (net[team] - net[f[0]]) + 2.5 * (1 if f[1] else -1)
-            out.append(round(mu + 5 * (2 * 0.5 * (1 + math.erf(mu / 12 / math.sqrt(2))) - 1), 1))
+            tot = 0.0
+            for (o, hm, _) in fx[r].get(team, []):
+                if team not in net or o not in net: continue
+                mu = 0.6 * (net[team] - net[o]) + 2.5 * (1 if hm else -1)
+                tot += mu + 5 * (2 * 0.5 * (1 + math.erf(mu / 12 / math.sqrt(2))) - 1)
+            out.append(round(tot, 1))
         return out
     coaches = []
     for _, c in S5[S5.pos == 4].iterrows():
-        nxt = fx[rounds[0]].get(c.team) if rounds else None
+        nxt = (fx[rounds[0]].get(c.team) or [None])[0] if rounds else None
         coaches.append(dict(raw=c['name'], he=c['name'], team=c.team, price=int(c.price), s5id=int(c.s5id), logo=s5teams[c.teamId]['logo'],
                             injured=bool(c.injured), fut=coach_fut(c.team), opp=nxt[0] if nxt else None, venue=('Home' if nxt[1] else 'Away') if nxt else None))
     # ---- opponents: fantasy points a game allowed to each position (weighted by minutes), season and last 5 ----
@@ -244,14 +289,15 @@ def main():
         return {p: round(float(g.get(p, np.nan)), 3) if p in g else None for p in pos3}
     opponents = []
     for t in sorted(set(cur.opp)):
-        z = cur[cur.opp == t]; last = sorted(z['round'].unique())[-5:]
-        nxt = fx[rounds[0]].get(t) if rounds else None
-        opponents.append(dict(team=t, season=allowed(z), last5=allowed(z[z['round'].isin(last)]),
+        z = cur[cur.opp == t]; last = sorted(z.game.unique(), key=lambda g: seq.get(g, 0))[-5:]
+        nxt = (fx[rounds[0]].get(t) or [None])[0] if rounds else None
+        opponents.append(dict(team=t, season=allowed(z), last5=allowed(z[z.game.isin(last)]),
                               next_vs=nxt[0] if nxt else None, next_venue=('Home' if nxt[1] else 'Away') if nxt else None))
     league = allowed(cur) if len(cur) else {}
-    fixtures = [dict(game=str(g.game), round=int(g['round']), date=g.utc.strftime('%Y-%m-%d'), utc=g.utc.strftime('%Y-%m-%dT%H:%M:%SZ'),
-                     home=g.home, away=g.away, played=bool(g['round'] in played_rounds and g.utc < now - timedelta(hours=2.5)))
-                for _, g in sch.sort_values('utc').iterrows() if int(g['round']) in rounds]
+    played = set(cur.game)
+    fixtures = [dict(game=str(g.game), round=label[int(g.fr)], league_round=int(g['round']), date=g.utc.strftime('%Y-%m-%d'),
+                     utc=g.utc.strftime('%Y-%m-%dT%H:%M:%SZ'), home=g.home, away=g.away, played=bool(g.game in played))
+                for _, g in fs.sort_values('utc').iterrows() if int(g.fr) in label]
     try: ab = C.absences(d[d.season == CYEAR].assign(phase=lambda z: z.phase))
     except Exception as e: ab = {}; print('absences failed:', e)
     bt = None
@@ -269,26 +315,28 @@ def main():
     for t in set(short) | set(logos):
         abbr[t] = next((v for k, v in AB if k in t), short.get(t, t))
     meta = dict(model='component', league='winner', generated_utc=now.strftime('%Y-%m-%dT%H:%M:%SZ'), season=f'{CYEAR - 1}/{str(CYEAR)[2:]}',
-                n_ranked=len(ranked), n_players=len(players), fut_rounds=rounds, next_round=R0,
+                n_ranked=len(ranked), n_players=len(players), fut_rounds=rounds, next_round=R0, fantasy_round_ids=frs,
                 last_complete_round=int(max(complete)) if complete else None, backtest=bt, team_short=short, team_abbr=abbr, team_logo=logos)
     data = dict(meta=meta, fixtures=fixtures, players=players, round_hits=[], coaches=coaches,
                 s5teams={str(k): v['name'] for k, v in s5teams.items()}, opponents=opponents, league=league, absences=ab)
     with open(os.path.join(OUT, 'data.json'), 'w', encoding='utf-8') as fh: json.dump(data, fh, ensure_ascii=False, separators=(',', ':'))
-    write_live(sch, cur, R0, now)
+    write_live(sch, cur, R0, now, label)
     build_page(data)
     print(f'winner: round {R0}, {len(players)} players ({len(ranked)} ranked, {sum(1 for x in players if x["fut"] is None)} without a projection), '
           f'{len(coaches)} coaches, {time.time() - t0:.0f}s', flush=True)
 
-def write_live(sch, cur, R0, now):
+def write_live(sch, cur, R0, now, label):
     """live.json as on the EuroLeague site (no live feed: finished games of the coming round, schedule, difficulty)."""
     done = lambda g: g.utc < now - timedelta(hours=2.5) and int(g.game) in set(cur.game)
-    sched = [dict(game=str(g.game), round=int(g['round']), date=g.utc.strftime('%Y-%m-%d'), utc=g.utc.strftime('%Y-%m-%dT%H:%M:%SZ'),
+    rl = lambda g: label.get(int(g.fr)) if g.fr == g.fr and g.fr is not None and int(g.fr) in label else (int(g.frl) if g.frl == g.frl and g.frl is not None else int(g['round']))
+    sched = [dict(game=str(g.game), round=rl(g), date=g.utc.strftime('%Y-%m-%d'), utc=g.utc.strftime('%Y-%m-%dT%H:%M:%SZ'),
                   home=g.home, away=g.away, status='final' if done(g) else 'scheduled',
                   hs=int(cur[(cur.game == g.game) & (cur.team == g.home)].points.sum()) if done(g) else None,
                   **{'as': int(cur[(cur.game == g.game) & (cur.team == g.away)].points.sum()) if done(g) else None})
-             for _, g in sch.sort_values('utc').iterrows()]
+             for _, g in sch.sort_values('utc').iterrows()
+             if not ((g.fr is None or g.fr != g.fr) and g['round'] >= min(label.values()))]   # played before the fantasy game began, ahead of its round
     games = [x for x in sched if x['round'] == R0]
-    rr = cur[cur['round'] == R0].sort_values('fp', ascending=False)
+    rr = cur[cur.game.isin([int(x['game']) for x in games])].sort_values('fp', ascending=False)
     actual = [dict(raw=x.player, team=x.team, opp=x.opp, game=str(x.game), pir=int(x.fp), min=round(float(x['min']), 1), status='final',
                    rank=int((rr.fp > x.fp).sum()) + 1) for _, x in rr.iterrows()]
     nxt = {}

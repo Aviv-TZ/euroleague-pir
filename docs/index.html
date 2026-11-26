@@ -18,6 +18,7 @@ h1{margin:0;font-size:24px;display:flex;align-items:center;gap:10px}
 h1 .ball{width:26px;height:26px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#ffb066,#ff7a00 60%,#c95400);box-shadow:0 0 0 2px #0003 inset}
 .sub{color:var(--muted);font-size:13px;margin-top:6px}
 nav{display:flex;gap:4px;margin-top:16px;flex-wrap:wrap}
+.dbl{color:var(--accent);font-size:11px;white-space:nowrap}
 .lswitch{display:inline-block;margin-top:6px;font-size:13px;font-weight:600;color:var(--accent);text-decoration:none;border:1px solid var(--line);border-radius:999px;padding:3px 12px}
 nav button{background:none;border:none;color:var(--muted);font:inherit;font-weight:600;padding:10px 16px;border-radius:10px 10px 0 0;cursor:pointer}
 nav button.on{background:var(--bg);color:var(--text);box-shadow:inset 0 3px 0 var(--accent)}
@@ -472,7 +473,8 @@ const tShort = t => ((typeof D!=='undefined' && D.meta && D.meta.team_short) || 
 const tName = t => `<span class="tl">${esc(t)}</span><span class="ts">${esc(tShort(t))}</span>`;   // long on desktop, short on mobile
 // opponent with the venue: "Bayern (H)" = home game, "Bayern (A)" = away; isolated LTR so Hebrew text around it stays tidy
 const vsTxt = (venue, team, long=false) => `<bdi dir="ltr">${long ? tName(team) : esc(tShort(team))} (${venue==='Home'?'H':'A'})</bdi>`;   // HTML
-const oppText = p => p.opp ? vsTxt(p.venue, p.opp, true) : 'אין משחק במחזור';
+const dblTag = p => p.games_in_round > 1 ? ` <b class="dbl" title="${p.games_in_round} משחקים במחזור הפנטזי הזה – הצפי הוא סכום שלהם">×${p.games_in_round}</b>` : '';
+const oppText = p => p.opp ? vsTxt(p.venue, p.opp, true) + dblTag(p) : 'אין משחק במחזור';
 
 // ---------- Live / in-round results (live.json, refreshed by the server every 10-60 min) ----------
 const LIVE = {data:null, rows:[], map:new Map(), direct:new Map(), round:M.next_round, nPlayed:0, nFinal:0, roundDone:false};
@@ -637,7 +639,7 @@ function renderTops(){
         <tbody>${rows.map(p=>`<tr>
           <td class="rk">${p.m[m.k].rank}</td>
           <td class="pl" data-id="${p.id}"><b>${esc(p.name)}</b><small>${tName(p.team)} · ${p.pos_he}${ownTxt(p)?` · ${ownTxt(p)} אחזקה`:''}</small></td>
-          <td>${p.opp?vsTxt(p.venue, p.opp, true):'אין משחק'}<br><small class="note">${nextGameOf(p)?`הבאה: ${vsTxt(nextGameOf(p).venue, nextGameOf(p).vs)}`:fmtShortDate(p.date)}</small></td>
+          <td>${p.opp?vsTxt(p.venue, p.opp, true)+dblTag(p):'אין משחק'}<br><small class="note">${nextGameOf(p)?`הבאה: ${vsTxt(nextGameOf(p).venue, nextGameOf(p).vs)}`:fmtShortDate(p.date)}</small></td>
           ${M.model==='component'?'':`<td class="num score ${m.cls}c col-score">${f(p.m[m.k].score,2)}</td>`}
           <td class="num">${f(p.m[m.k].pir)}</td>
           ${actualCell(p,m.k)}</tr>`).join('')}</tbody>
@@ -940,7 +942,8 @@ function courtCard(x, isCap){
       <div class="cvs">${x.ot!=null?x.ot:oppShort(p)}</div><div class="cmeta">${f(x.price,0)}M${ownTxt(p)?` · ${ownTxt(p)}`:''}</div>${x.hn?`<div class="cmeta">${x.hn} מפגשים${x.fc!=null?` · צפי ${f(x.fc,1)}`:''}</div>`:''}${liveFoot(x)}
     </div>`;
 }
-const oppShort = p => p.opp ? vsTxt(p.venue, p.opp) : '';
+// two games in one fantasy round (a postponed game made up that week, Winner League)
+const oppShort = p => p.opp ? vsTxt(p.venue, p.opp) + dblTag(p) : '';
 function courtView(r){
   const cap = r.five.reduce((a,b)=>b.fp>a.fp?b:a);
   const row = pos => r.five.filter(x=>x.pos===pos).sort((a,b)=>b.fp-a.fp).map(x=>courtCard(x, x===cap)).join('');
@@ -2136,7 +2139,7 @@ function renderFilter(){
   // phones: position and opponent move into the player's second line, so the row fits without scrolling
   const rows = list.slice(0,60).map((p,i)=>`<tr>
       <td class="rk">${i+1}</td>
-      <td class="pl" data-id="${p.id}"><b>${esc(p.he||p.name)}</b><small><span class="tl">${esc(p.name)} · ${esc(p.team)}</span><span class="ts">${esc(tShort(p.team))} · ${posHe[p.s5pos||p.pos]} · ${p.opp?vsTxt(p.venue,p.opp):'אין משחק'}</span></small></td>
+      <td class="pl" data-id="${p.id}"><b>${esc(p.he||p.name)}</b><small><span class="tl">${esc(p.name)} · ${esc(p.team)}</span><span class="ts">${esc(tShort(p.team))} · ${posHe[p.s5pos||p.pos]} · ${p.opp?vsTxt(p.venue,p.opp)+dblTag(p):'אין משחק'}</span></small></td>
       <td class="col-mh"><span class="tag">${posHe[p.s5pos||p.pos]}</span></td>
       <td class="col-mh">${oppText(p)}</td>
       <td class="num">${f(p.price,0)}M</td>
@@ -2339,7 +2342,7 @@ function compareTable(ps){
     h += row('מתוך', p=>{const a=getActual(p); return a?LIVE.nPlayed:null;}, {d:0,cls:'real'});
   }
   h += sec('כללי');
-  h += row('יריבה במחזור', p=>p.opp?vsTxt(p.venue, p.opp, true):'אין משחק');
+  h += row('יריבה במחזור', p=>p.opp?vsTxt(p.venue, p.opp, true)+dblTag(p):'אין משחק');
   h += row('תאריך', p=>fmtShortDate(p.date)||'–');
   if(ps.some(nextGameOf)) h += row('המשחק הבא', p=>{ const n = nextGameOf(p); return n ? nextGameTxt(n) : '–'; });
   h += row('משחקים', p=>p.games, {d:0});
