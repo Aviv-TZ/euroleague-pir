@@ -20,8 +20,10 @@ def call(path, wait=2.2, **q):
         print(f'  {path}: HTTP {e.code} {body}'); return None
 
 out = {}
-acc = call('account'); out['account'] = {k: v for k, v in (acc or {}).items() if 'key' not in k.lower()}
-print('account:', json.dumps(out['account'])[:400])
+# plan only: the account call also returns personal details, which are never printed or saved
+plan = lambda a: [{k: s.get(k) for k in ('request_limit', 'requests_used', 'valid_from', 'valid_to') if k in s} for s in (a or {}).get('subscriptions') or []]
+acc = call('account'); out['account'] = plan(acc)
+print('plan:', out['account'])
 T = call('tournaments', sportId=11) or []
 hits = [t for t in T if any(w in json.dumps(t, ensure_ascii=False).lower() for w in ['euroleague', 'israel', 'ligat', 'winner', 'super league', 'premier league'])]
 out['tournaments'] = hits
@@ -47,4 +49,4 @@ for lab, t in [('euroleague', el), ('israel', il)]:
         print(f'   historical {f.get("participant1Name")} - {f.get("participant2Name")} {f.get("startTime")}: bookmakers {list(bm)}, '
               f'markets {[len((v or {}).get("markets") or {}) for v in bm.values()]}')
 with open(os.path.join(OUT, 'probe.json'), 'w') as fh: json.dump(out, fh, ensure_ascii=False)
-acc = call('account'); print('account after:', json.dumps({k: v for k, v in (acc or {}).items() if 'key' not in k.lower()})[:400])
+print('plan after:', plan(call('account')))
