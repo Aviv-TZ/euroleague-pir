@@ -1,0 +1,542 @@
+fixtureId,league,start,team1,team2,margin,book,p1,p2,ml1,ml2
+id1100013862095964,euroleague,2026-01-02T17:00:00.000Z,Anadolu Efes SK,KK Crvena zvezda Belgrade,,,,,,
+id1100013862095968,euroleague,2026-01-02T19:00:00.000Z,Baskonia Vitoria-Gasteiz,Fenerbahce Istanbul,,,,,,
+id1100013862095966,euroleague,2026-01-02T19:15:00.000Z,Panathinaikos BC,BC Olympiakos Piraeus,,,,,,
+id1100013862095970,euroleague,2026-01-02T19:30:00.000Z,Virtus Bologna,Olimpia Milano,,,,,,
+id1100013862095972,euroleague,2026-01-02T19:45:00.000Z,Real Madrid,Dubai Basketball,,,,,,
+id1100013862095974,euroleague,2026-01-02T20:00:00.000Z,Bayern Munich,Maccabi Tel-Aviv,,,,,,
+id1100119763468367,israel,2026-01-03T17:05:00.000Z,Hapoel Tel-Aviv,Hapoel Jerusalem,,,,,,
+id1100119763468455,israel,2026-01-03T18:50:00.000Z,Maccabi Rishon LeZion,Hapoel Holon BC,,,,,,
+id1100119763468457,israel,2026-01-04T16:35:00.000Z,Hapoel Beer Sheva,Bnei Herzliya Basket,,,,,,
+id1100119763468465,israel,2026-01-04T18:30:00.000Z,Maccabi Tel-Aviv,Hapoel Haemek,,,,,,
+id1100119763468453,israel,2026-01-05T16:35:00.000Z,Maccabi Raanana,Maccabi Ironi Ramat Gan,,,,,,
+id1100119763468459,israel,2026-01-05T18:55:00.000Z,Ironi Ness Ziona,Ironi Kiryat ATA,,,,,,
+id1100013862095976,euroleague,2026-01-06T17:45:00.000Z,Fenerbahce Istanbul,BC Olympiakos Piraeus,,,,,,
+id1100013862095980,euroleague,2026-01-06T18:30:00.000Z,AS Monaco,KK Partizan Belgrade,,,,,,
+id1100013862095982,euroleague,2026-01-06T19:00:00.000Z,KK Crvena zvezda Belgrade,Valencia Basket,,,,,,
+id1100013862095984,euroleague,2026-01-06T19:00:00.000Z,ASVEL Lyon-Villeurbanne,Real Madrid,,,,,,
+id1100013862095978,euroleague,2026-01-06T19:05:00.000Z,Hapoel Tel-Aviv,Dubai Basketball,,,,,,
+id1100013862095986,euroleague,2026-01-06T19:15:00.000Z,Panathinaikos BC,Olimpia Milano,,,,,,
+id1100013862095988,euroleague,2026-01-06T19:30:00.000Z,FC Barcelona,Maccabi Tel-Aviv,,,,,,
+id1100013862095990,euroleague,2026-01-06T19:30:00.000Z,Virtus Bologna,BC Zalgiris Kaunas,,,,,,
+id1100013862095992,euroleague,2026-01-07T17:30:00.000Z,Anadolu Efes SK,Paris Basketball,,,,,,
+id1100013862095994,euroleague,2026-01-07T19:30:00.000Z,Bayern Munich,Baskonia Vitoria-Gasteiz,,,,,,
+id1100119763468473,israel,2026-01-08T15:50:00.000Z,Hapoel Galil Elyon,Hapoel Beer Sheva,,,,,,
+id1100013862095996,euroleague,2026-01-08T16:00:00.000Z,Dubai Basketball,Fenerbahce Istanbul,,,,,,
+id1100013862095998,euroleague,2026-01-08T19:15:00.000Z,Panathinaikos BC,Virtus Bologna,,,,,,
+id1100013862096000,euroleague,2026-01-08T19:30:00.000Z,Valencia Basket,AS Monaco,,,,,,
+id1100013862096002,euroleague,2026-01-08T19:45:00.000Z,Real Madrid,Maccabi Tel-Aviv,,,,,,
+id1100013862096006,euroleague,2026-01-09T18:00:00.000Z,BC Zalgiris Kaunas,KK Crvena zvezda Belgrade,,,,,,
+id1100013862096008,euroleague,2026-01-09T19:15:00.000Z,BC Olympiakos Piraeus,Bayern Munich,,,,,,
+id1100013862096010,euroleague,2026-01-09T19:30:00.000Z,Baskonia Vitoria-Gasteiz,ASVEL Lyon-Villeurbanne,,,,,,
+id1100013862096012,euroleague,2026-01-09T19:30:00.000Z,Olimpia Milano,Anadolu Efes SK,,,,,,
+id1100013862096014,euroleague,2026-01-09T19:30:00.000Z,FC Barcelona,KK Partizan Belgrade,,,,,,
+id1100119763468475,israel,2026-01-10T16:50:00.000Z,Bnei Herzliya Basket,Ironi Ness Ziona,,,,,,
+id1100119763468477,israel,2026-01-11T16:35:00.000Z,Maccabi Ironi Ramat Gan,Hapoel Tel-Aviv,,,,,,
+id1100119763468479,israel,2026-01-11T19:05:00.000Z,Maccabi Tel-Aviv,Hapoel Jerusalem,,,,,,
+id1100119763468467,israel,2026-01-12T16:35:00.000Z,Elitzur Netanya,Ironi Kiryat ATA,,,,,,
+id1100119763468469,israel,2026-01-12T18:55:00.000Z,Maccabi Raanana,Maccabi Rishon LeZion,,,,,,
+id1100119763468463,israel,2026-01-13T18:40:00.000Z,Hapoel Tel-Aviv,Hapoel Galil Elyon,19.5,pinnacle+30,1.9,1.84,1.036,11.25
+id1100013862096032,euroleague,2026-01-14T18:30:00.000Z,KK Partizan Belgrade,BC Olympiakos Piraeus,-8.0,pinnacle+30,1.862,1.934,3.76,1.294
+id1100013862096016,euroleague,2026-01-15T16:00:00.000Z,Dubai Basketball,Virtus Bologna,5.0,1xbet,1.916,1.936,,
+id1100013862096018,euroleague,2026-01-15T17:30:00.000Z,Anadolu Efes SK,Baskonia Vitoria-Gasteiz,5.0,1xbet,1.926,1.926,,
+id1100013862096020,euroleague,2026-01-15T18:30:00.000Z,Bayern Munich,Panathinaikos BC,-4.5,1xbet,1.93,1.93,,
+id1100013862096022,euroleague,2026-01-15T19:05:00.000Z,Maccabi Tel-Aviv,BC Zalgiris Kaunas,2.0,1xbet,1.926,1.926,,
+id1100013862096024,euroleague,2026-01-15T19:30:00.000Z,Olimpia Milano,KK Crvena zvezda Belgrade,5.5,1xbet,1.93,1.93,,
+id1100013862096026,euroleague,2026-01-15T19:45:00.000Z,Paris Basketball,AS Monaco,-4.5,1xbet,1.93,1.93,,
+id1100119763468483,israel,2026-01-16T11:00:00.000Z,Hapoel Beer Sheva,Hapoel Haemek,-1.5,1xbet,1.87,1.86,,
+id1100013862096028,euroleague,2026-01-16T17:45:00.000Z,Fenerbahce Istanbul,Valencia Basket,5.5,1xbet,1.92,1.94,,
+id1100013862096030,euroleague,2026-01-16T19:00:00.000Z,ASVEL Lyon-Villeurbanne,Hapoel Tel-Aviv,-8.0,1xbet,1.926,1.926,,
+id1100013862096034,euroleague,2026-01-16T19:45:00.000Z,Real Madrid,FC Barcelona,4.5,1xbet,1.93,1.93,,
+id1100119763468489,israel,2026-01-17T17:10:00.000Z,Hapoel Holon BC,Maccabi Tel-Aviv,-11.0,pinnacle+30,1.892,1.925,5.64,1.126
+id1100119763468491,israel,2026-01-17T18:15:00.000Z,Hapoel Jerusalem,Ironi Kiryat ATA,13.0,pinnacle+30,1.925,1.892,1.087,6.92
+id1100119763468493,israel,2026-01-18T16:00:00.000Z,Hapoel Tel-Aviv,Elitzur Netanya,22.5,pinnacle+30,1.847,1.943,1.022,11.66
+id1100119763468481,israel,2026-01-18T17:30:00.000Z,Maccabi Rishon LeZion,Maccabi Ironi Ramat Gan,2.5,1xbet,1.86,1.87,,
+id1100119763468485,israel,2026-01-19T16:30:00.000Z,Bnei Herzliya Basket,Maccabi Raanana,10.0,1xbet,1.86,1.85,,
+id1100119763468487,israel,2026-01-19T18:55:00.000Z,Ironi Ness Ziona,Hapoel Galil Elyon,7.5,1xbet,1.86,1.87,,
+id1100013862096042,euroleague,2026-01-20T17:15:00.000Z,BC Olympiakos Piraeus,Maccabi Tel-Aviv,11.5,1xbet,1.94,1.92,,
+id1100013862096036,euroleague,2026-01-20T17:30:00.000Z,Hapoel Tel-Aviv,Anadolu Efes SK,10.5,1xbet,1.93,1.93,,
+id1100013862096038,euroleague,2026-01-20T17:45:00.000Z,AS Monaco,KK Crvena zvezda Belgrade,8.5,1xbet,1.93,1.93,,
+id1100013862096040,euroleague,2026-01-20T19:00:00.000Z,ASVEL Lyon-Villeurbanne,BC Zalgiris Kaunas,-3.0,1xbet,1.906,1.946,,
+id1100013862096044,euroleague,2026-01-20T19:15:00.000Z,Panathinaikos BC,Baskonia Vitoria-Gasteiz,10.0,1xbet,1.907,1.945,,
+id1100013862096046,euroleague,2026-01-20T19:30:00.000Z,FC Barcelona,Dubai Basketball,7.5,1xbet,1.91,1.95,,
+id1100013862096048,euroleague,2026-01-20T19:30:00.000Z,Valencia Basket,Paris Basketball,9.0,1xbet,1.946,1.906,,
+id1100013865624442,euroleague,2026-01-20T19:30:00.000Z,Bayern Munich,KK Partizan Belgrade,7.0,1xbet,1.907,1.945,,
+id1100013862096052,euroleague,2026-01-20T19:45:00.000Z,Real Madrid,Olimpia Milano,8.5,1xbet,1.93,1.93,,
+id1100013862096054,euroleague,2026-01-21T19:30:00.000Z,Virtus Bologna,Fenerbahce Istanbul,-3.5,1xbet,1.93,1.93,,
+id1100013862096056,euroleague,2026-01-22T17:30:00.000Z,Anadolu Efes SK,BC Olympiakos Piraeus,-6.5,1xbet,1.93,1.93,,
+id1100013862096058,euroleague,2026-01-22T19:05:00.000Z,Maccabi Tel-Aviv,Panathinaikos BC,1.0,1xbet,1.886,1.968,,
+id1100013862096060,euroleague,2026-01-22T19:30:00.000Z,Bayern Munich,Valencia Basket,-4.5,1xbet,1.93,1.93,,
+id1100013862096062,euroleague,2026-01-22T19:30:00.000Z,Olimpia Milano,BC Zalgiris Kaunas,3.5,1xbet,1.93,1.93,,
+id1100013862096066,euroleague,2026-01-22T19:45:00.000Z,Real Madrid,AS Monaco,4.0,1xbet,1.926,1.926,,
+id1100013862096064,euroleague,2026-01-22T20:00:00.000Z,Paris Basketball,Dubai Basketball,1.5,1xbet,1.93,1.93,,
+id1100119763468495,israel,2026-01-23T11:00:00.000Z,Elitzur Netanya,Ironi Ness Ziona,-2.0,1xbet,1.84,1.87,,
+id1100013862096068,euroleague,2026-01-23T17:45:00.000Z,Fenerbahce Istanbul,Baskonia Vitoria-Gasteiz,11.0,1xbet,1.915,1.937,,
+id1100013862096072,euroleague,2026-01-23T19:30:00.000Z,KK Partizan Belgrade,Hapoel Tel-Aviv,-7.5,1xbet,1.93,1.93,,
+id1100013862096074,euroleague,2026-01-23T19:30:00.000Z,Virtus Bologna,KK Crvena zvezda Belgrade,1.5,1xbet,1.93,1.93,,
+id1100013862096070,euroleague,2026-01-23T19:45:00.000Z,ASVEL Lyon-Villeurbanne,FC Barcelona,-8.5,1xbet,1.93,1.93,,
+id1100119763468499,israel,2026-01-24T17:10:00.000Z,Hapoel Galil Elyon,Hapoel Jerusalem,-14.0,1xbet,1.86,1.86,,
+id1100119763468503,israel,2026-01-24T19:00:00.000Z,Ironi Kiryat ATA,Hapoel Holon BC,-5.0,1xbet,1.85,1.86,,
+id1100119763468507,israel,2026-01-25T16:35:00.000Z,Hapoel Tel-Aviv,Hapoel Beer Sheva,16.5,1xbet,1.89,1.84,,
+id1100119763468505,israel,2026-01-25T18:55:00.000Z,Maccabi Ironi Ramat Gan,Maccabi Tel-Aviv,-11.5,1xbet,1.88,1.85,,
+id1100119763468497,israel,2026-01-26T16:30:00.000Z,Maccabi Raanana,Hapoel Haemek,-4.5,1xbet,1.88,1.85,,
+id1100119763468501,israel,2026-01-26T18:55:00.000Z,Bnei Herzliya Basket,Maccabi Rishon LeZion,7.0,1xbet,1.86,1.85,,
+id1100013862096076,euroleague,2026-01-27T20:00:00.000Z,Paris Basketball,Real Madrid,-7.0,pinnacle+30,1.925,1.917,3.39,1.326
+id1100013862096078,euroleague,2026-01-29T17:45:00.000Z,Fenerbahce Istanbul,Anadolu Efes SK,7.5,pinnacle+30,1.917,1.934,1.334,3.46
+id1100013862096080,euroleague,2026-01-29T19:05:00.000Z,Hapoel Tel-Aviv,Bayern Munich,10.0,pinnacle+30,1.934,1.909,1.198,4.9
+id1100013862096082,euroleague,2026-01-29T19:15:00.000Z,BC Olympiakos Piraeus,FC Barcelona,6.0,pinnacle+30,1.934,1.909,1.389,3.14
+id1100013862096084,euroleague,2026-01-29T19:30:00.000Z,Olimpia Milano,KK Partizan Belgrade,8.5,pinnacle+30,1.909,1.934,1.248,4.21
+id1100013862096086,euroleague,2026-01-29T19:45:00.000Z,Valencia Basket,Maccabi Tel-Aviv,7.5,pinnacle+30,1.961,1.892,1.307,3.65
+id1100013862096088,euroleague,2026-01-30T18:30:00.000Z,AS Monaco,Virtus Bologna,10.5,pinnacle+30,1.925,1.917,1.18,5.25
+id1100013862096090,euroleague,2026-01-30T19:00:00.000Z,KK Crvena zvezda Belgrade,Dubai Basketball,5.5,pinnacle+30,1.925,1.925,1.392,3.12
+id1100013862096094,euroleague,2026-01-30T19:30:00.000Z,Baskonia Vitoria-Gasteiz,BC Zalgiris Kaunas,-1.0,pinnacle+30,1.97,1.869,1.961,1.892
+id1100013862096092,euroleague,2026-01-30T19:45:00.000Z,ASVEL Lyon-Villeurbanne,Panathinaikos BC,-7.0,pinnacle+30,1.9,1.952,3.58,1.263
+id1100013862096096,euroleague,2026-02-03T16:00:00.000Z,Dubai Basketball,BC Olympiakos Piraeus,-5.0,pinnacle+30,1.917,1.925,2.69,1.502
+id1100013862096098,euroleague,2026-02-03T17:30:00.000Z,Anadolu Efes SK,Valencia Basket,-3.0,pinnacle+30,1.952,1.892,2.29,1.662
+id1100013862096100,euroleague,2026-02-03T18:00:00.000Z,BC Zalgiris Kaunas,AS Monaco,1.0,pinnacle+30,1.925,1.917,1.884,1.97
+id1100013862096102,euroleague,2026-02-03T19:00:00.000Z,KK Crvena zvezda Belgrade,Hapoel Tel-Aviv,4.0,pinnacle+30,1.925,1.925,1.564,2.5
+id1100013862096112,euroleague,2026-02-03T19:05:00.000Z,Maccabi Tel-Aviv,KK Partizan Belgrade,7.0,pinnacle+30,1.884,1.961,1.298,3.72
+id1100013862096104,euroleague,2026-02-03T19:15:00.000Z,Panathinaikos BC,Real Madrid,1.0,pinnacle+30,1.892,1.952,1.909,1.943
+id1100013862096106,euroleague,2026-02-03T19:30:00.000Z,Olimpia Milano,Baskonia Vitoria-Gasteiz,5.5,pinnacle+30,1.943,1.9,1.404,3.06
+id1100013862096108,euroleague,2026-02-03T19:30:00.000Z,FC Barcelona,Fenerbahce Istanbul,3.5,pinnacle+30,1.917,1.934,1.645,2.33
+id1100013862096110,euroleague,2026-02-03T19:30:00.000Z,Bayern Munich,Paris Basketball,4.0,pinnacle+30,1.961,1.884,1.564,2.51
+id1100013862096114,euroleague,2026-02-04T19:30:00.000Z,Virtus Bologna,ASVEL Lyon-Villeurbanne,8.5,pinnacle+30,1.917,1.925,1.242,4.27
+id1100013862096116,euroleague,2026-02-05T16:00:00.000Z,Dubai Basketball,Real Madrid,-3.0,pinnacle+30,1.925,1.917,2.34,1.636
+id1100013862096118,euroleague,2026-02-05T19:00:00.000Z,Hapoel Tel-Aviv,Valencia Basket,4.0,pinnacle+30,1.961,1.884,1.518,2.64
+id1100013862096120,euroleague,2026-02-05T19:30:00.000Z,Bayern Munich,AS Monaco,-3.5,pinnacle+30,1.925,1.925,2.33,1.645
+id1100013862096122,euroleague,2026-02-05T19:30:00.000Z,KK Partizan Belgrade,Panathinaikos BC,-4.5,pinnacle+30,1.961,1.884,2.74,1.485
+id1100013862096124,euroleague,2026-02-05T19:45:00.000Z,Paris Basketball,Fenerbahce Istanbul,-5.0,pinnacle+30,1.961,1.892,2.71,1.495
+id1100119763468515,israel,2026-02-06T11:00:00.000Z,Ironi Ness Ziona,Maccabi Rishon LeZion,3.0,pinnacle+30,1.884,1.934,1.636,2.28
+id1100013862096126,euroleague,2026-02-06T17:30:00.000Z,Anadolu Efes SK,BC Zalgiris Kaunas,-2.0,pinnacle+30,1.9,1.943,2.15,1.746
+id1100013862096128,euroleague,2026-02-06T19:00:00.000Z,KK Crvena zvezda Belgrade,Maccabi Tel-Aviv,6.5,pinnacle+30,1.952,1.9,1.362,3.28
+id1100013862096130,euroleague,2026-02-06T19:00:00.000Z,ASVEL Lyon-Villeurbanne,Olimpia Milano,-2.5,pinnacle+30,1.934,1.909,2.21,1.709
+id1100013862096132,euroleague,2026-02-06T19:15:00.000Z,BC Olympiakos Piraeus,Virtus Bologna,12.5,pinnacle+30,1.884,1.961,1.159,5.71
+id1100013862096134,euroleague,2026-02-06T19:30:00.000Z,Baskonia Vitoria-Gasteiz,FC Barcelona,-2.5,pinnacle+30,1.917,1.934,2.25,1.684
+id1100119763468519,israel,2026-02-07T17:10:00.000Z,Hapoel Holon BC,Bnei Herzliya Basket,2.0,pinnacle+30,1.909,1.909,1.781,2.06
+id1100119763468511,israel,2026-02-08T16:30:00.000Z,Hapoel Haemek,Maccabi Ironi Ramat Gan,7.5,pinnacle+30,1.909,1.909,1.273,3.64
+id1100119763468517,israel,2026-02-08T17:00:00.000Z,Ironi Kiryat ATA,Hapoel Beer Sheva,-1.5,pinnacle+30,1.917,1.892,2.009,1.813
+id1100119763468521,israel,2026-02-08T18:55:00.000Z,Hapoel Jerusalem,Hapoel Tel-Aviv,-1.5,pinnacle+30,1.884,1.934,1.943,1.869
+id1100119763468513,israel,2026-02-09T16:35:00.000Z,Hapoel Galil Elyon,Elitzur Netanya,1.5,pinnacle+30,1.9,1.917,1.84,1.99
+id1100119763468509,israel,2026-02-09T18:55:00.000Z,Maccabi Raanana,Maccabi Tel-Aviv,-15.5,pinnacle+30,1.943,1.869,8.69,1.057
+id1100013862096136,euroleague,2026-02-12T17:30:00.000Z,Anadolu Efes SK,Virtus Bologna,5.0,pinnacle+30,1.909,1.961,1.476,2.8
+id1100013862096138,euroleague,2026-02-12T19:05:00.000Z,Maccabi Tel-Aviv,Bayern Munich,5.5,1xbet,1.92,1.94,,
+id1100013862096140,euroleague,2026-02-12T19:15:00.000Z,BC Olympiakos Piraeus,KK Crvena zvezda Belgrade,8.0,pinnacle+30,1.925,1.925,1.286,3.83
+id1100013862096142,euroleague,2026-02-12T19:30:00.000Z,Valencia Basket,ASVEL Lyon-Villeurbanne,11.5,1xbet,1.93,1.93,,
+id1100013862096144,euroleague,2026-02-12T19:30:00.000Z,FC Barcelona,Paris Basketball,2.5,1xbet,1.85,1.85,,
+id1100013862096146,euroleague,2026-02-13T18:00:00.000Z,BC Zalgiris Kaunas,Hapoel Tel-Aviv,2.5,pinnacle+30,1.892,1.961,1.729,2.17
+id1100013862096148,euroleague,2026-02-13T18:30:00.000Z,AS Monaco,Baskonia Vitoria-Gasteiz,8.5,1xbet,1.93,1.93,,
+id1100013862096150,euroleague,2026-02-13T19:15:00.000Z,Panathinaikos BC,Fenerbahce Istanbul,3.0,pinnacle+30,1.917,1.934,1.645,2.32
+id1100013862096152,euroleague,2026-02-13T19:30:00.000Z,KK Partizan Belgrade,Real Madrid,-5.5,1xbet,1.93,1.93,,
+id1100013862096154,euroleague,2026-02-13T19:30:00.000Z,Olimpia Milano,Dubai Basketball,2.5,1xbet,1.91,1.95,,
+id1100119763468631,israel,2026-02-15T16:00:00.000Z,Hapoel Tel-Aviv,Maccabi Raanana,17.0,pinnacle+30,1.909,1.909,1.042,10.09
+id1100119763468527,israel,2026-02-17T17:00:00.000Z,Maccabi Rishon LeZion,Ironi Kiryat ATA,,,,,,
+id1100119763468645,israel,2026-02-18T17:00:00.000Z,Hapoel Tel-Aviv,Maccabi Ironi Ramat Gan,14.0,pinnacle+30,1.909,1.9,1.07,7.78
+id1100119763468525,israel,2026-02-20T11:00:00.000Z,Maccabi Raanana,Hapoel Beer Sheva,-2.5,pinnacle+30,1.877,1.934,2.15,1.714
+id1100119763468523,israel,2026-02-21T17:10:00.000Z,Elitzur Netanya,Hapoel Haemek,-7.0,pinnacle+30,1.854,1.877,3.23,1.288
+id1100119763468533,israel,2026-02-21T19:15:00.000Z,Hapoel Tel-Aviv,Hapoel Holon BC,12.5,pinnacle+30,1.884,1.934,1.12,5.82
+id1100119763468531,israel,2026-02-22T16:35:00.000Z,Maccabi Ironi Ramat Gan,Hapoel Jerusalem,-10.5,pinnacle+30,1.9,1.917,5.28,1.142
+id1100119763468529,israel,2026-02-22T16:45:00.000Z,Bnei Herzliya Basket,Hapoel Galil Elyon,13.0,pinnacle+30,1.869,1.952,1.087,6.93
+id1100119763468535,israel,2026-02-22T18:55:00.000Z,Maccabi Tel-Aviv,Ironi Ness Ziona,17.0,pinnacle+30,1.877,1.934,1.046,9.66
+id1100013862096156,euroleague,2026-02-25T17:45:00.000Z,Fenerbahce Istanbul,KK Partizan Belgrade,9.5,pinnacle+30,1.952,1.892,1.234,4.38
+id1100013862096158,euroleague,2026-02-25T18:00:00.000Z,BC Zalgiris Kaunas,BC Olympiakos Piraeus,3.0,pinnacle+30,1.847,1.925,1.609,2.3
+id1100013862096160,euroleague,2026-02-25T19:30:00.000Z,Virtus Bologna,FC Barcelona,-4.0,pinnacle+30,1.9,1.943,2.45,1.588
+id1100013862096168,euroleague,2026-02-25T19:30:00.000Z,KK Crvena zvezda Belgrade,Anadolu Efes SK,7.5,pinnacle+30,1.961,1.884,1.32,3.55
+id1100013862096162,euroleague,2026-02-26T17:00:00.000Z,Dubai Basketball,ASVEL Lyon-Villeurbanne,10.0,pinnacle+30,1.925,1.925,1.194,4.97
+id1100013862096166,euroleague,2026-02-26T18:30:00.000Z,AS Monaco,Maccabi Tel-Aviv,6.5,pinnacle+30,1.952,1.9,1.366,3.26
+id1100013862096164,euroleague,2026-02-26T19:05:00.000Z,Hapoel Tel-Aviv,Olimpia Milano,7.0,pinnacle+30,1.943,1.9,1.325,3.52
+id1100013862096172,euroleague,2026-02-26T19:30:00.000Z,Baskonia Vitoria-Gasteiz,Valencia Basket,-2.5,pinnacle+30,1.943,1.9,2.18,1.724
+id1100013862096170,euroleague,2026-02-26T19:45:00.000Z,Panathinaikos BC,Paris Basketball,9.5,pinnacle+30,1.934,1.909,1.2,4.87
+id1100013862096174,euroleague,2026-02-26T19:45:00.000Z,Real Madrid,Bayern Munich,11.0,pinnacle+30,1.9,1.943,1.159,5.71
+id1100013862096176,euroleague,2026-03-05T17:45:00.000Z,Fenerbahce Istanbul,AS Monaco,4.5,pinnacle+30,1.892,1.961,1.478,2.76
+id1100013862096180,euroleague,2026-03-05T19:30:00.000Z,Olimpia Milano,FC Barcelona,1.0,pinnacle+30,1.925,1.925,1.854,2.0
+id1100013862096184,euroleague,2026-03-05T19:30:00.000Z,Valencia Basket,BC Zalgiris Kaunas,4.5,pinnacle+30,1.9,1.943,1.492,2.71
+id1100013862096186,euroleague,2026-03-05T19:45:00.000Z,Real Madrid,Virtus Bologna,12.0,pinnacle+30,1.892,1.952,1.151,5.93
+id1100013862096188,euroleague,2026-03-06T17:30:00.000Z,Anadolu Efes SK,ASVEL Lyon-Villeurbanne,8.0,pinnacle+30,1.917,1.934,1.282,3.86
+id1100013862096190,euroleague,2026-03-06T19:00:00.000Z,KK Crvena zvezda Belgrade,Bayern Munich,9.0,pinnacle+30,1.877,1.9,1.243,4.1
+id1100013862096192,euroleague,2026-03-06T19:15:00.000Z,BC Olympiakos Piraeus,Panathinaikos BC,-2.5,pinnacle+30,1.909,1.934,2.25,1.68
+id1100013862096194,euroleague,2026-03-06T19:30:00.000Z,Baskonia Vitoria-Gasteiz,Paris Basketball,3.5,pinnacle+30,1.917,1.925,1.621,2.37
+id1100013862096262,euroleague,2026-03-10T19:45:00.000Z,Paris Basketball,BC Olympiakos Piraeus,-4.0,pinnacle+30,1.884,1.961,2.36,1.628
+id1100013862096202,euroleague,2026-03-11T19:45:00.000Z,Virtus Bologna,KK Partizan Belgrade,3.5,pinnacle+30,1.952,1.892,1.588,2.45
+id1100013862096208,euroleague,2026-03-12T18:00:00.000Z,AS Monaco,BC Olympiakos Piraeus,-8.5,pinnacle+30,1.877,1.934,3.6,1.298
+id1100013862096196,euroleague,2026-03-12T19:00:00.000Z,Dubai Basketball,Baskonia Vitoria-Gasteiz,7.0,pinnacle+30,1.934,1.884,1.381,3.18
+id1100013862096198,euroleague,2026-03-12T19:30:00.000Z,Bayern Munich,Anadolu Efes SK,3.5,pinnacle+30,1.934,1.909,1.621,2.37
+id1100013862096206,euroleague,2026-03-12T19:45:00.000Z,Real Madrid,Valencia Basket,5.5,pinnacle+30,1.884,1.961,1.404,3.06
+id1100013862096200,euroleague,2026-03-12T20:00:00.000Z,Panathinaikos BC,BC Zalgiris Kaunas,7.5,pinnacle+30,1.961,1.884,1.299,3.72
+id1100013862096204,euroleague,2026-03-12T20:00:00.000Z,Paris Basketball,ASVEL Lyon-Villeurbanne,6.0,pinnacle+30,1.892,1.952,1.387,3.14
+id1100013862096210,euroleague,2026-03-13T19:00:00.000Z,KK Crvena zvezda Belgrade,Fenerbahce Istanbul,1.5,pinnacle+30,1.952,1.9,1.763,2.12
+id1100013862096212,euroleague,2026-03-13T19:30:00.000Z,Olimpia Milano,Maccabi Tel-Aviv,4.5,pinnacle+30,1.917,1.925,1.487,2.73
+id1100013862096214,euroleague,2026-03-13T19:30:00.000Z,FC Barcelona,Hapoel Tel-Aviv,2.5,pinnacle+30,1.934,1.909,1.719,2.19
+id1100013869832182,euroleague,2026-03-17T15:00:00.000Z,Hapoel Tel-Aviv,Paris Basketball,6.0,pinnacle+30,1.943,1.909,1.375,3.21
+id1100013869653708,euroleague,2026-03-17T19:00:00.000Z,KK Partizan Belgrade,Dubai Basketball,-2.0,pinnacle+30,1.934,1.917,2.15,1.746
+id1100013868937720,euroleague,2026-03-17T19:15:00.000Z,BC Olympiakos Piraeus,Fenerbahce Istanbul,6.0,pinnacle+30,1.892,1.952,1.381,3.18
+id1100013862096224,euroleague,2026-03-19T17:00:00.000Z,Valencia Basket,FC Barcelona,6.5,pinnacle+30,1.917,1.934,1.374,3.21
+id1100013862096216,euroleague,2026-03-19T17:30:00.000Z,Anadolu Efes SK,AS Monaco,4.5,pinnacle+30,1.952,1.892,1.526,2.61
+id1100013862096218,euroleague,2026-03-19T19:05:00.000Z,Hapoel Tel-Aviv,Virtus Bologna,9.5,pinnacle+30,1.952,1.892,1.225,4.49
+id1100013862096222,euroleague,2026-03-19T19:15:00.000Z,BC Olympiakos Piraeus,Baskonia Vitoria-Gasteiz,13.0,pinnacle+30,1.952,1.892,1.111,7.38
+id1100013862096220,euroleague,2026-03-19T19:30:00.000Z,Bayern Munich,Dubai Basketball,-1.5,pinnacle+30,1.925,1.925,2.02,1.84
+id1100013862096226,euroleague,2026-03-19T19:45:00.000Z,Paris Basketball,KK Partizan Belgrade,5.5,pinnacle+30,1.892,1.952,1.497,2.7
+id1100013862096228,euroleague,2026-03-20T17:45:00.000Z,Fenerbahce Istanbul,Olimpia Milano,7.0,pinnacle+30,1.943,1.9,1.359,3.3
+id1100013862096230,euroleague,2026-03-20T18:00:00.000Z,BC Zalgiris Kaunas,Real Madrid,-1.0,pinnacle+30,1.98,1.877,1.917,1.934
+id1100013862096234,euroleague,2026-03-20T19:15:00.000Z,Panathinaikos BC,KK Crvena zvezda Belgrade,6.0,pinnacle+30,1.925,1.925,1.361,3.29
+id1100013862096232,euroleague,2026-03-20T19:45:00.000Z,ASVEL Lyon-Villeurbanne,Maccabi Tel-Aviv,-2.0,pinnacle+30,1.952,1.892,2.1,1.781
+id1100013862096242,euroleague,2026-03-24T17:30:00.000Z,Maccabi Tel-Aviv,Fenerbahce Istanbul,-3.5,pinnacle+30,1.892,1.961,2.38,1.617
+id1100013862096238,euroleague,2026-03-24T18:00:00.000Z,AS Monaco,Olimpia Milano,2.0,pinnacle+30,1.961,1.892,1.877,1.98
+id1100013862096240,euroleague,2026-03-24T18:00:00.000Z,BC Zalgiris Kaunas,Bayern Munich,7.5,pinnacle+30,1.925,1.925,1.305,3.67
+id1100013862096236,euroleague,2026-03-24T18:30:00.000Z,Dubai Basketball,Panathinaikos BC,-2.5,pinnacle+30,1.952,1.892,2.22,1.704
+id1100013862096244,euroleague,2026-03-24T19:30:00.000Z,FC Barcelona,Anadolu Efes SK,6.5,pinnacle+30,1.934,1.917,1.35,3.35
+id1100013862096248,euroleague,2026-03-24T19:30:00.000Z,Valencia Basket,BC Olympiakos Piraeus,1.0,pinnacle+30,1.917,1.925,1.934,1.917
+id1100013862096246,euroleague,2026-03-24T19:45:00.000Z,KK Partizan Belgrade,ASVEL Lyon-Villeurbanne,8.5,pinnacle+30,1.917,1.925,1.26,4.08
+id1100013862096250,euroleague,2026-03-24T20:00:00.000Z,Real Madrid,Hapoel Tel-Aviv,-15.0,pinnacle+30,1.854,1.884,1.359,3.3
+id1100013862096254,euroleague,2026-03-25T19:30:00.000Z,Baskonia Vitoria-Gasteiz,KK Crvena zvezda Belgrade,-2.5,bet365,1.83,1.9,1.71,2.1
+id1100013862096256,euroleague,2026-03-26T19:30:00.000Z,Maccabi Tel-Aviv,Dubai Basketball,1.0,pinnacle+30,1.952,1.9,1.862,2.0
+id1100013862096258,euroleague,2026-03-26T19:30:00.000Z,Olimpia Milano,Virtus Bologna,7.0,pinnacle+30,1.9,1.943,1.323,3.53
+id1100013862096260,euroleague,2026-03-26T19:30:00.000Z,Bayern Munich,ASVEL Lyon-Villeurbanne,7.0,pinnacle+30,1.952,1.884,1.346,3.38
+id1100013862096264,euroleague,2026-03-26T19:45:00.000Z,Real Madrid,Anadolu Efes SK,10.0,pinnacle+30,1.909,1.943,1.191,5.03
+id1100013862096266,euroleague,2026-03-27T17:45:00.000Z,Fenerbahce Istanbul,BC Zalgiris Kaunas,5.5,pinnacle+30,1.909,1.943,1.406,3.05
+id1100013862096268,euroleague,2026-03-27T19:15:00.000Z,Panathinaikos BC,AS Monaco,8.0,pinnacle+30,1.917,1.925,1.236,4.35
+id1100013862096270,euroleague,2026-03-27T19:30:00.000Z,Baskonia Vitoria-Gasteiz,Hapoel Tel-Aviv,-5.0,pinnacle+30,1.884,1.952,2.86,1.452
+id1100013862096274,euroleague,2026-03-27T19:30:00.000Z,KK Partizan Belgrade,Valencia Basket,-3.5,pinnacle+30,1.943,1.892,2.4,1.609
+id1100013862096272,euroleague,2026-03-27T20:00:00.000Z,FC Barcelona,KK Crvena zvezda Belgrade,3.5,pinnacle+30,1.943,1.9,1.581,2.47
+id1100013868937890,euroleague,2026-03-31T18:45:00.000Z,Virtus Bologna,Paris Basketball,2.0,pinnacle+30,1.925,1.917,1.724,2.18
+id1100013862096292,euroleague,2026-04-01T17:00:00.000Z,Bayern Munich,Fenerbahce Istanbul,-5.5,pinnacle+30,1.909,1.934,2.95,1.429
+id1100013862096278,euroleague,2026-04-02T17:00:00.000Z,Hapoel Tel-Aviv,Panathinaikos BC,-1.5,pinnacle+30,1.952,1.9,2.04,1.826
+id1100013862096280,euroleague,2026-04-02T17:00:00.000Z,BC Zalgiris Kaunas,FC Barcelona,4.5,pinnacle+30,1.934,1.909,1.537,2.58
+id1100013862096282,euroleague,2026-04-02T18:00:00.000Z,KK Crvena zvezda Belgrade,KK Partizan Belgrade,6.5,pinnacle+30,1.917,1.925,1.333,3.46
+id1100013862096286,euroleague,2026-04-02T18:00:00.000Z,Dubai Basketball,AS Monaco,4.0,pinnacle+30,1.9,1.943,1.564,2.5
+id1100013862096284,euroleague,2026-04-02T18:45:00.000Z,Paris Basketball,Olimpia Milano,2.0,pinnacle+30,1.925,1.917,1.787,2.09
+id1100013862096276,euroleague,2026-04-02T19:00:00.000Z,Maccabi Tel-Aviv,Anadolu Efes SK,5.5,pinnacle+30,1.943,1.869,1.403,2.98
+id1100013862096288,euroleague,2026-04-03T18:00:00.000Z,ASVEL Lyon-Villeurbanne,BC Olympiakos Piraeus,-8.5,pinnacle+30,1.943,1.9,3.95,1.272
+id1100013862096290,euroleague,2026-04-03T18:30:00.000Z,Baskonia Vitoria-Gasteiz,Real Madrid,-6.0,pinnacle+30,1.943,1.877,3.15,1.386
+id1100013862096294,euroleague,2026-04-03T18:30:00.000Z,Virtus Bologna,Valencia Basket,-4.5,pinnacle+30,1.934,1.909,2.74,1.485
+id1100013862096300,euroleague,2026-04-07T16:00:00.000Z,Hapoel Tel-Aviv,Fenerbahce Istanbul,3.0,pinnacle+30,1.925,1.884,1.709,2.16
+id1100013862096296,euroleague,2026-04-07T17:00:00.000Z,BC Zalgiris Kaunas,Dubai Basketball,7.0,pinnacle+30,1.925,1.925,1.346,3.38
+id1100013862096298,euroleague,2026-04-07T18:00:00.000Z,KK Crvena zvezda Belgrade,Paris Basketball,7.0,pinnacle+30,1.909,1.934,1.32,3.55
+id1100013862096302,euroleague,2026-04-07T18:15:00.000Z,BC Olympiakos Piraeus,Real Madrid,5.0,pinnacle+30,1.917,1.934,1.434,2.92
+id1100013862096306,euroleague,2026-04-07T18:30:00.000Z,FC Barcelona,Panathinaikos BC,-3.0,pinnacle+30,1.943,1.909,2.21,1.704
+id1100013862096308,euroleague,2026-04-07T18:30:00.000Z,Valencia Basket,Olimpia Milano,7.0,pinnacle+30,1.892,1.961,1.315,3.59
+id1100013862096310,euroleague,2026-04-07T18:30:00.000Z,Virtus Bologna,Bayern Munich,2.0,pinnacle+30,1.892,1.961,1.735,2.17
+id1100013862096304,euroleague,2026-04-07T19:00:00.000Z,Baskonia Vitoria-Gasteiz,Maccabi Tel-Aviv,-1.0,pinnacle+30,1.925,1.925,1.99,1.869
+id1100013862096312,euroleague,2026-04-08T17:30:00.000Z,Anadolu Efes SK,KK Partizan Belgrade,2.0,pinnacle+30,1.884,1.952,1.74,2.16
+id1100013862096314,euroleague,2026-04-08T17:30:00.000Z,AS Monaco,ASVEL Lyon-Villeurbanne,9.0,pinnacle+30,1.909,1.934,1.249,4.2
+id1100013862096316,euroleague,2026-04-09T16:30:00.000Z,Hapoel Tel-Aviv,BC Olympiakos Piraeus,-2.0,pinnacle+30,1.9,1.952,2.13,1.763
+id1100013862096318,euroleague,2026-04-09T17:45:00.000Z,Fenerbahce Istanbul,Real Madrid,2.0,pinnacle+30,1.917,1.934,1.775,2.11
+id1100013862096320,euroleague,2026-04-09T18:30:00.000Z,Olimpia Milano,Bayern Munich,6.0,pinnacle+30,1.917,1.925,1.361,3.29
+id1100013862096324,euroleague,2026-04-09T18:45:00.000Z,Valencia Basket,Panathinaikos BC,1.5,pinnacle+30,1.9,1.952,1.9,1.952
+id1100013862096322,euroleague,2026-04-09T19:00:00.000Z,Paris Basketball,Maccabi Tel-Aviv,-1.0,pinnacle+30,1.943,1.909,1.943,1.909
+id1100013862096328,euroleague,2026-04-10T17:30:00.000Z,AS Monaco,FC Barcelona,3.0,pinnacle+30,1.9,1.952,1.641,2.33
+id1100013862096326,euroleague,2026-04-10T18:00:00.000Z,Dubai Basketball,Anadolu Efes SK,8.5,pinnacle+30,1.943,1.909,1.252,4.16
+id1100013862096332,euroleague,2026-04-10T18:30:00.000Z,KK Partizan Belgrade,BC Zalgiris Kaunas,-2.5,pinnacle+30,1.934,1.909,2.19,1.719
+id1100013862096334,euroleague,2026-04-10T18:30:00.000Z,Virtus Bologna,Baskonia Vitoria-Gasteiz,3.5,pinnacle+30,1.9,1.952,1.666,2.28
+id1100013862096330,euroleague,2026-04-10T18:45:00.000Z,ASVEL Lyon-Villeurbanne,KK Crvena zvezda Belgrade,-6.0,pinnacle+30,1.917,1.925,3.26,1.366
+id1100013869653830,euroleague,2026-04-12T19:15:00.000Z,Maccabi Tel-Aviv,Hapoel Tel-Aviv,-5.0,pinnacle+30,1.917,1.934,2.73,1.487
+id1100013862096336,euroleague,2026-04-16T18:00:00.000Z,ASVEL Lyon-Villeurbanne,Fenerbahce Istanbul,-8.0,pinnacle+30,1.877,1.943,3.22,1.355
+id1100013862096338,euroleague,2026-04-16T18:05:00.000Z,Maccabi Tel-Aviv,Virtus Bologna,7.0,pinnacle+30,1.869,1.943,1.321,3.43
+id1100013862096340,euroleague,2026-04-16T18:15:00.000Z,BC Olympiakos Piraeus,Olimpia Milano,12.0,pinnacle+30,1.909,1.9,1.125,6.38
+id1100013862096342,euroleague,2026-04-16T18:30:00.000Z,KK Partizan Belgrade,Baskonia Vitoria-Gasteiz,5.0,pinnacle+30,1.9,1.917,1.425,2.89
+id1100013862096344,euroleague,2026-04-16T18:45:00.000Z,Real Madrid,KK Crvena zvezda Belgrade,7.5,pinnacle+30,1.884,1.934,1.301,3.57
+id1100013862096348,euroleague,2026-04-17T17:00:00.000Z,BC Zalgiris Kaunas,Paris Basketball,8.5,pinnacle+30,1.892,1.917,1.27,3.83
+id1100013862096350,euroleague,2026-04-17T17:30:00.000Z,AS Monaco,Hapoel Tel-Aviv,3.0,pinnacle+30,1.934,1.884,1.671,2.23
+id1100013862096346,euroleague,2026-04-17T18:00:00.000Z,Dubai Basketball,Valencia Basket,-2.0,pinnacle+30,1.917,1.9,2.07,1.775
+id1100013862096352,euroleague,2026-04-17T18:15:00.000Z,Panathinaikos BC,Anadolu Efes SK,10.5,pinnacle+30,1.925,1.892,1.143,5.83
+id1100013862096354,euroleague,2026-04-17T18:30:00.000Z,FC Barcelona,Bayern Munich,7.5,pinnacle+30,1.884,1.925,1.241,4.12
+id1100119769753788,israel,2026-04-18T17:20:00.000Z,Hapoel Jerusalem,Bnei Herzliya Basket,11.5,pinnacle+30,1.9,1.917,1.172,4.74
+id1100119763468607,israel,2026-04-18T18:00:00.000Z,Elitzur Netanya,Maccabi Rishon LeZion,-4.5,pinnacle+30,1.917,1.9,2.58,1.507
+id1100119769753782,israel,2026-04-19T14:30:00.000Z,Ironi Kiryat ATA,Maccabi Raanana,2.5,pinnacle+30,1.943,1.862,1.675,2.21
+id1100119763468597,israel,2026-04-19T15:15:00.000Z,Hapoel Haemek,Hapoel Galil Elyon,13.0,pinnacle+30,1.917,1.9,1.098,6.5
+id1100119763468657,israel,2026-04-19T16:35:00.000Z,Ironi Ness Ziona,Maccabi Ironi Ramat Gan,4.0,pinnacle+30,1.934,1.884,1.558,2.45
+id1100119769753780,israel,2026-04-19T17:30:00.000Z,Hapoel Beer Sheva,Hapoel Holon BC,1.5,pinnacle+30,1.934,1.877,1.769,2.07
+id1100013870449346,euroleague,2026-04-21T18:00:00.000Z,Panathinaikos BC,AS Monaco,8.5,pinnacle+30,1.917,1.952,1.293,3.77
+id1100013870449348,euroleague,2026-04-21T18:45:00.000Z,FC Barcelona,KK Crvena zvezda Belgrade,4.0,pinnacle+30,1.943,1.925,1.537,2.58
+id1100119763468555,israel,2026-04-23T13:00:00.000Z,Hapoel Galil Elyon,Hapoel Tel-Aviv,-17.0,pinnacle+30,1.877,1.943,9.26,1.05
+id1100119763468599,israel,2026-04-23T16:00:00.000Z,Bnei Herzliya Basket,Hapoel Beer Sheva,5.0,pinnacle+30,1.892,1.925,1.42,2.86
+id1100119763468595,israel,2026-04-23T18:05:00.000Z,Maccabi Rishon LeZion,Maccabi Tel-Aviv,-14.0,pinnacle+30,1.877,1.925,7.22,1.081
+id1100119763468659,israel,2026-04-24T09:30:00.000Z,Ironi Kiryat ATA,Hapoel Tel-Aviv,-17.0,pinnacle+30,1.9,1.917,9.71,1.046
+id1100119763468573,israel,2026-04-24T10:50:00.000Z,Hapoel Holon BC,Hapoel Haemek,1.0,pinnacle+30,1.909,1.909,1.892,1.925
+id1100013870449350,euroleague,2026-04-24T17:30:00.000Z,AS Monaco,FC Barcelona,1.5,pinnacle+30,1.917,1.9,1.813,2.009
+id1100119763468593,israel,2026-04-25T17:45:00.000Z,Maccabi Raanana,Hapoel Jerusalem,-12.5,pinnacle+30,1.877,1.934,6.35,1.102
+id1100119770820602,israel,2026-04-26T15:40:00.000Z,Ironi Ness Ziona,Bnei Herzliya Basket,-3.5,pinnacle+30,1.925,1.892,2.36,1.598
+id1100119769753852,israel,2026-04-26T16:30:00.000Z,Maccabi Ironi Ramat Gan,Elitzur Netanya,6.0,pinnacle+30,1.934,1.877,1.366,3.08
+id1100119763468623,israel,2026-04-27T15:30:00.000Z,Hapoel Haemek,Ironi Kiryat ATA,9.0,pinnacle+30,1.869,1.943,1.189,4.49
+id1100119763468621,israel,2026-04-27T17:55:00.000Z,Maccabi Rishon LeZion,Hapoel Beer Sheva,2.0,pinnacle+30,1.877,1.934,1.689,2.19
+id1100013870907762,euroleague,2026-04-28T17:45:00.000Z,Fenerbahce Istanbul,BC Zalgiris Kaunas,5.5,pinnacle+30,1.909,1.943,1.398,3.09
+id1100013870449656,euroleague,2026-04-28T18:00:00.000Z,BC Olympiakos Piraeus,AS Monaco,8.5,pinnacle+30,1.892,1.961,1.251,4.17
+id1100013870449620,euroleague,2026-04-28T18:45:00.000Z,Valencia Basket,Panathinaikos BC,3.5,pinnacle+30,1.909,1.934,1.617,2.38
+id1100119763468633,israel,2026-04-29T15:45:00.000Z,Maccabi Tel-Aviv,Elitzur Netanya,18.5,pinnacle+30,1.943,1.869,1.036,10.95
+id1100119763468629,israel,2026-04-29T16:30:00.000Z,Hapoel Jerusalem,Hapoel Holon BC,8.5,pinnacle+30,1.847,1.892,1.227,3.91
+id1100013870907952,euroleague,2026-04-29T18:45:00.000Z,Real Madrid,Hapoel Tel-Aviv,7.5,pinnacle+30,1.943,1.952,1.296,3.74
+id1100119763468625,israel,2026-04-30T16:30:00.000Z,Hapoel Galil Elyon,Maccabi Ironi Ramat Gan,-3.0,pinnacle+30,1.884,1.925,2.29,1.632
+id1100013870907856,euroleague,2026-04-30T17:45:00.000Z,Fenerbahce Istanbul,BC Zalgiris Kaunas,6.0,pinnacle+30,1.892,1.961,1.429,2.95
+id1100013870449654,euroleague,2026-04-30T18:00:00.000Z,BC Olympiakos Piraeus,AS Monaco,9.0,pinnacle+30,1.909,1.943,1.233,4.39
+id1100013870449618,euroleague,2026-04-30T18:45:00.000Z,Valencia Basket,Panathinaikos BC,4.5,pinnacle+30,1.917,1.925,1.546,2.55
+id1100119769753784,israel,2026-05-01T10:30:00.000Z,Ironi Ness Ziona,Hapoel Haemek,-4.0,pinnacle+30,1.909,1.909,2.67,1.473
+id1100013870907954,euroleague,2026-05-01T18:45:00.000Z,Real Madrid,Hapoel Tel-Aviv,7.0,pinnacle+30,1.917,1.934,1.33,3.49
+id1100119763468561,israel,2026-05-02T17:40:00.000Z,Hapoel Holon BC,Maccabi Rishon LeZion,4.0,pinnacle+30,1.943,1.877,1.507,2.57
+id1100119771015644,israel,2026-05-03T15:35:00.000Z,Hapoel Beer Sheva,Hapoel Galil Elyon,8.5,pinnacle+30,1.943,1.862,1.242,3.9
+id1100119763468617,israel,2026-05-03T18:00:00.000Z,Hapoel Jerusalem,Maccabi Tel-Aviv,-1.5,pinnacle+30,1.884,1.9,1.97,1.826
+id1100119763468565,israel,2026-05-04T15:00:00.000Z,Elitzur Netanya,Maccabi Raanana,-1.0,pinnacle+30,1.884,1.925,1.961,1.862
+id1100119771015652,israel,2026-05-04T18:00:00.000Z,Maccabi Ironi Ramat Gan,Bnei Herzliya Basket,-4.5,pinnacle+30,1.934,1.877,2.65,1.48
+id1100013870907956,euroleague,2026-05-05T16:00:00.000Z,Hapoel Tel-Aviv,Real Madrid,1.5,pinnacle+30,1.909,1.943,1.862,1.99
+id1100119763468643,israel,2026-05-05T17:10:00.000Z,Hapoel Holon BC,Ironi Ness Ziona,7.5,pinnacle+30,1.917,1.892,1.287,3.54
+id1100013870449650,euroleague,2026-05-05T17:45:00.000Z,AS Monaco,BC Olympiakos Piraeus,-9.0,pinnacle+30,1.917,1.934,4.19,1.25
+id1100119763468647,israel,2026-05-06T16:00:00.000Z,Maccabi Tel-Aviv,Hapoel Beer Sheva,15.0,pinnacle+30,1.952,1.869,1.061,8.41
+id1100119763468639,israel,2026-05-06T16:10:00.000Z,Maccabi Rishon LeZion,Hapoel Haemek,-2.5,pinnacle+30,1.884,1.925,2.19,1.689
+id1100013870907860,euroleague,2026-05-06T17:00:00.000Z,BC Zalgiris Kaunas,Fenerbahce Istanbul,2.5,pinnacle+30,1.892,1.961,1.775,2.11
+id1100013870449616,euroleague,2026-05-06T18:15:00.000Z,Panathinaikos BC,Valencia Basket,4.5,pinnacle+30,1.892,1.961,1.452,2.86
+id1100119763468635,israel,2026-05-07T15:30:00.000Z,Elitzur Netanya,Hapoel Jerusalem,-10.5,pinnacle+30,1.892,1.917,4.88,1.163
+id1100119763468637,israel,2026-05-07T16:00:00.000Z,Maccabi Raanana,Hapoel Galil Elyon,3.5,pinnacle+30,1.917,1.9,1.609,2.33
+id1100013871322548,euroleague,2026-05-07T18:00:00.000Z,Hapoel Tel-Aviv,Real Madrid,-3.0,pinnacle+30,1.961,1.892,2.3,1.657
+id1100119763468641,israel,2026-05-08T10:15:00.000Z,Bnei Herzliya Basket,Ironi Kiryat ATA,11.0,pinnacle+30,1.917,1.869,1.115,5.52
+id1100013871344474,euroleague,2026-05-08T17:00:00.000Z,BC Zalgiris Kaunas,Fenerbahce Istanbul,1.5,pinnacle+30,1.943,1.9,1.84,2.02
+id1100013871352662,euroleague,2026-05-08T18:15:00.000Z,Panathinaikos BC,Valencia Basket,4.5,pinnacle+30,1.952,1.892,1.497,2.7
+id1100119763468609,israel,2026-05-09T17:15:00.000Z,Hapoel Haemek,Hapoel Tel-Aviv,-7.0,pinnacle+30,1.869,1.952,3.52,1.29
+id1100119763468587,israel,2026-05-10T15:30:00.000Z,Hapoel Jerusalem,Maccabi Rishon LeZion,8.5,pinnacle+30,1.847,1.892,1.207,4.13
+id1100119763468581,israel,2026-05-10T17:15:00.000Z,Hapoel Beer Sheva,Ironi Ness Ziona,4.0,pinnacle+30,1.884,1.934,1.543,2.48
+id1100119771194044,israel,2026-05-10T17:50:00.000Z,Hapoel Galil Elyon,Hapoel Holon BC,-6.5,pinnacle+30,1.862,1.917,3.32,1.32
+id1100119763468557,israel,2026-05-11T17:30:00.000Z,Bnei Herzliya Basket,Elitzur Netanya,7.0,pinnacle+30,1.877,1.934,1.251,3.82
+id1100119763468577,israel,2026-05-11T18:05:00.000Z,Maccabi Tel-Aviv,Ironi Kiryat ATA,18.0,pinnacle+30,1.9,1.909,1.035,11.04
+id1100119763468589,israel,2026-05-12T16:00:00.000Z,Maccabi Ironi Ramat Gan,Maccabi Raanana,5.5,pinnacle+30,1.877,1.943,1.414,2.87
+id1100119763468567,israel,2026-05-13T15:35:00.000Z,Maccabi Rishon LeZion,Hapoel Galil Elyon,6.0,pinnacle+30,1.892,1.925,1.35,3.16
+id1100119763468571,israel,2026-05-13T17:55:00.000Z,Ironi Ness Ziona,Hapoel Jerusalem,-5.5,pinnacle+30,1.884,1.854,3.01,1.354
+id1100013870449624,euroleague,2026-05-13T19:00:00.000Z,Valencia Basket,Panathinaikos BC,2.5,bet365,1.86,1.86,2.2,1.66
+id1100119763468603,israel,2026-05-14T14:30:00.000Z,Ironi Kiryat ATA,Elitzur Netanya,4.0,pinnacle+30,1.909,1.869,1.534,2.45
+id1100119763468553,israel,2026-05-14T18:05:00.000Z,Hapoel Haemek,Maccabi Tel-Aviv,-21.5,pinnacle+30,1.869,1.869,9.99,1.02
+id1100119763468615,israel,2026-05-15T10:30:00.000Z,Hapoel Holon BC,Maccabi Raanana,10.0,pinnacle+30,1.934,1.884,1.168,4.8
+id1100119763468569,israel,2026-05-15T11:00:00.000Z,Hapoel Beer Sheva,Maccabi Ironi Ramat Gan,3.5,pinnacle+30,1.892,1.917,1.609,2.33
+id1100119769753786,israel,2026-05-17T18:05:00.000Z,Maccabi Tel-Aviv,Hapoel Galil Elyon,21.5,pinnacle+30,1.884,1.847,1.026,12.69
+id1100119763468579,israel,2026-05-18T15:40:00.000Z,Elitzur Netanya,Hapoel Holon BC,-6.5,pinnacle+30,1.917,1.9,3.08,1.366
+id1100119763468551,israel,2026-05-18T18:00:00.000Z,Maccabi Raanana,Ironi Ness Ziona,-5.5,pinnacle+30,1.869,1.862,2.8,1.436
+id1100119763468559,israel,2026-05-19T16:00:00.000Z,Ironi Kiryat ATA,Maccabi Ironi Ramat Gan,3.5,pinnacle+30,1.9,1.917,1.568,2.43
+id1100119763468563,israel,2026-05-20T15:40:00.000Z,Hapoel Jerusalem,Hapoel Beer Sheva,15.5,pinnacle+30,1.877,1.943,1.061,8.38
+id1100119763468585,israel,2026-05-20T17:00:00.000Z,Bnei Herzliya Basket,Hapoel Haemek,4.5,pinnacle+30,1.925,1.892,1.523,2.53
+id1100119771506632,israel,2026-05-20T18:00:00.000Z,Hapoel Tel-Aviv,Maccabi Rishon LeZion,10.5,pinnacle+30,1.892,1.847,1.127,5.51
+id1100013870449612,euroleague,2026-05-22T15:00:00.000Z,BC Olympiakos Piraeus,Fenerbahce Istanbul,5.5,pinnacle+30,1.909,1.943,1.471,2.78
+id1100013871493990,euroleague,2026-05-22T18:00:00.000Z,Valencia Basket,Real Madrid,-1.0,pinnacle+30,1.917,1.934,1.99,1.869
+id1100119763468649,israel,2026-05-23T17:45:00.000Z,Maccabi Rishon LeZion,Maccabi Raanana,8.0,pinnacle+30,1.833,1.909,1.249,3.84
+id1100013870449608,euroleague,2026-05-24T18:00:00.000Z,BC Olympiakos Piraeus,Real Madrid,6.5,pinnacle+30,1.97,1.943,1.342,3.41
+id1100119763468601,israel,2026-05-25T15:40:00.000Z,Ironi Ness Ziona,Hapoel Tel-Aviv,-8.0,pinnacle+30,1.9,1.917,3.88,1.245
+id1100119763468661,israel,2026-05-25T18:00:00.000Z,Maccabi Tel-Aviv,Bnei Herzliya Basket,15.0,pinnacle+30,1.877,1.862,1.091,6.75
+id1100119763468605,israel,2026-05-26T14:30:00.000Z,Maccabi Ironi Ramat Gan,Hapoel Holon BC,-1.0,pinnacle+30,1.925,1.862,2.71,1.462
+id1100119763468583,israel,2026-05-26T15:30:00.000Z,Hapoel Galil Elyon,Ironi Kiryat ATA,-1.5,pinnacle+30,1.917,1.862,2.05,1.757
+id1100119763468653,israel,2026-05-27T15:35:00.000Z,Hapoel Beer Sheva,Elitzur Netanya,3.5,pinnacle+30,1.877,1.943,1.632,2.29
+id1100119771240332,israel,2026-05-27T17:50:00.000Z,Hapoel Haemek,Hapoel Jerusalem,-5.5,pinnacle+30,1.917,1.9,2.98,1.389
+id1100119763468591,israel,2026-05-28T18:00:00.000Z,Maccabi Tel-Aviv,Hapoel Tel-Aviv,8.0,pinnacle+30,1.943,1.877,1.236,3.96
+id1100119763468613,israel,2026-05-29T10:45:00.000Z,Ironi Kiryat ATA,Ironi Ness Ziona,-2.5,pinnacle+30,1.892,1.925,2.06,1.781
+id1100119771781774,israel,2026-05-31T15:35:00.000Z,Hapoel Tel-Aviv,Maccabi Rishon LeZion,11.5,pinnacle+30,1.925,1.884,1.112,6.02
+id1100119771781776,israel,2026-05-31T17:55:00.000Z,Hapoel Jerusalem,Hapoel Haemek,13.0,pinnacle+30,1.884,1.925,1.09,6.81
+id1100119771781778,israel,2026-06-01T15:35:00.000Z,Bnei Herzliya Basket,Hapoel Holon BC,1.5,pinnacle+30,1.925,1.884,1.769,2.07
+id1100119771828162,israel,2026-06-01T17:00:00.000Z,Elitzur Netanya,Hapoel Galil Elyon,6.0,pinnacle+30,1.869,1.952,1.367,3.08
+id1100119771781780,israel,2026-06-01T17:55:00.000Z,Maccabi Tel-Aviv,Hapoel Beer Sheva,22.5,pinnacle+30,1.934,1.877,1.025,12.97
+id1100119771781782,israel,2026-06-02T15:35:00.000Z,Hapoel Haemek,Hapoel Jerusalem,-6.0,pinnacle+30,1.917,1.892,3.06,1.371
+id1100119771828164,israel,2026-06-02T17:00:00.000Z,Ironi Ness Ziona,Maccabi Raanana,9.0,pinnacle+30,1.917,1.9,1.239,3.93
+id1100119771781784,israel,2026-06-02T17:55:00.000Z,Maccabi Rishon LeZion,Hapoel Tel-Aviv,-12.0,pinnacle+30,1.884,1.934,6.36,1.102
+id1100119771781786,israel,2026-06-03T15:30:00.000Z,Hapoel Beer Sheva,Maccabi Tel-Aviv,-16.5,pinnacle+30,1.934,1.884,9.59,1.047
+id1100119771781788,israel,2026-06-03T17:30:00.000Z,Hapoel Holon BC,Bnei Herzliya Basket,4.5,pinnacle+30,1.877,1.943,1.507,2.57
+id1100119771913482,israel,2026-06-04T17:55:00.000Z,Hapoel Tel-Aviv,Maccabi Rishon LeZion,15.0,pinnacle+30,1.925,1.884,1.057,8.66
+id1100119771828168,israel,2026-06-06T17:50:00.000Z,Hapoel Galil Elyon,Ironi Ness Ziona,-1.5,pinnacle+30,1.862,1.877,2.02,1.74
+id1100119771828166,israel,2026-06-06T18:00:00.000Z,Maccabi Raanana,Elitzur Netanya,2.0,pinnacle+30,1.892,1.917,1.746,2.11
+id1100119771937616,israel,2026-06-07T17:50:00.000Z,Hapoel Tel-Aviv,Hapoel Jerusalem,5.0,pinnacle+30,1.869,1.943,1.4,2.93
+id1100119771916934,israel,2026-06-08T17:50:00.000Z,Maccabi Tel-Aviv,Hapoel Holon BC,13.0,pinnacle+30,1.9,1.909,1.081,7.2
+id1100119771828170,israel,2026-06-09T15:30:00.000Z,Elitzur Netanya,Ironi Ness Ziona,-1.5,pinnacle+30,1.943,1.877,2.029,1.8
+id1100119771828172,israel,2026-06-09T17:00:00.000Z,Maccabi Raanana,Hapoel Galil Elyon,4.0,pinnacle+30,1.892,1.925,1.531,2.51
+id1100119771937618,israel,2026-06-09T17:50:00.000Z,Hapoel Jerusalem,Hapoel Tel-Aviv,-5.5,pinnacle+30,1.884,1.934,2.83,1.427
+id1100119771916936,israel,2026-06-10T17:50:00.000Z,Hapoel Holon BC,Maccabi Tel-Aviv,-10.0,pinnacle+30,1.884,1.925,4.53,1.186
+id1100119771941850,israel,2026-06-11T17:50:00.000Z,Hapoel Tel-Aviv,Hapoel Jerusalem,7.0,pinnacle+30,1.925,1.884,1.33,3.27
+id1100119771941858,israel,2026-06-12T12:00:00.000Z,Maccabi Tel-Aviv,Hapoel Holon BC,14.0,pinnacle+30,1.869,1.943,1.076,7.44
+id1100119771828174,israel,2026-06-14T14:50:00.000Z,Hapoel Galil Elyon,Maccabi Raanana,1.0,pinnacle+30,1.909,1.909,1.869,1.943
+id1100119771828176,israel,2026-06-14T16:00:00.000Z,Ironi Ness Ziona,Elitzur Netanya,4.0,pinnacle+30,1.909,1.909,1.512,2.56
+id1100119772068898,israel,2026-06-16T17:50:00.000Z,Maccabi Tel-Aviv,Hapoel Tel-Aviv,2.5,pinnacle+30,1.917,1.9,1.649,2.26
+id1100119771828178,israel,2026-06-17T16:50:00.000Z,Elitzur Netanya,Maccabi Raanana,5.0,pinnacle+30,1.909,1.909,1.442,2.77
+id1100119771828180,israel,2026-06-17T16:50:00.000Z,Ironi Ness Ziona,Hapoel Galil Elyon,4.0,pinnacle+30,1.862,1.877,1.5,2.48
+id1100119772069268,israel,2026-06-18T17:50:00.000Z,Hapoel Tel-Aviv,Maccabi Tel-Aviv,2.0,pinnacle+30,1.925,1.884,1.781,2.05
+id1100119772196666,israel,2026-06-21T17:50:00.000Z,Maccabi Tel-Aviv,Hapoel Tel-Aviv,6.5,pinnacle+30,1.892,1.917,1.357,3.13
+id1100119771828184,israel,2026-06-22T15:30:00.000Z,Hapoel Galil Elyon,Elitzur Netanya,5.0,pinnacle+30,1.84,1.892,1.452,2.58
+id1100119771828182,israel,2026-06-22T17:50:00.000Z,Maccabi Raanana,Ironi Ness Ziona,-6.5,pinnacle+30,1.877,1.862,3.15,1.328
+id1100119772265290,israel,2026-06-23T17:50:00.000Z,Hapoel Tel-Aviv,Maccabi Tel-Aviv,3.0,pinnacle+30,1.934,1.877,1.653,2.25
+id1100013873262938,euroleague,2026-09-24T16:00:00.000Z,Dubai Basketball,Real Madrid,3.5,pinnacle+30,1.892,1.952,1.649,2.32
+id1100013873262940,euroleague,2026-09-24T16:00:00.000Z,Hapoel Tel-Aviv,Bayern Munich,7.5,pinnacle+30,1.952,1.892,1.314,3.6
+id1100013873262942,euroleague,2026-09-24T18:00:00.000Z,KK Crvena zvezda Belgrade,BC Zalgiris Kaunas,3.0,pinnacle+30,1.925,1.925,1.645,2.32
+id1100013873262944,euroleague,2026-09-24T18:15:00.000Z,Panathinaikos BC,Paris Basketball,9.0,pinnacle+30,1.892,1.952,1.267,4.0
+id1100013873262946,euroleague,2026-09-24T18:30:00.000Z,FC Barcelona,Anadolu Efes SK,-2.0,pinnacle+30,1.9,1.952,2.12,1.763
+id1100013873262948,euroleague,2026-09-24T18:30:00.000Z,Baskonia Vitoria-Gasteiz,BC Olympiakos Piraeus,-10.0,pinnacle+30,1.934,1.917,4.58,1.219
+id1100013873262950,euroleague,2026-09-24T18:45:00.000Z,ASVEL Lyon-Villeurbanne,Maccabi Tel-Aviv,-3.5,pinnacle+30,1.952,1.9,2.42,1.602
+id1100013873262952,euroleague,2026-09-25T17:00:00.000Z,Besiktas JK,Valencia Basket,2.0,pinnacle+30,1.943,1.909,1.819,2.05
+id1100013873262954,euroleague,2026-09-25T17:45:00.000Z,Fenerbahce Istanbul,Virtus Bologna,12.0,pinnacle+30,1.961,1.892,1.15,5.96
+id1100013873262956,euroleague,2026-09-25T18:45:00.000Z,KK Partizan Belgrade,Olimpia Milano,2.5,pinnacle+30,1.917,1.925,1.724,2.18
+id1100013873262958,euroleague,2026-09-29T16:00:00.000Z,Dubai Basketball,FC Barcelona,7.0,pinnacle+30,1.943,1.909,1.384,3.16
+id1100013873262960,euroleague,2026-09-29T17:00:00.000Z,Anadolu Efes SK,Real Madrid,-1.0,pinnacle+30,1.934,1.917,1.943,1.9
+id1100013873262962,euroleague,2026-09-29T17:00:00.000Z,BC Zalgiris Kaunas,BC Olympiakos Piraeus,-2.0,pinnacle+30,1.892,1.961,2.14,1.751
+id1100013873262964,euroleague,2026-09-29T17:45:00.000Z,Fenerbahce Istanbul,Bayern Munich,8.5,pinnacle+30,1.961,1.884,1.327,3.5
+id1100013873262966,euroleague,2026-09-29T18:00:00.000Z,KK Crvena zvezda Belgrade,Hapoel Tel-Aviv,2.5,pinnacle+30,1.943,1.909,1.666,2.28
+id1100013873262968,euroleague,2026-09-29T18:30:00.000Z,Valencia Basket,Baskonia Vitoria-Gasteiz,8.5,pinnacle+30,1.884,1.961,1.285,3.83
+id1100013873262970,euroleague,2026-09-29T18:30:00.000Z,Olimpia Milano,Virtus Bologna,6.5,pinnacle+30,1.925,1.917,1.386,3.16
+id1100013873262972,euroleague,2026-09-29T18:45:00.000Z,Paris Basketball,KK Partizan Belgrade,3.0,pinnacle+30,1.9,1.943,1.666,2.28
+id1100013873262974,euroleague,2026-09-30T18:05:00.000Z,Maccabi Tel-Aviv,Besiktas JK,5.5,pinnacle+30,1.9,1.952,1.454,2.85
+id1100013873262976,euroleague,2026-09-30T18:15:00.000Z,Panathinaikos BC,ASVEL Lyon-Villeurbanne,11.5,pinnacle+30,1.961,1.884,1.164,5.6
+id1100013873262978,euroleague,2026-10-01T16:00:00.000Z,Hapoel Tel-Aviv,Real Madrid,-4.0,pinnacle+30,1.917,1.925,2.53,1.555
+id1100013873262980,euroleague,2026-10-01T18:00:00.000Z,KK Crvena zvezda Belgrade,Anadolu Efes SK,3.0,pinnacle+30,1.934,1.909,1.649,2.31
+id1100013873262982,euroleague,2026-10-01T18:30:00.000Z,Virtus Bologna,BC Olympiakos Piraeus,-10.0,pinnacle+30,1.934,1.909,4.09,1.259
+id1100013873262984,euroleague,2026-10-01T18:45:00.000Z,Paris Basketball,BC Zalgiris Kaunas,-4.5,pinnacle+30,1.917,1.934,2.49,1.571
+id1100013873262986,euroleague,2026-10-02T17:00:00.000Z,Besiktas JK,FC Barcelona,1.5,pinnacle+30,1.952,1.9,1.806,2.07
+id1100013873262988,euroleague,2026-10-02T17:45:00.000Z,Fenerbahce Istanbul,Dubai Basketball,5.0,pinnacle+30,1.934,1.917,1.52,2.63
+id1100013873262990,euroleague,2026-10-02T18:00:00.000Z,ASVEL Lyon-Villeurbanne,Valencia Basket,-3.5,pinnacle+30,1.917,1.934,2.38,1.617
+id1100013873262996,euroleague,2026-10-02T18:00:00.000Z,Bayern Munich,KK Partizan Belgrade,4.0,pinnacle+30,1.9,1.952,1.564,2.5
+id1100013873262992,euroleague,2026-10-02T18:15:00.000Z,Panathinaikos BC,Maccabi Tel-Aviv,10.0,pinnacle+30,1.952,1.892,1.184,5.16
+id1100013873262994,euroleague,2026-10-02T18:30:00.000Z,Baskonia Vitoria-Gasteiz,Olimpia Milano,1.0,pinnacle+30,1.884,1.97,1.934,1.917
+id1100013873262998,euroleague,2026-10-07T18:45:00.000Z,Paris Basketball,ASVEL Lyon-Villeurbanne,5.0,pinnacle+30,1.961,1.892,1.52,2.63
+id1100013873263000,euroleague,2026-10-08T16:00:00.000Z,Maccabi Tel-Aviv,Olimpia Milano,5.5,pinnacle+30,1.869,1.943,1.421,2.9
+id1100013873263010,euroleague,2026-10-08T16:00:00.000Z,Dubai Basketball,KK Crvena zvezda Belgrade,8.0,pinnacle+30,1.917,1.925,1.3,3.71
+id1100013873263004,euroleague,2026-10-08T18:00:00.000Z,Bayern Munich,Virtus Bologna,5.5,pinnacle+30,1.961,1.884,1.398,3.09
+id1100013873263002,euroleague,2026-10-08T18:15:00.000Z,Panathinaikos BC,Fenerbahce Istanbul,4.5,pinnacle+30,1.943,1.909,1.476,2.77
+id1100013873263006,euroleague,2026-10-08T18:30:00.000Z,Valencia Basket,Hapoel Tel-Aviv,3.0,pinnacle+30,1.9,1.952,1.662,2.29
+id1100013873263008,euroleague,2026-10-08T18:45:00.000Z,Real Madrid,KK Partizan Belgrade,9.0,pinnacle+30,1.892,1.961,1.261,4.07
+id1100013873263012,euroleague,2026-10-09T18:15:00.000Z,BC Olympiakos Piraeus,Anadolu Efes SK,9.5,pinnacle+30,1.909,1.934,1.222,4.54
+id1100013873263014,euroleague,2026-10-09T18:30:00.000Z,Baskonia Vitoria-Gasteiz,Besiktas JK,2.5,pinnacle+30,1.934,1.909,1.699,2.23
+id1100013873263016,euroleague,2026-10-09T18:30:00.000Z,FC Barcelona,BC Zalgiris Kaunas,2.0,pinnacle+30,1.925,1.917,1.763,2.12
+id1100119774527720,israel,2026-10-10T17:15:00.000Z,Maccabi Tel-Aviv,Hapoel Galil Elyon,18.5,pinnacle+30,1.925,1.877,1.037,10.8
+id1100119774527714,israel,2026-10-11T15:30:00.000Z,Hapoel Beer Sheva,Hapoel Tel-Aviv,-14.5,pinnacle+30,1.925,1.892,8.05,1.066
+id1100119774527716,israel,2026-10-11T17:15:00.000Z,Ironi Kiryat ATA,Hapoel Haemek,-2.0,pinnacle+30,1.877,1.943,2.18,1.694
+id1100119774527718,israel,2026-10-11T17:55:00.000Z,Hapoel Holon BC,Hapoel Jerusalem,-6.5,pinnacle+30,1.934,1.877,3.37,1.312
+id1100119774527710,israel,2026-10-12T17:05:00.000Z,Maccabi Rishon LeZion,Hapoel Eilat,2.5,pinnacle+30,1.869,1.943,1.74,2.11
+id1100119774527712,israel,2026-10-12T17:10:00.000Z,Bnei Herzliya Basket,Maccabi Ironi Ramat Gan,6.5,pinnacle+30,1.877,1.934,1.323,3.31
+id1100119774527708,israel,2026-10-12T17:15:00.000Z,Maccabi Ashdod,Ironi Ness Ziona,-5.5,pinnacle+30,1.9,1.917,3.03,1.377
+id1100013873263018,euroleague,2026-10-13T17:45:00.000Z,Fenerbahce Istanbul,BC Zalgiris Kaunas,7.0,pinnacle+30,1.909,1.934,1.305,3.66
+id1100013873263020,euroleague,2026-10-13T18:00:00.000Z,ASVEL Lyon-Villeurbanne,KK Crvena zvezda Belgrade,-2.0,pinnacle+30,1.925,1.925,2.1,1.781
+id1100013873263022,euroleague,2026-10-13T18:30:00.000Z,Baskonia Vitoria-Gasteiz,Dubai Basketball,-3.0,pinnacle+30,1.925,1.925,2.26,1.675
+id1100013873263024,euroleague,2026-10-13T18:30:00.000Z,Olimpia Milano,Real Madrid,-4.0,pinnacle+30,1.884,1.961,2.51,1.561
+id1100013873263026,euroleague,2026-10-13T18:30:00.000Z,FC Barcelona,Maccabi Tel-Aviv,5.5,pinnacle+30,1.909,1.934,1.414,3.01
+id1100013873263028,euroleague,2026-10-13T18:30:00.000Z,KK Partizan Belgrade,Panathinaikos BC,-5.0,pinnacle+30,1.892,1.961,2.72,1.492
+id1100013873263030,euroleague,2026-10-13T19:00:00.000Z,Valencia Basket,BC Olympiakos Piraeus,-2.0,pinnacle+30,1.943,1.9,2.06,1.813
+id1100013873263032,euroleague,2026-10-14T16:00:00.000Z,Hapoel Tel-Aviv,Besiktas JK,7.0,pinnacle+30,1.961,1.884,1.331,3.48
+id1100013873263034,euroleague,2026-10-14T17:30:00.000Z,Anadolu Efes SK,Bayern Munich,5.0,pinnacle+30,1.917,1.925,1.48,2.75
+id1100013873263036,euroleague,2026-10-14T18:45:00.000Z,Paris Basketball,Virtus Bologna,3.0,pinnacle+30,1.934,1.917,1.699,2.22
+id1100013873263038,euroleague,2026-10-15T17:45:00.000Z,Fenerbahce Istanbul,KK Partizan Belgrade,10.0,pinnacle+30,1.943,1.943,1.195,4.95
+id1100013873263040,euroleague,2026-10-15T18:30:00.000Z,Olimpia Milano,Dubai Basketball,-1.5,pinnacle+30,1.97,1.909,2.11,1.806
+id1100013873263042,euroleague,2026-10-15T18:30:00.000Z,Valencia Basket,Maccabi Tel-Aviv,8.0,pinnacle+30,1.892,1.952,1.294,3.75
+id1100013873263044,euroleague,2026-10-15T19:00:00.000Z,Real Madrid,ASVEL Lyon-Villeurbanne,12.5,pinnacle+30,1.892,1.952,1.16,5.7
+id1100013873263046,euroleague,2026-10-16T17:00:00.000Z,Besiktas JK,Bayern Munich,3.5,pinnacle+30,1.952,1.9,1.609,2.4
+id1100013873263048,euroleague,2026-10-16T17:00:00.000Z,BC Zalgiris Kaunas,Anadolu Efes SK,7.5,pinnacle+30,1.961,1.884,1.328,3.5
+id1100013873263050,euroleague,2026-10-16T18:00:00.000Z,KK Crvena zvezda Belgrade,Paris Basketball,8.0,pinnacle+30,1.917,1.934,1.319,3.56
+id1100013873263052,euroleague,2026-10-16T18:15:00.000Z,Panathinaikos BC,Hapoel Tel-Aviv,9.0,pinnacle+30,1.909,1.934,1.218,4.59
+id1100013873263054,euroleague,2026-10-16T18:30:00.000Z,FC Barcelona,BC Olympiakos Piraeus,-3.0,pinnacle+30,1.934,1.917,2.28,1.671
+id1100013873263056,euroleague,2026-10-16T18:30:00.000Z,Virtus Bologna,Baskonia Vitoria-Gasteiz,4.5,pinnacle+30,1.917,1.925,1.483,2.75
+id1100119774527730,israel,2026-10-17T17:15:00.000Z,Hapoel Jerusalem,Hapoel Beer Sheva,15.5,pinnacle+30,1.925,1.892,1.057,8.66
+id1100119774527732,israel,2026-10-18T15:30:00.000Z,Hapoel Tel-Aviv,Maccabi Ashdod,16.5,pinnacle+30,1.917,1.9,1.048,9.46
+id1100119774527726,israel,2026-10-18T17:15:00.000Z,Ironi Ness Ziona,Bnei Herzliya Basket,4.0,pinnacle+30,1.925,1.884,1.54,2.49
+id1100119774527734,israel,2026-10-18T17:55:00.000Z,Maccabi Tel-Aviv,Ironi Kiryat ATA,18.5,pinnacle+30,1.884,1.934,1.038,10.63
+id1100119774527722,israel,2026-10-19T17:05:00.000Z,Hapoel Eilat,Hapoel Holon BC,1.0,pinnacle+30,1.9,1.917,1.925,1.892
+id1100119774527724,israel,2026-10-19T17:10:00.000Z,Hapoel Galil Elyon,Maccabi Ironi Ramat Gan,1.0,pinnacle+30,1.854,1.952,1.892,1.925
+id1100119774527892,israel,2026-10-19T17:15:00.000Z,Maccabi Rishon LeZion,Hapoel Haemek,-1.0,1xbet,1.84,1.87,2.04,1.727
+id1100013873263058,euroleague,2026-10-21T16:00:00.000Z,Hapoel Tel-Aviv,Virtus Bologna,7.5,pinnacle+30,1.934,1.917,1.289,3.79
+id1100013873263060,euroleague,2026-10-22T17:30:00.000Z,Anadolu Efes SK,Besiktas JK,4.0,pinnacle+30,1.925,1.925,1.555,2.53
+id1100013873263068,euroleague,2026-10-22T18:00:00.000Z,Bayern Munich,Dubai Basketball,-1.5,pinnacle+30,1.909,1.934,2.05,1.813
+id1100013873263062,euroleague,2026-10-22T18:05:00.000Z,Maccabi Tel-Aviv,Real Madrid,-3.5,pinnacle+30,1.952,1.892,2.48,1.574
+id1100013873263064,euroleague,2026-10-22T18:15:00.000Z,Panathinaikos BC,Baskonia Vitoria-Gasteiz,17.0,pinnacle+30,1.884,1.961,1.087,8.76
+id1100013873263066,euroleague,2026-10-22T18:30:00.000Z,Olimpia Milano,FC Barcelona,1.5,pinnacle+30,1.934,1.917,1.862,1.99
+id1100013873263070,euroleague,2026-10-22T18:45:00.000Z,KK Partizan Belgrade,KK Crvena zvezda Belgrade,-1.0,pinnacle+30,1.97,1.909,1.925,1.961
+id1100119774527742,israel,2026-10-23T11:00:00.000Z,Hapoel Beer Sheva,Hapoel Holon BC,-3.0,pinnacle+30,1.847,1.892,2.19,1.632
+id1100013873263072,euroleague,2026-10-23T17:00:00.000Z,BC Zalgiris Kaunas,ASVEL Lyon-Villeurbanne,8.0,pinnacle+30,1.892,1.952,1.292,3.77
+id1100013873263074,euroleague,2026-10-23T18:15:00.000Z,BC Olympiakos Piraeus,Fenerbahce Istanbul,1.5,pinnacle+30,1.917,1.925,1.826,2.04
+id1100013873263076,euroleague,2026-10-23T18:45:00.000Z,Paris Basketball,Valencia Basket,-4.5,pinnacle+30,1.892,1.943,2.61,1.526
+id1100119774527738,israel,2026-10-24T16:25:00.000Z,Maccabi Rishon LeZion,Maccabi Tel-Aviv,-16.0,pinnacle+30,1.909,1.909,8.42,1.06
+id1100119774527744,israel,2026-10-25T16:30:00.000Z,Hapoel Haemek,Ironi Ness Ziona,3.5,pinnacle+30,1.892,1.925,1.609,2.33
+id1100119774527748,israel,2026-10-25T18:55:00.000Z,Hapoel Tel-Aviv,Hapoel Jerusalem,4.5,pinnacle+30,1.925,1.892,1.492,2.62
+id1100119774527740,israel,2026-10-26T17:30:00.000Z,Bnei Herzliya Basket,Hapoel Eilat,4.5,pinnacle+30,1.877,1.943,1.469,2.69
+id1100119774527736,israel,2026-10-26T17:40:00.000Z,Maccabi Ashdod,Hapoel Galil Elyon,4.5,pinnacle+30,1.9,1.917,1.476,2.67
+id1100119774527746,israel,2026-10-26T17:50:00.000Z,Maccabi Ironi Ramat Gan,Ironi Kiryat ATA,8.0,pinnacle+30,1.869,1.952,1.241,3.91
+id1100013873263078,euroleague,2026-10-27T16:00:00.000Z,Dubai Basketball,Paris Basketball,9.5,pinnacle+30,1.892,1.961,1.24,4.3
+id1100013873263080,euroleague,2026-10-27T19:00:00.000Z,KK Crvena zvezda Belgrade,Maccabi Tel-Aviv,5.5,pinnacle+30,1.925,1.925,1.408,3.05
+id1100013873263084,euroleague,2026-10-27T19:00:00.000Z,Bayern Munich,FC Barcelona,1.5,pinnacle+30,1.934,1.917,1.813,2.06
+id1100013873263082,euroleague,2026-10-27T19:15:00.000Z,Panathinaikos BC,Olimpia Milano,12.5,pinnacle+30,1.961,1.892,1.155,5.82
+id1100013873263086,euroleague,2026-10-27T19:30:00.000Z,Valencia Basket,Fenerbahce Istanbul,-1.0,pinnacle+30,1.925,1.917,1.917,1.934
+id1100013873263088,euroleague,2026-10-27T20:00:00.000Z,Baskonia Vitoria-Gasteiz,Real Madrid,-9.5,pinnacle+30,1.952,1.892,4.17,1.251
+id1100013873263092,euroleague,2026-10-28T17:30:00.000Z,Besiktas JK,BC Olympiakos Piraeus,-2.0,pinnacle+30,1.909,1.934,2.13,1.757
+id1100013873263090,euroleague,2026-10-28T18:00:00.000Z,Hapoel Tel-Aviv,Anadolu Efes SK,6.5,pinnacle+30,1.952,1.9,1.358,3.3
+id1100013873263094,euroleague,2026-10-28T19:00:00.000Z,ASVEL Lyon-Villeurbanne,KK Partizan Belgrade,1.0,pinnacle+30,1.892,1.952,1.909,1.943
+id1100013873263096,euroleague,2026-10-28T19:30:00.000Z,Virtus Bologna,BC Zalgiris Kaunas,1.5,pinnacle+30,1.925,1.925,1.854,2.0
+id1100013873263098,euroleague,2026-10-29T19:00:00.000Z,KK Crvena zvezda Belgrade,Bayern Munich,7.5,pinnacle+30,1.934,1.909,1.303,3.68
+id1100013873263100,euroleague,2026-10-29T19:05:00.000Z,Maccabi Tel-Aviv,Paris Basketball,4.0,pinnacle+30,1.909,1.943,1.574,2.48
+id1100013873263102,euroleague,2026-10-29T19:45:00.000Z,Real Madrid,Fenerbahce Istanbul,6.0,pinnacle+30,1.9,1.943,1.421,2.98
+id1100013873263104,euroleague,2026-10-30T16:00:00.000Z,Dubai Basketball,Hapoel Tel-Aviv,2.5,pinnacle+30,1.961,1.892,1.704,2.22
+id1100013873263106,euroleague,2026-10-30T17:30:00.000Z,Anadolu Efes SK,Panathinaikos BC,-5.5,pinnacle+30,1.909,1.943,2.95,1.429
+id1100013873263108,euroleague,2026-10-30T18:00:00.000Z,BC Zalgiris Kaunas,KK Partizan Belgrade,6.5,pinnacle+30,1.934,1.917,1.327,3.5
+id1100013873263110,euroleague,2026-10-30T19:00:00.000Z,ASVEL Lyon-Villeurbanne,Baskonia Vitoria-Gasteiz,4.0,pinnacle+30,1.961,1.892,1.546,2.55
+id1100013873263112,euroleague,2026-10-30T19:15:00.000Z,BC Olympiakos Piraeus,Olimpia Milano,8.5,pinnacle+30,1.917,1.925,1.27,3.97
+id1100013873263114,euroleague,2026-10-30T19:30:00.000Z,FC Barcelona,Valencia Basket,2.5,pinnacle+30,1.961,1.892,1.694,2.23
+id1100013873263116,euroleague,2026-10-30T19:30:00.000Z,Virtus Bologna,Besiktas JK,4.5,pinnacle+30,1.9,1.943,1.54,2.57
+id1100119774527754,israel,2026-10-31T17:15:00.000Z,Hapoel Haemek,Maccabi Ironi Ramat Gan,4.0,pinnacle+30,1.884,1.934,1.534,2.51
+id1100119774527756,israel,2026-11-01T16:30:00.000Z,Ironi Kiryat ATA,Bnei Herzliya Basket,-2.5,pinnacle+30,1.925,1.877,2.19,1.689
+id1100119774527760,israel,2026-11-01T17:00:00.000Z,Hapoel Jerusalem,Hapoel Eilat,13.0,pinnacle+30,1.909,1.9,1.086,6.96
+id1100119774527762,israel,2026-11-01T18:55:00.000Z,Maccabi Tel-Aviv,Hapoel Tel-Aviv,5.0,pinnacle+30,1.925,1.884,1.483,2.65
+id1100119774527752,israel,2026-11-02T17:55:00.000Z,Hapoel Galil Elyon,Ironi Ness Ziona,-4.0,pinnacle+30,1.869,1.869,2.4,1.529
+id1100119774527750,israel,2026-11-02T18:05:00.000Z,Maccabi Ashdod,Hapoel Beer Sheva,2.5,pinnacle+30,1.869,1.869,1.666,2.13
+id1100119774527758,israel,2026-11-02T18:15:00.000Z,Hapoel Holon BC,Maccabi Rishon LeZion,4.5,pinnacle+30,1.862,1.877,1.432,2.69
+id1100013873263120,euroleague,2026-11-04T19:45:00.000Z,Real Madrid,Panathinaikos BC,-1.5,pinnacle+30,1.943,1.961,2.05,1.869
+id1100013873263122,euroleague,2026-11-05T17:15:00.000Z,Anadolu Efes SK,Paris Basketball,4.5,pinnacle+30,1.9,1.943,1.446,2.88
+id1100013873263118,euroleague,2026-11-05T18:00:00.000Z,Fenerbahce Istanbul,Baskonia Vitoria-Gasteiz,14.5,pinnacle+30,1.917,1.934,1.09,8.58
+id1100013873263124,euroleague,2026-11-05T18:45:00.000Z,Hapoel Tel-Aviv,FC Barcelona,6.0,pinnacle+30,1.961,1.892,1.361,3.29
+id1100013873263126,euroleague,2026-11-05T19:00:00.000Z,ASVEL Lyon-Villeurbanne,Bayern Munich,1.0,pinnacle+30,1.934,1.917,1.877,1.97
+id1100013873263128,euroleague,2026-11-05T19:30:00.000Z,Olimpia Milano,Valencia Basket,-2.0,pinnacle+30,1.892,1.952,2.18,1.729
+id1100119774527770,israel,2026-11-06T11:00:00.000Z,Hapoel Holon BC,Hapoel Galil Elyon,5.5,pinnacle+30,1.892,1.925,1.413,2.88
+id1100013873263130,euroleague,2026-11-06T17:00:00.000Z,Besiktas JK,BC Zalgiris Kaunas,-1.0,pinnacle+30,1.934,1.917,1.961,1.884
+id1100013873263132,euroleague,2026-11-06T19:15:00.000Z,BC Olympiakos Piraeus,KK Crvena zvezda Belgrade,5.5,pinnacle+30,1.917,1.925,1.418,3.0
+id1100013873263134,euroleague,2026-11-06T19:30:00.000Z,Virtus Bologna,Dubai Basketball,-3.0,pinnacle+30,1.925,1.925,2.3,1.657
+id1100013873263136,euroleague,2026-11-06T19:45:00.000Z,KK Partizan Belgrade,Maccabi Tel-Aviv,5.5,pinnacle+30,1.934,1.909,1.444,2.89
+id1100119774527774,israel,2026-11-07T17:15:00.000Z,Maccabi Ironi Ramat Gan,Maccabi Rishon LeZion,4.0,pinnacle+30,1.869,1.952,1.502,2.59
+id1100119774527768,israel,2026-11-08T16:30:00.000Z,Ironi Ness Ziona,Ironi Kiryat ATA,6.5,pinnacle+30,1.862,1.943,1.335,3.24
+id1100119774527772,israel,2026-11-08T18:15:00.000Z,Hapoel Jerusalem,Hapoel Haemek,12.5,pinnacle+30,1.869,1.943,1.115,5.96
+id1100119774527806,israel,2026-11-09T16:30:00.000Z,Hapoel Eilat,Hapoel Beer Sheva,5.5,pinnacle+30,1.877,1.925,1.427,2.83
+id1100119774527776,israel,2026-11-09T17:00:00.000Z,Bnei Herzliya Basket,Maccabi Ashdod,5.0,pinnacle+30,1.917,1.9,1.42,2.86
+id1100013873263138,euroleague,2026-11-11T19:45:00.000Z,Paris Basketball,Fenerbahce Istanbul,-5.5,pinnacle+30,1.909,1.943,3.11,1.395
+id1100013873263140,euroleague,2026-11-11T19:45:00.000Z,KK Partizan Belgrade,Baskonia Vitoria-Gasteiz,8.5,pinnacle+30,1.934,1.909,1.236,4.35
+id1100013873263142,euroleague,2026-11-12T19:05:00.000Z,Maccabi Tel-Aviv,Hapoel Tel-Aviv,-7.0,pinnacle+30,1.943,1.909,3.39,1.344
+id1100013873263144,euroleague,2026-11-12T19:15:00.000Z,BC Olympiakos Piraeus,Dubai Basketball,3.5,pinnacle+30,1.909,1.934,1.571,2.48
+id1100013873263146,euroleague,2026-11-12T19:30:00.000Z,Olimpia Milano,BC Zalgiris Kaunas,-2.5,pinnacle+30,1.9,1.952,2.13,1.757
+id1100013873263148,euroleague,2026-11-12T19:30:00.000Z,Valencia Basket,Bayern Munich,8.5,pinnacle+30,1.917,1.934,1.291,3.78
+id1100013873263150,euroleague,2026-11-12T20:00:00.000Z,Real Madrid,KK Crvena zvezda Belgrade,5.5,pinnacle+30,1.9,1.943,1.421,2.98
+id1100013873263152,euroleague,2026-11-13T17:30:00.000Z,Anadolu Efes SK,Virtus Bologna,7.0,pinnacle+30,1.9,1.952,1.358,3.3
+id1100013873263154,euroleague,2026-11-13T19:15:00.000Z,Panathinaikos BC,FC Barcelona,10.5,pinnacle+30,1.943,1.9,1.176,5.34
+id1100013873263156,euroleague,2026-11-13T19:30:00.000Z,ASVEL Lyon-Villeurbanne,Besiktas JK,2.5,pinnacle+30,1.9,1.952,1.74,2.15
+id1100119774527788,israel,2026-11-14T16:30:00.000Z,Hapoel Tel-Aviv,Bnei Herzliya Basket,14.5,pinnacle+30,1.892,1.925,1.064,8.16
+id1100119774527790,israel,2026-11-14T18:55:00.000Z,Maccabi Tel-Aviv,Hapoel Jerusalem,4.0,pinnacle+30,1.9,1.909,1.534,2.5
+id1100119774527782,israel,2026-11-15T17:00:00.000Z,Ironi Kiryat ATA,Maccabi Ashdod,1.0,pinnacle+30,1.877,1.934,1.909,1.909
+id1100119774527786,israel,2026-11-15T18:15:00.000Z,Maccabi Ironi Ramat Gan,Ironi Ness Ziona,-3.0,pinnacle+30,1.9,1.909,2.3,1.628
+id1100119774527780,israel,2026-11-16T17:55:00.000Z,Hapoel Galil Elyon,Hapoel Eilat,1.0,pinnacle+30,1.884,1.934,1.917,1.9
+id1100119774527784,israel,2026-11-16T18:05:00.000Z,Hapoel Holon BC,Hapoel Haemek,-2.5,pinnacle+30,1.869,1.943,2.11,1.746
+id1100119774527778,israel,2026-11-16T18:15:00.000Z,Maccabi Rishon LeZion,Hapoel Beer Sheva,5.5,pinnacle+30,1.909,1.9,1.434,2.81
+id1100013873263158,euroleague,2026-11-17T16:00:00.000Z,Dubai Basketball,Anadolu Efes SK,8.0,pinnacle+30,1.934,1.917,1.293,3.77
+id1100013873263164,euroleague,2026-11-17T17:00:00.000Z,Maccabi Tel-Aviv,BC Olympiakos Piraeus,-6.5,pinnacle+30,1.961,1.884,3.35,1.35
+id1100013873263160,euroleague,2026-11-17T18:00:00.000Z,Fenerbahce Istanbul,ASVEL Lyon-Villeurbanne,12.0,pinnacle+30,1.917,1.925,1.163,5.61
+id1100013873263162,euroleague,2026-11-17T18:00:00.000Z,BC Zalgiris Kaunas,Bayern Munich,8.0,pinnacle+30,1.961,1.892,1.257,4.11
+id1100013873263166,euroleague,2026-11-17T19:30:00.000Z,Baskonia Vitoria-Gasteiz,Hapoel Tel-Aviv,-6.5,pinnacle+30,1.925,1.925,3.21,1.375
+id1100013873263168,euroleague,2026-11-17T19:30:00.000Z,Olimpia Milano,KK Crvena zvezda Belgrade,-1.0,pinnacle+30,1.961,1.884,1.934,1.917
+id1100013873263170,euroleague,2026-11-17T19:30:00.000Z,FC Barcelona,Paris Basketball,4.5,pinnacle+30,1.961,1.892,1.518,2.63
+id1100013873263172,euroleague,2026-11-17T19:45:00.000Z,KK Partizan Belgrade,Valencia Basket,-1.5,pinnacle+30,1.925,1.925,2.04,1.826
+id1100013873263174,euroleague,2026-11-17T20:00:00.000Z,Virtus Bologna,Panathinaikos BC,-5.5,pinnacle+30,1.892,1.952,3.15,1.386
+id1100013873263176,euroleague,2026-11-18T17:00:00.000Z,Besiktas JK,Real Madrid,-7.5,pinnacle+30,1.952,1.892,3.6,1.314
+id1100013873263180,euroleague,2026-11-19T17:15:00.000Z,Maccabi Tel-Aviv,Dubai Basketball,-4.0,pinnacle+30,1.961,1.892,2.49,1.571
+id1100013873263178,euroleague,2026-11-19T18:00:00.000Z,BC Zalgiris Kaunas,Panathinaikos BC,-1.5,pinnacle+30,1.952,1.9,2.1,1.781
+id1100013873263184,euroleague,2026-11-19T19:00:00.000Z,Bayern Munich,Baskonia Vitoria-Gasteiz,7.0,pinnacle+30,1.884,1.961,1.332,3.47
+id1100013873263182,euroleague,2026-11-19T19:30:00.000Z,Olimpia Milano,Fenerbahce Istanbul,-3.5,pinnacle+30,1.961,1.892,2.6,1.529
+id1100013873263186,euroleague,2026-11-19T19:45:00.000Z,Paris Basketball,Hapoel Tel-Aviv,2.0,pinnacle+30,1.925,1.925,1.781,2.09
+id1100013873263188,euroleague,2026-11-19T20:00:00.000Z,Valencia Basket,Virtus Bologna,10.5,pinnacle+30,1.961,1.892,1.232,4.4
+id1100119774527800,israel,2026-11-20T11:00:00.000Z,Hapoel Jerusalem,Maccabi Ashdod,13.5,pinnacle+30,1.877,1.862,1.127,5.53
+id1100119774527796,israel,2026-11-20T11:10:00.000Z,Hapoel Beer Sheva,Ironi Ness Ziona,-9.0,pinnacle+30,1.925,1.892,4.31,1.203
+id1100013873263190,euroleague,2026-11-20T17:30:00.000Z,Anadolu Efes SK,ASVEL Lyon-Villeurbanne,8.0,pinnacle+30,1.9,1.943,1.338,3.43
+id1100013873263192,euroleague,2026-11-20T19:15:00.000Z,BC Olympiakos Piraeus,Real Madrid,3.0,pinnacle+30,1.961,1.884,1.662,2.29
+id1100013873263194,euroleague,2026-11-20T19:30:00.000Z,FC Barcelona,KK Crvena zvezda Belgrade,2.5,pinnacle+30,1.925,1.917,1.719,2.19
+id1100013873263196,euroleague,2026-11-20T19:45:00.000Z,KK Partizan Belgrade,Besiktas JK,4.5,pinnacle+30,1.934,1.909,1.497,2.69
+id1100119774527802,israel,2026-11-21T16:30:00.000Z,Hapoel Tel-Aviv,Ironi Kiryat ATA,18.0,pinnacle+30,1.925,1.884,1.052,9.11
+id1100119774527804,israel,2026-11-21T18:55:00.000Z,Maccabi Tel-Aviv,Hapoel Holon BC,14.5,pinnacle+30,1.909,1.9,1.079,7.28
+id1100119774527792,israel,2026-11-22T17:55:00.000Z,Hapoel Eilat,Maccabi Ironi Ramat Gan,4.5,pinnacle+30,1.884,1.934,1.483,2.65
+id1100119774527798,israel,2026-11-22T18:05:00.000Z,Hapoel Haemek,Bnei Herzliya Basket,1.5,pinnacle+30,1.9,1.917,1.751,2.1
+id1100119774527794,israel,2026-11-22T18:15:00.000Z,Maccabi Rishon LeZion,Hapoel Galil Elyon,4.5,pinnacle+30,1.877,1.943,1.473,2.67
+id1100013873263198,euroleague,2026-11-24T17:00:00.000Z,Besiktas JK,Paris Basketball,1.5,pinnacle+30,1.934,1.917,1.819,2.04
+id1100013873263200,euroleague,2026-11-24T18:00:00.000Z,KK Crvena zvezda Belgrade,Virtus Bologna,8.0,pinnacle+30,1.952,1.884,1.294,3.75
+id1100013873263202,euroleague,2026-11-24T19:00:00.000Z,Bayern Munich,Maccabi Tel-Aviv,4.5,pinnacle+30,1.943,1.9,1.531,2.59
+id1100013873263204,euroleague,2026-11-24T19:30:00.000Z,Valencia Basket,Panathinaikos BC,2.0,pinnacle+30,1.9,1.952,1.74,2.16
+id1100013873263206,euroleague,2026-11-24T19:45:00.000Z,ASVEL Lyon-Villeurbanne,Olimpia Milano,-1.5,pinnacle+30,1.961,1.892,2.1,1.781
+id1100013873263208,euroleague,2026-11-24T20:00:00.000Z,FC Barcelona,Fenerbahce Istanbul,-4.0,pinnacle+30,1.917,1.925,2.56,1.543
+id1100013873263210,euroleague,2026-11-25T16:00:00.000Z,Dubai Basketball,KK Partizan Belgrade,7.5,pinnacle+30,1.917,1.925,1.316,3.58
+id1100013873263212,euroleague,2026-11-25T19:15:00.000Z,BC Olympiakos Piraeus,Hapoel Tel-Aviv,5.5,pinnacle+30,1.925,1.917,1.434,2.93
+id1100013873263214,euroleague,2026-11-25T19:30:00.000Z,Baskonia Vitoria-Gasteiz,Anadolu Efes SK,-2.0,pinnacle+30,1.934,1.909,2.08,1.793
+id1100013873263216,euroleague,2026-11-25T19:45:00.000Z,Real Madrid,BC Zalgiris Kaunas,7.0,pinnacle+30,1.9,1.952,1.347,3.37

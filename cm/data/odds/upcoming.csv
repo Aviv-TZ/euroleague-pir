@@ -1,0 +1,45 @@
+fixtureId,league,start,team1,team2,hasOdds
+id1100013873263218,euroleague,2026-12-03T17:30:00.000Z,Anadolu Efes SK,Valencia Basket,True
+id1100013873263220,euroleague,2026-12-03T17:45:00.000Z,Fenerbahce Istanbul,KK Crvena zvezda Belgrade,True
+id1100013873263222,euroleague,2026-12-03T18:45:00.000Z,Hapoel Tel-Aviv,Olimpia Milano,True
+id1100013873263224,euroleague,2026-12-03T19:00:00.000Z,Bayern Munich,Paris Basketball,True
+id1100013873263226,euroleague,2026-12-03T19:45:00.000Z,Real Madrid,FC Barcelona,True
+id1100013873263234,euroleague,2026-12-03T20:00:00.000Z,Baskonia Vitoria-Gasteiz,Maccabi Tel-Aviv,True
+id1100013873263236,euroleague,2026-12-03T20:00:00.000Z,Virtus Bologna,KK Partizan Belgrade,True
+id1100013873263228,euroleague,2026-12-04T17:00:00.000Z,Besiktas JK,Panathinaikos BC,True
+id1100013873263230,euroleague,2026-12-04T18:00:00.000Z,BC Zalgiris Kaunas,Dubai Basketball,True
+id1100013873263232,euroleague,2026-12-04T19:15:00.000Z,BC Olympiakos Piraeus,ASVEL Lyon-Villeurbanne,True
+id1100013873263238,euroleague,2026-12-10T17:45:00.000Z,Fenerbahce Istanbul,Anadolu Efes SK,True
+id1100013873263242,euroleague,2026-12-10T18:00:00.000Z,BC Zalgiris Kaunas,Baskonia Vitoria-Gasteiz,True
+id1100013873263240,euroleague,2026-12-10T18:45:00.000Z,Hapoel Tel-Aviv,ASVEL Lyon-Villeurbanne,True
+id1100013873263252,euroleague,2026-12-10T19:30:00.000Z,Valencia Basket,KK Crvena zvezda Belgrade,True
+id1100013874158086,euroleague,2026-12-10T19:30:00.000Z,Olimpia Milano,Bayern Munich,True
+id1100013873263246,euroleague,2026-12-10T19:45:00.000Z,Paris Basketball,Real Madrid,True
+id1100013873263248,euroleague,2026-12-11T16:00:00.000Z,Dubai Basketball,Besiktas JK,True
+id1100013873263250,euroleague,2026-12-11T19:15:00.000Z,Panathinaikos BC,BC Olympiakos Piraeus,True
+id1100013873263254,euroleague,2026-12-11T19:30:00.000Z,Virtus Bologna,Maccabi Tel-Aviv,True
+id1100013873263564,euroleague,2026-12-11T19:45:00.000Z,KK Partizan Belgrade,FC Barcelona,True
+id1100013873263260,euroleague,2026-12-15T17:00:00.000Z,Maccabi Tel-Aviv,BC Zalgiris Kaunas,False
+id1100013873263538,euroleague,2026-12-15T17:15:00.000Z,Anadolu Efes SK,KK Partizan Belgrade,False
+id1100013873263258,euroleague,2026-12-15T19:15:00.000Z,Fenerbahce Istanbul,Hapoel Tel-Aviv,False
+id1100013873263262,euroleague,2026-12-15T19:30:00.000Z,Valencia Basket,Dubai Basketball,False
+id1100013873263264,euroleague,2026-12-15T19:30:00.000Z,Virtus Bologna,ASVEL Lyon-Villeurbanne,False
+id1100013873263266,euroleague,2026-12-15T19:45:00.000Z,Paris Basketball,BC Olympiakos Piraeus,False
+id1100013873263268,euroleague,2026-12-15T19:45:00.000Z,Real Madrid,Bayern Munich,False
+id1100013873263270,euroleague,2026-12-16T17:00:00.000Z,Besiktas JK,Olimpia Milano,False
+id1100013873263272,euroleague,2026-12-16T19:15:00.000Z,Panathinaikos BC,KK Crvena zvezda Belgrade,False
+id1100013873263274,euroleague,2026-12-16T19:30:00.000Z,Baskonia Vitoria-Gasteiz,FC Barcelona,False
+id1100119774527814,israel,2026-12-05T17:15:00.000Z,Ironi Ness Ziona,Hapoel Tel-Aviv,False
+id1100119774527818,israel,2026-12-05T18:15:00.000Z,Maccabi Ironi Ramat Gan,Hapoel Holon BC,False
+id1100119774527810,israel,2026-12-06T17:00:00.000Z,Hapoel Galil Elyon,Hapoel Haemek,False
+id1100119774527812,israel,2026-12-06T18:15:00.000Z,Bnei Herzliya Basket,Hapoel Jerusalem,False
+id1100119774527764,israel,2026-12-07T16:30:00.000Z,Hapoel Eilat,Hapoel Tel-Aviv,False
+id1100119774527816,israel,2026-12-07T17:00:00.000Z,Ironi Kiryat ATA,Maccabi Rishon LeZion,False
+id1100119774527808,israel,2026-12-07T18:55:00.000Z,Maccabi Ashdod,Maccabi Tel-Aviv,False
+id1100119774527828,israel,2026-12-12T17:15:00.000Z,Hapoel Haemek,Hapoel Tel-Aviv,False
+id1100119774527824,israel,2026-12-12T18:15:00.000Z,Bnei Herzliya Basket,Maccabi Rishon LeZion,False
+id1100119774527826,israel,2026-12-13T16:30:00.000Z,Ironi Ness Ziona,Hapoel Jerusalem,False
+id1100119774527832,israel,2026-12-13T18:55:00.000Z,Maccabi Ironi Ramat Gan,Maccabi Tel-Aviv,False
+id1100119774527822,israel,2026-12-14T17:55:00.000Z,Hapoel Galil Elyon,Hapoel Beer Sheva,False
+id1100119774527820,israel,2026-12-14T18:05:00.000Z,Maccabi Ashdod,Hapoel Eilat,False
+id1100119774527830,israel,2026-12-14T18:15:00.000Z,Ironi Kiryat ATA,Hapoel Holon BC,False
