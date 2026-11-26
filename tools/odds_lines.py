@@ -87,6 +87,7 @@ def upcoming_lines():
     try:
         with open(os.path.join(D, 'upcoming.csv')) as fh: UP = {r['fixtureId']: r for r in csv.DictReader(fh)}
     except Exception: UP = {}
+    for f in R: print('  answered', f.get('fixtureId'), f.get('tournamentId'), f.get('startTime'), f.get('statusId'), f.get('participant1Id'), f.get('participant2Id'), f.get('_book'), flush=True)
     out = {'euroleague': [], 'winner': []}
     for f in R:
         lg = lg_of.get(f.get('tournamentId')); bk = ((f.get('bookmakerOdds') or {}).get(f.get('_book', BOOKS[0])) or {})
