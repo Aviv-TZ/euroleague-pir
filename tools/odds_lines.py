@@ -23,7 +23,7 @@ def call(path, wait=2.2, **q):
         except urllib.error.HTTPError as e:
             last[path] = time.time()
             if e.code == 429: time.sleep(8); continue
-            print(f'  {path}: HTTP {e.code}', flush=True); return None
+            print(f'  {path} {dict((k, v) for k, v in q.items() if k != "apiKey")}: HTTP {e.code} {e.read().decode("utf-8", "ignore")[:200]}', flush=True); return None
         except Exception as e:
             print(f'  {path}: {e}', flush=True); time.sleep(5)
     return None
@@ -53,8 +53,14 @@ def upcoming_lines():
     """Current point spread of every upcoming fixture of both leagues (one request: one bookmaker, both tournaments),
     written in the sites' own team names: docs/coach_lines.json {league: [{home, away, start, margin_home}]}."""
     import re, unicodedata
-    R = call('odds-by-tournaments', wait=1.2, tournamentIds=','.join(str(v) for v in LEAGUES.values()), bookmaker=BOOKS[0]) or []
-    if isinstance(R, dict): R = R.get('data') or []
+    R = []
+    for tid in LEAGUES.values():          # one tournament per call (a call with both answered 404); Pinnacle, else bet365
+        for bk in (BOOKS[0], 'bet365'):
+            x = call('odds-by-tournaments', wait=1.2, tournamentIds=str(tid), bookmaker=bk)
+            if isinstance(x, dict): x = x.get('data') or []
+            if x:
+                for f in x: f['_book'] = bk
+                R += x; break
     el = json.load(open(os.path.join(ROOT, 'docs', 'data.json')))
     wl = json.load(open(os.path.join(ROOT, 'docs', 'winner', 'data.json')))
     toks = lambda x: {w for w in re.sub(r'[^a-z0-9 ]', ' ', unicodedata.normalize('NFKD', str(x)).encode('ascii', 'ignore').decode().lower()).split()
@@ -74,7 +80,7 @@ def upcoming_lines():
     lg_of = {v: k for k, v in LEAGUES.items()}
     out = {'euroleague': [], 'winner': []}
     for f in R:
-        lg = lg_of.get(f.get('tournamentId')); bk = ((f.get('bookmakerOdds') or {}).get(BOOKS[0]) or {})
+        lg = lg_of.get(f.get('tournamentId')); bk = ((f.get('bookmakerOdds') or {}).get(f.get('_book', BOOKS[0])) or {})
         if not lg or f.get('statusId') != 0: continue
         best = None
         for mid, m in (bk.get('markets') or {}).items():
