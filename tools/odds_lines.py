@@ -62,9 +62,11 @@ def upcoming_lines():
     R = []
     for lg, D in (('euroleague', el), ('israel', wl)):
         if not soon(D): print(f'{lg}: no game in the next 3 days, not asked', flush=True); continue
-        x = call('odds-by-tournaments', wait=1.2, tournamentIds=str(LEAGUES[lg]), bookmaker=BOOKS[0])
-        if isinstance(x, dict): x = x.get('data') or []
-        for f in x or []: f['_book'] = BOOKS[0]
+        for bk in ('pinnacle+30', '1xbet'):   # Pinnacle opens a game only a day or two ahead; 1xbet days earlier
+            x = call('odds-by-tournaments', wait=1.2, tournamentIds=str(LEAGUES[lg]), bookmaker=bk)
+            if isinstance(x, dict): x = x.get('data') or []
+            if x: break
+        for f in x or []: f['_book'] = bk
         R += x or []
     toks = lambda x: {w for w in re.sub(r'[^a-z0-9 ]', ' ', unicodedata.normalize('NFKD', str(x)).encode('ascii', 'ignore').decode().lower()).split()
                       if len(w) > 2 and w not in ('basket', 'basketball', 'club', 'the')}
