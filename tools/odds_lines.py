@@ -83,6 +83,10 @@ def upcoming_lines():
         kw = next((h for e, h in KW if e == n), None)
         return next((t for t in wl_teams if kw and kw in t), None)
     lg_of = {v: k for k, v in LEAGUES.items()}
+    # the odds answer carries no team names: take them from the fixture list saved by the weekly run (no request)
+    try:
+        with open(os.path.join(D, 'upcoming.csv')) as fh: UP = {r['fixtureId']: r for r in csv.DictReader(fh)}
+    except Exception: UP = {}
     out = {'euroleague': [], 'winner': []}
     for f in R:
         lg = lg_of.get(f.get('tournamentId')); bk = ((f.get('bookmakerOdds') or {}).get(f.get('_book', BOOKS[0])) or {})
@@ -95,12 +99,13 @@ def upcoming_lines():
             if None in p: continue
             gap = abs(1 / p[0] - 1 / p[1])
             if best is None or gap < best[0]: best = (gap, -info['h'])
-        h, a = name(lg, f.get('participant1Name')), name(lg, f.get('participant2Name'))
+        u = UP.get(f.get('fixtureId'), {})
+        h, a = name(lg, f.get('participant1Name') or u.get('team1')), name(lg, f.get('participant2Name') or u.get('team2'))
         if best and h and a:
             out['euroleague' if lg == 'euroleague' else 'winner'].append(dict(home=h, away=a, start=f.get('startTime'), margin_home=best[1]))
     out['updated_utc'] = time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())
     with open(os.path.join(ROOT, 'docs', 'coach_lines.json'), 'w', encoding='utf-8') as fh: json.dump(out, fh, ensure_ascii=False)
-    print('upcoming lines:', {k: len(v) for k, v in out.items() if k != 'updated_utc'}, flush=True)
+    print('upcoming lines:', {k: len(v) for k, v in out.items() if k != 'updated_utc'}, '| fixtures answered', len(R), 'named', sum(1 for f in R if f.get('participant1Name') or f.get('fixtureId') in UP), flush=True)
 
 if '--diag' in sys.argv:   # 1 request: which bookmakers price one upcoming fixture now, and whether a spread is there
     fid = sys.argv[sys.argv.index('--diag') + 1]
