@@ -3,6 +3,9 @@ name: Betting lines (OddsPapi)
 # Closing point spreads of finished EuroLeague / Israeli league games (price history is free on OddsPapi;
 # listing the fixtures uses 1 request per league per run). Manual for now.
 on:
+  schedule:
+    - cron: '41 5,13,21 * * *'     # current lines of the coming games (1 request each, ~90 a month)
+    - cron: '11 9 * * 1'           # Monday: closing lines of last week's games (2 requests)
   workflow_dispatch:
 
 permissions:
@@ -22,10 +25,10 @@ jobs:
         env:
           ODDSPAPI_KEY: ${{ secrets.ODDSPAPI_KEY }}
         run: |
-          python3 -u tools/odds_lines.py
+          if [ "${{ github.event.schedule }}" = "41 5,13,21 * * *" ]; then python3 -u tools/odds_lines.py --upcoming; else python3 -u tools/odds_lines.py && python3 -u tools/odds_lines.py --upcoming; fi
           git config user.name  "el-bot"
           git config user.email "el-bot@users.noreply.github.com"
-          git add cm/data/odds/lines.csv cm/data/odds/upcoming.csv
+          git add cm/data/odds/lines.csv cm/data/odds/upcoming.csv docs/coach_lines.json
           if git diff --cached --quiet; then exit 0; fi
           git commit -q -m "Betting lines $(date -u +%Y-%m-%dT%H:%MZ)"
           for i in 1 2 3; do git pull -q --rebase -X theirs origin main && git push -q && exit 0; git rebase --abort 2>/dev/null; sleep 5; done

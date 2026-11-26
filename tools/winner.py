@@ -277,11 +277,19 @@ def main():
                 tot += mu + 5 * (2 * 0.5 * (1 + math.erf(mu / 12 / math.sqrt(2))) - 1)
             out.append(round(tot, 1))
         return out
+    def coach_games(team):   # the coming fantasy round, game by game (the site swaps in the betting line where there is one)
+        out = []
+        for (o, hm, g) in fx[rounds[0]].get(team, []) if rounds else []:
+            v = None
+            if team in net and o in net:
+                mu = 0.6 * (net[team] - net[o]) + 2.5 * (1 if hm else -1); v = round(mu + 5 * (2 * 0.5 * (1 + math.erf(mu / 12 / math.sqrt(2))) - 1), 1)
+            out.append(dict(home=team if hm else o, away=o if hm else team, utc=g.utc.strftime('%Y-%m-%dT%H:%M:%SZ'), ours=v))
+        return out
     coaches = []
     for _, c in S5[S5.pos == 4].iterrows():
         nxt = (fx[rounds[0]].get(c.team) or [None])[0] if rounds else None
         coaches.append(dict(raw=c['name'], he=c['name'], team=c.team, price=int(c.price), s5id=int(c.s5id), logo=s5teams[c.teamId]['logo'],
-                            injured=bool(c.injured), fut=coach_fut(c.team), opp=nxt[0] if nxt else None, venue=('Home' if nxt[1] else 'Away') if nxt else None))
+                            injured=bool(c.injured), fut=coach_fut(c.team), games0=coach_games(c.team), opp=nxt[0] if nxt else None, venue=('Home' if nxt[1] else 'Away') if nxt else None))
     # ---- opponents: fantasy points a game allowed to each position (weighted by minutes), season and last 5 ----
     pos3 = ['Guard', 'Forward', 'Center']
     def allowed(rows):

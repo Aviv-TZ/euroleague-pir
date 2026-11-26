@@ -1152,7 +1152,39 @@ async function loadNext(){
   NEXT.cmap = new Map((j.coaches||[]).map(q=>[q.s5id, q]));
   renderBuilder(); renderSquad(); if(MT.sq && MT.off) mtCompute();
 }
-const coachOpp = c => c && c.opp ? vsTxt(c.venue, c.opp) : '';
+const coachOpp = c => c && c.opp ? vsTxt(c.venue, c.opp) + (c.lineTxt ? ` <small class="note" title="צפי המאמן מחושב מהליין של סוכנויות ההימורים">${c.lineTxt}</small>` : '') : '';
+// Coaches: when the bookmakers' point spread for a coming game is known (docs/coach_lines.json, refreshed 3 times a day),
+// the coach's projection for that game comes from it (a closing line beat our margin formula on 2026 games:
+// EuroLeague 13.1 vs 13.7 points off, Israeli league 14.0 vs 15.5). sd = how far results land from the line.
+async function loadCoachLines(){
+  if(location.protocol==='file:') return;
+  const get = u => fetch(u, {cache:'no-store'}).then(r=>r.ok?r.json():null).catch(()=>null);
+  const own = location.hostname.endsWith('.github.io') ? location.hostname.split('.')[0] : null;
+  const repo = own ? location.pathname.split('/').filter(Boolean)[0] : null;
+  const rel = SITE.league==='winner' ? '../coach_lines.json' : 'coach_lines.json';
+  const [a, b] = await Promise.all([get(rel+'?t='+Date.now()), own && repo ? get(`https://raw.githubusercontent.com/${own}/${repo}/main/docs/coach_lines.json?t=${Date.now()}`) : null]);
+  const j = [a, b].filter(x=>x && x.updated_utc).sort((x,y)=>y.updated_utc.localeCompare(x.updated_utc))[0];
+  const L = j && j[SITE.league==='winner' ? 'winner' : 'euroleague']; if(!L || !L.length) return;
+  const sd = SITE.league==='winner' ? 13.4 : 11, phi = x => 0.5*(1+erf(x/Math.SQRT2));
+  const exp = mu => mu + 5*(2*phi(mu/sd)-1);
+  const near = (a, b) => Math.abs(Date.parse(a) - Date.parse(b)) < 2*86400e3;
+  const lineFor = (team, opp, utc) => { const l = L.find(x=>((x.home===team && x.away===opp) || (x.away===team && x.home===opp)) && (!utc || near(x.start, utc)));
+    return l ? (l.home===team ? l.margin_home : -l.margin_home) : null; };
+  const fx = D.fixtures || [], r0 = M.next_round;
+  let n = 0;
+  (D.coaches||[]).forEach(c=>{
+    const games = c.games0 || fx.filter(f=>f.round===r0 && (f.home===c.team || f.away===c.team)).map(f=>({home:f.home, away:f.away, utc:f.utc, ours:null}));
+    if(!games.length || !c.fut) return;
+    let tot = 0, used = [], ok = true;
+    games.forEach(g=>{ const opp = g.home===c.team ? g.away : g.home, m = lineFor(c.team, opp, g.utc);
+      if(m!=null){ tot += exp(m); used.push(m); } else if(g.ours!=null){ tot += g.ours; } else if(games.length===1){ ok = false; } else ok = false; });
+    if(!used.length || !ok) return;
+    c.fut0_ours = c.fut0_ours ?? c.fut[0]; c.fut[0] = Math.round(tot*10)/10; n++;
+    c.lineTxt = 'ליין ' + used.map(m=>`<bdi dir="ltr">${m>0?'+':''}${f(m,1)}</bdi>`).join(', ');
+  });
+  if(n) renderAll();
+}
+function erf(x){ const t = 1/(1+0.3275911*Math.abs(x)), y = 1-(((((1.061405429*t-1.453152027)*t)+1.421413741)*t-0.284496736)*t+0.254829592)*t*Math.exp(-x*x); return x>=0?y:-y; }
 // coach fantasy points from a score: win = 5 + margin, loss = -(5 + margin)
 const coachPtsFromScore = (own, opp) => own>opp ? 5+(own-opp) : own<opp ? -(5+(opp-own)) : 0;
 // the team's game in the current round (final or in progress) -> {pts, live, score}
@@ -1297,6 +1329,7 @@ const ownPct = p => (p && p.s5id!=null && OWN.size && OWN.own[p.s5id]!=null) ? 1
 const ownTxt = p => { const v = ownPct(p); return v==null ? '' : `${v<1?f(v,1):f(v,0)}%`; };
 // own.json: now; own_base.json: when the transfer window opened. Both also read from the repository directly
 // (the newest wins), so a refresh shows up before the page is redeployed.
+setTimeout(()=>{ loadCoachLines(); setInterval(loadCoachLines, 60*60e3); }, 0);
 async function loadOwn(){
   if(location.protocol==='file:') return;
   const get = u => fetch(u, {cache:'no-store'}).then(r=>r.ok?r.json():null).catch(()=>null);
