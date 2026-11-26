@@ -336,6 +336,7 @@ def main():
         z = cur[cur.opp == t]; last = sorted(z.game.unique(), key=lambda g: seq.get(g, 0))[-5:]
         nxt = (fx[rounds[0]].get(t) or [None])[0] if rounds else None
         opponents.append(dict(team=t, season=allowed(z), last5=allowed(z[z.game.isin(last)]),
+                              home=allowed(z[z.home == 0]), away=allowed(z[z.home == 1]),   # the team's home games = its opponents away
                               next_vs=nxt[0] if nxt else None, next_venue=('Home' if nxt[1] else 'Away') if nxt else None))
     league = allowed(cur) if len(cur) else {}
     played = set(cur.game)
