@@ -76,6 +76,10 @@ tbody tr:hover{background:var(--panel2)}
 .player{margin-top:18px}
 .phead{display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between}
 .phead h2{font-size:22px;margin:0}
+.pid{display:flex;align-items:center;gap:12px;min-width:0}
+.pph{flex:0 0 auto;width:72px;height:72px;border-radius:50%;background:#e9e9e9 center 12%/cover no-repeat;border:2px solid #eee}
+.pph.ini{display:flex;align-items:center;justify-content:center;font-weight:800;color:#777;font-size:22px}
+@media(max-width:520px){ .pph{width:56px;height:56px;font-size:18px} .pid{gap:10px} }
 .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
 .chip{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:6px 10px;font-size:13px}
 .chip b{font-size:15px;margin-inline-start:6px;direction:ltr;display:inline-block}
@@ -899,14 +903,18 @@ function renderOpp(){
   const LD = LIVE.data && LIVE.data.round===M.next_round ? LIVE.data : null;
   const prog = LD ? `<div class="roundnote">מחזור ${LD.round}: ${LD.round_finished}/${LD.round_games} משחקים הסתיימו${LD.round_finished?' · הטבלה כבר כוללת אותם':''} · עודכן ${dayFmt.format(new Date(LD.updated_utc))} ${timeFmt.format(new Date(LD.updated_utc))}</div>` : '';
   const get = (o,k)=> k==='team' ? o.team : o[oppView][k];
-  const rows = [...O].sort((a,b)=>{ const x=get(a,oppSort.key), y=get(b,oppSort.key);
+  // home / away views: only teams with a home (away) game in the coming round (a team with both in a double round is in both)
+  const venueOf = team => { const fx = roundGames(M.next_round);
+    return new Set(fx.filter(g=>g.home===team||g.away===team).map(g=>g.home===team?'home':'away')); };
+  const O2 = (oppView==='home'||oppView==='away') ? O.filter(o=>venueOf(o.team).has(oppView)) : O;
+  const rows = [...O2].sort((a,b)=>{ const x=get(a,oppSort.key), y=get(b,oppSort.key);
     if(x==null) return 1; if(y==null) return -1;
     return (typeof x==='string' ? x.localeCompare(y) : x-y)*oppSort.dir; });
   const dir = oppSort.dir>0?'▲':'▼';
   $('#oppView').innerHTML = `<div class="card">
     <div class="opp-top"><div>
       <h2>נקודות פנטזי שהיריבה מאפשרת לפי עמדה</h2>
-      <div class="hint">ממוצע פנטזי (משוקלל לפי דקות) של שחקני היריבות בכל עמדה מול כל קבוצה. ערך גבוה = הגנה חלשה מול העמדה. לחיצה על כותרת ממיינת · <b>לחיצה על ערך מציגה את השחקנים מהיריבה הבאה בעמדה הזו</b> · H = משחק בית, A = משחק חוץ</div>
+      <div class="hint">ממוצע פנטזי (משוקלל לפי דקות) של שחקני היריבות בכל עמדה מול כל קבוצה. ערך גבוה = הגנה חלשה מול העמדה. לחיצה על כותרת ממיינת · <b>לחיצה על ערך מציגה את השחקנים מהיריבה הבאה בעמדה הזו</b> · H = משחק בית, A = משחק חוץ${oppView==='home'||oppView==='away'?` · <b>מוצגות רק הקבוצות שמשחקות ${oppView==='home'?'בבית':'בחוץ'} במחזור ${M.next_round}</b>`:''}</div>
       ${prog}</div>
       <div class="seg"><button data-v="season" class="${oppView==='season'?'on':''}">עונה</button><button data-v="last5" class="${oppView==='last5'?'on':''}">5 אחרונים</button><button data-v="home" class="${oppView==='home'?'on':''}" title="כל העונה, במשחקי הבית של הקבוצה">בבית</button><button data-v="away" class="${oppView==='away'?'on':''}" title="כל העונה, במשחקי החוץ של הקבוצה">בחוץ</button></div></div>
     <div class="legend">ממוצע ליגה: ${POS.map(([p,h])=>`${h} <b>${f(L[p],2)}</b>`).join(' · ')}
@@ -2262,9 +2270,9 @@ function h2hBlock(p){
   </div>`;
 }
 function playerCard(p){
-  const head = `<div class="phead"><div>
+  const head = `<div class="phead"><div class="pid"><div class="pph ${p.img?'':'ini'}" data-img="${p.id}" style="${p.img?`background-image:url('${esc(p.img)}')`:''}">${p.img?'':esc(initials(p))}</div><div>
       <h2>${esc(p.name)}</h2>
-      <div class="note">${esc(p.he?p.he+' · ':'')}${esc(p.raw)} · ${esc(p.team)} · ${p.pos_he}</div></div>
+      <div class="note">${esc(p.he?p.he+' · ':'')}${esc(p.raw)} · ${esc(p.team)} · ${p.pos_he}</div></div></div>
       <button class="btn" id="goCompare">⇄ השוואה</button></div>
     <div class="opp" style="margin-top:8px">יריבה במחזור: <b>${oppText(p)}</b>${p.date?` · ${fmtShortDate(p.date)}`:''}${nextAfter(p)}</div>
     ${actualBanner(p)}
@@ -2298,6 +2306,11 @@ function renderPlayer(){
   if(mode==='compare'){ pv.innerHTML=''; renderCompare(); return; }
   ca.innerHTML = '';
   pv.innerHTML = playerCard(byId.get(current));
+  pv.querySelectorAll('.pph[data-img]').forEach(async el=>{   // EuroLeague: photo looked up on Wikipedia (as on the court cards)
+    const pp = byId.get(+el.dataset.img); if(!pp || pp.img) return;
+    const url = await wikiImage(pp);
+    if(url && el.isConnected){ el.style.backgroundImage=`url("${url}")`; el.textContent=''; el.classList.remove('ini'); el.title='תמונה: ויקיפדיה'; }
+  });
   $('#goCompare').onclick = ()=>{ mode='compare'; compare=[current]; showCmpSearch=true; renderPlayer(); syncHash(); };
 }
 function openPlayer(id){ current=id; compare=[id]; mode='card'; showTab('search'); renderPlayer(); syncHash(); window.scrollTo({top:0,behavior:'smooth'}); }
