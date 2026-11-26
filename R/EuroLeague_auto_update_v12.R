@@ -95,10 +95,20 @@ el_parse_schedule <- function(x) {
   }))
 }
 
+# A game moved to after a later round has started (e.g. Olympiacos-Paris, round 23 -> 26.1) does not hold back its round:
+# the round counts as finished without it (sport5 adds its points to the original round once it is played).
+el_postponed <- function(s) {
+  first <- tapply(s$Utc, s$Round, function(v) suppressWarnings(min(v, na.rm=TRUE)))
+  later <- vapply(s$Round, function(r) { f <- first[as.numeric(names(first)) > r]; if (length(f)) min(f) else Inf }, 0)
+  !s$Played & !is.na(s$Utc) & as.numeric(s$Utc) >= later
+}
+
 # Returns list(due, round, ended_utc, due_utc, reason)
 el_round_status <- function(schedule, last_published, delay_hours=12, game_hours=2.5,
                             now=Sys.time()) {
   s <- schedule[is.finite(schedule$Round) & schedule$Round >= 1 & nzchar(schedule$Game),,drop=FALSE]
+  pp <- el_postponed(s); if (any(pp)) message('Postponed (not holding back their round): ', paste0('game ', s$Game[pp], ' (round ', s$Round[pp], ')', collapse=', '))
+  s <- s[!pp,,drop=FALSE]
   done <- tapply(s$Played, s$Round, all)
   complete <- sort(as.numeric(names(done)[done]))
   if (!length(complete)) return(list(due=FALSE, round=NA, reason='No completed round yet'))
@@ -121,6 +131,7 @@ el_round_status <- function(schedule, last_published, delay_hours=12, game_hours
 # (delay hours after the last finished game of that round), once per game day.
 el_next_status <- function(schedule, done_upto, delay_hours=8, game_hours=2.5, now=Sys.time()) {
   s <- schedule[is.finite(schedule$Round) & schedule$Round >= 1 & nzchar(schedule$Game),,drop=FALSE]
+  s <- s[!el_postponed(s),,drop=FALSE]
   open_r <- s$Round[!s$Played]
   if (!length(open_r)) return(list(due=FALSE))
   r <- min(open_r)

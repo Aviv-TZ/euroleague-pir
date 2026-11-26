@@ -247,7 +247,7 @@ el_live_update <- function(schedule, site_dir, code_dir, now=Sys.time()) {
   if (!length(R) || !is.finite(R)) {
     fx_games <- vapply(d$fixtures, function(x) as.character(x$game), '')
     R <- suppressWarnings(min(s$Round[s$Game %in% fx_games]))
-    if (!is.finite(R)) R <- min(s$Round[!s$Played])
+    if (!is.finite(R)) R <- min(s$Round[!s$Played & !(if (exists('el_postponed', mode='function')) el_postponed(s) else FALSE)])
   }
   rg <- s[s$Round == R,,drop=FALSE]
   finished <- sort(s$Game[s$Played])
