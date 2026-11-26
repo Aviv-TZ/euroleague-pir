@@ -730,10 +730,12 @@ function gameMid(g){
   return (g.utc?`<b>${timeFmt.format(new Date(g.utc))}</b>`:'')+'בית · חוץ';
 }
 function leaders(game, team){   // actual top fantasy points in this game for this team (ties: all of them)
-  const rows = (LIVE.rows||[]).filter(a=>String(a.game)===String(game) && a.team===team);
+  const bg = LIVE.data && LIVE.data.by_game;   // Winner League: a team can play twice in a round - this game's points only
+  const rows = (bg || LIVE.rows || []).filter(a=>String(a.game)===String(game) && a.team===team);
   if(!rows.length) return null;
   const top = Math.max(...rows.map(a=>a.pir));
-  return {pir:top, live:rows[0].status==='live', ps:rows.filter(a=>a.pir===top)};
+  const st = bg ? gameStatus((LIVE.data.games||[]).find(g=>String(g.game)===String(game))||{}) : rows[0].status;
+  return {pir:top, live:st==='live', ps:rows.filter(a=>a.pir===top)};
 }
 function roundGames(r){
   const past = (LIVE.data && LIVE.data.past_games) || [];
@@ -750,7 +752,10 @@ function renderFixtures(){
   const fx = roundGames(fxRound);
   const isPred = fxRound===M.next_round;
   const teamTop = {};
-  if(isPred) P.filter(p=>p.ranked).forEach(p=>{ if(!teamTop[p.team]||p.m[1].rank<teamTop[p.team].m[1].rank) teamTop[p.team]=p; });
+  // projected leader of each game: a player with two games in the round counts that game's projection only
+  const gPred = (p, game) => { const x = p.g0 && p.g0.find(z=>z.game===String(game)); return x ? x.pred : p.m[1].pir; };
+  const topOf = (t, game) => { const k = t+'|'+game; if(!(k in teamTop)) teamTop[k] = P.filter(p=>p.ranked && p.team===t)
+    .reduce((b,p)=>!b||gPred(p,game)>gPred(b,game)?p:b, null); return teamTop[k]; };
   const byRaw = new Map(P.map(p=>[akey(p.raw,p.team),p]));
   const team = (g,t)=>{
     const st = gameStatus(g);
@@ -762,8 +767,8 @@ function renderFixtures(){
       const names = ld.ps.map(a=>{ const p=byRaw.get(akey(a.raw,a.team));
         return p ? `<span class="pl" data-id="${p.id}">${esc(p.name)}</span>` : esc(fmtRaw(a.raw)); }).join(', ');
       sub = `<small class="${ld.live?'lead-live':'lead-final'}">${ld.live?'מוביל עכשיו':'מוביל בפועל'}: ${names} (${f(ld.pir,0)})</small>`;
-    } else if(st==='scheduled' && teamTop[t]){ const tp=teamTop[t];
-      sub = `<small>מוביל צפוי: <span class="pl" data-id="${tp.id}">${esc(tp.name)}</span> (${f(tp.m[1].pir,1)})</small>`; }
+    } else if(st==='scheduled' && isPred && topOf(t, g.game)){ const tp=topOf(t, g.game);
+      sub = `<small>מוביל צפוי: <span class="pl" data-id="${tp.id}">${esc(tp.name)}</span> (${f(gPred(tp, g.game),1)})</small>`; }
     const gi = gameInfo(g);
     if((st==='final'||st==='live') && gi.hs!=null && gi.as!=null){
       const home = t===g.home, pts = coachPtsFromScore(home?gi.hs:gi.as, home?gi.as:gi.hs);
@@ -2200,12 +2205,19 @@ let current = null, compare = [], mode = 'card';   // mode: 'card' | 'compare'
 const CM_ROWS = [['pts','נקודות',1],['reb','ריבאונדים',2],['ast','אסיסטים',2],['stl','חטיפות',3],['blk','חסימות',3],
                  ['fd','עבירות שנסחטו',1],['tov','איבודים',-2],['miss','החטאות (זריקות + עונשין)',-1],['fc','עבירות',-1]];
 function cmTable(p){
-  const c = p.cm, e = c.e, bonus = 10*c.p_dd + 20*c.p_td;
+  if(p.g0 && p.g0.length>1)   // two games in the fantasy round: the components of each game, then the round total
+    return p.g0.map((g,i)=>`<div class="hint" style="margin:${i?10:4}px 0 2px"><b>משחק ${i+1}: ${vsTxt(g.venue, g.opp, true)}</b> · ${fmtShortDate(g.date)}</div>`
+      + cmGame(g.cm, g.pred, 'פנטזי צפוי במשחק')).join('')
+      + `<table class="comp"><tr class="total"><td>פנטזי צפוי במחזור (${p.g0.length} משחקים)</td><td></td><td class="num m2c">${f(p.fut?p.fut[0]:p.m[1].pir,1)}</td></tr></table>`;
+  return cmGame(p.cm, p.fut?p.fut[0]:p.m[1].pir, 'פנטזי צפוי');
+}
+function cmGame(c, tot, lab){
+  const e = c.e, bonus = 10*c.p_dd + 20*c.p_td;
   return `<table class="comp">
     <tr><td>דקות צפויות</td><td class="num">${f(c.min,1)}</td><td></td></tr>
     ${CM_ROWS.map(([k,l,w])=>`<tr><td>${l} <small class="note"><bdi dir="ltr">×${w}</bdi></small></td><td class="num">${f(e[k],1)}</td><td class="num"><bdi dir="ltr">${w*e[k]>=0?'+':''}${f(w*e[k],1)}</bdi></td></tr>`).join('')}
     <tr><td>דאבל-דאבל / טריפל-דאבל <small class="note">סיכוי <bdi dir="ltr">${f(100*c.p_dd,0)}% / ${f(100*c.p_td,1)}%</bdi></small></td><td></td><td class="num">+${f(bonus,1)}</td></tr>
-    <tr class="total"><td>פנטזי צפוי</td><td></td><td class="num m2c">${f(p.fut?p.fut[0]:p.m[1].pir,1)}</td></tr>
+    <tr class="total"><td>${lab}</td><td></td><td class="num m2c">${f(tot,1)}</td></tr>
   </table>`;
 }
 function componentsTable(p, m){

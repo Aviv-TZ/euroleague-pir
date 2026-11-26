@@ -228,20 +228,23 @@ def main():
         mine = cur[(cur.player == key) & (cur.team == team)]
         known_cur = st is not None and key in st.pw.index
         old = next((x for x in past if key in x.pw.index), None)
-        fut = None; cmx = None; e0 = None
+        fut = None; cmx = None; e0 = None; g0 = []
+        cmd = lambda E: dict(min=round(float(E['min']), 1), e={k: round(float(E['e_' + k]), 2) for k in C.K},
+                             p_dd=round(float(E.p_dd), 3), p_td=round(float(E.p_td), 4))
         if known_cur or old is not None:
             src = st if known_cur else old
             fut = []; e0 = None
             for j, r in enumerate(rounds):
                 tot = 0.0
-                for (o, hm, _) in fx[r].get(team, []):
+                for (o, hm, g) in fx[r].get(team, []):
                     e = src.project(key, ppos, o, hm, HF)
                     if not e: continue
                     E1 = C.fp_from(pd.DataFrame([dict(**e)])).iloc[0]; tot += float(E1.pred)
                     if j == 0 and e0 is None: e0 = E1
+                    if j == 0: g0.append(dict(game=str(g.game), opp=o, venue='Home' if hm else 'Away', date=g.utc.strftime('%Y-%m-%d'),
+                                              pred=round(float(E1.pred), 1), cm=cmd(E1)))
                 fut.append(round(tot, 1))
-            if e0 is not None: cmx = dict(min=round(float(e0['min']), 1), e={k: round(float(e0['e_' + k]), 2) for k in C.K},
-                                          p_dd=round(float(e0.p_dd), 3), p_td=round(float(e0.p_td), 4))
+            if e0 is not None: cmx = cmd(e0)
         gt = len(mine)
         ng = fx[rounds[0]].get(team, []) if rounds else []; nxt = ng[0] if ng else None
         reason = None
@@ -257,7 +260,8 @@ def main():
                             l5n=int(len(l5)), min=round(float(mine['min'].mean()), 1) if gt else None, l5min=round(float(l5['min'].mean()), 1) if gt else None,
                             opp=nxt[0] if nxt else None, venue=('Home' if nxt[1] else 'Away') if nxt else None,
                             date=nxt[2].utc.strftime('%Y-%m-%d') if nxt else None, games_in_round=len(ng), ranked=reason is None, reason=reason,
-                            fut=fut, price=int(p.price), s5id=int(p.s5id), s5pos=ppos, injured=bool(p.injured), out3=out3, cm=cmx))
+                            fut=fut, price=int(p.price), s5id=int(p.s5id), s5pos=ppos, injured=bool(p.injured), out3=out3, cm=cmx,
+                            **({'g0': g0} if len(g0) > 1 else {})))
     ranked = sorted([x for x in players if x['ranked']], key=lambda x: -x['fut'][0])
     resid_lo, resid_hi = -12.0, 14.0
     for i, x in enumerate(ranked):
@@ -354,6 +358,13 @@ def write_live(sch, cur, R0, now, label):
     actual = [dict(raw=x.player, team=x.team, opp=x.opp, game=str(x.game), pir=int(x.fp), min=round(float(x['min']), 1),
                    status='final' if team_done[x.team] >= team_n[x.team] else 'live', games=int(x.n),
                    rank=int((ag.fp > x.fp).sum()) + 1) for _, x in ag.iterrows()]
+    # earlier rounds: each finished game with its top fantasy scorer per team (that game only)
+    def lead(gid, team):
+        z = cur[(cur.game == int(gid)) & (cur.team == team)]
+        if not len(z): return None
+        m = int(z.fp.max()); return dict(fp=m, raw=list(z[z.fp == m].player))
+    past_games = [dict(x, lead_home=lead(x['game'], x['home']), lead_away=lead(x['game'], x['away']))
+                  for x in sched if x['status'] == 'final' and x['round'] < R0]
     nxt = {}
     for x in sched:
         if x['status'] == 'final': continue
@@ -370,7 +381,9 @@ def write_live(sch, cur, R0, now, label):
                         def_away=float(dw.fp.mean()) if len(dw) else None))
     live = dict(updated_utc=now.strftime('%Y-%m-%dT%H:%M:%SZ'), round=R0, finished_ids=[g['game'] for g in games if g['status'] == 'final'],
                 schedule=sched, round_finished=sum(g['status'] == 'final' for g in games), round_games=len(games), n_played=len(actual),
-                games=games, actual=actual, next_game=nxt, fdr=fdr)
+                games=games, actual=actual, next_game=nxt, fdr=fdr,
+                by_game=[dict(raw=x.player, team=x.team, game=str(x.game), pir=int(x.fp)) for _, x in rr.iterrows()],
+                past_games=past_games)
     with open(os.path.join(OUT, 'live.json'), 'w', encoding='utf-8') as fh: json.dump(live, fh, ensure_ascii=False, separators=(',', ':'))
 
 def build_page(data):
