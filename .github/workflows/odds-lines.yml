@@ -7,6 +7,11 @@ on:
     - cron: '41 7,17 * * *'        # current lines of games in the next 3 days (1 request per league with such a game)
     - cron: '11 9 * * 1'           # Monday: closing lines of last week's games (2 requests)
   workflow_dispatch:
+    inputs:
+      diag:
+        description: 'fixture id: list the bookmakers pricing it (1 request) and stop'
+        required: false
+        default: ''
 
 permissions:
   contents: write
@@ -25,6 +30,7 @@ jobs:
         env:
           ODDSPAPI_KEY: ${{ secrets.ODDSPAPI_KEY }}
         run: |
+          if [ -n "${{ github.event.inputs.diag }}" ]; then python3 -u tools/odds_lines.py --diag "${{ github.event.inputs.diag }}"; exit 0; fi
           if [ "${{ github.event.schedule }}" = "41 7,17 * * *" ]; then python3 -u tools/odds_lines.py --upcoming; else python3 -u tools/odds_lines.py && python3 -u tools/odds_lines.py --upcoming; fi
           git config user.name  "el-bot"
           git config user.email "el-bot@users.noreply.github.com"

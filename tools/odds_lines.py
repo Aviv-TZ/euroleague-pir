@@ -100,6 +100,15 @@ def upcoming_lines():
     with open(os.path.join(ROOT, 'docs', 'coach_lines.json'), 'w', encoding='utf-8') as fh: json.dump(out, fh, ensure_ascii=False)
     print('upcoming lines:', {k: len(v) for k, v in out.items() if k != 'updated_utc'}, flush=True)
 
+if '--diag' in sys.argv:   # 1 request: which bookmakers price one upcoming fixture now, and whether a spread is there
+    fid = sys.argv[sys.argv.index('--diag') + 1]
+    x = call('odds', fixtureId=fid) or {}
+    print('fixture', fid, x.get('participant1Name'), '-', x.get('participant2Name'), x.get('startTime'), 'hasOdds', x.get('hasOdds'))
+    for bk, v in sorted((x.get('bookmakerOdds') or {}).items()):
+        ms = [M[m]['t'] for m in (v.get('markets') or {}) if m in M]
+        print(f'  {bk}: {len(v.get("markets") or {})} markets, spreads {ms.count("spreads")}, moneyline {ms.count("moneyline")}')
+    sys.exit(0)
+
 if '--upcoming' in sys.argv:
     upcoming_lines(); sys.exit(0)
 
